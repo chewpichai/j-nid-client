@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" creationComplete="init(event)" width="100%" height="100%">
+	
+	<mx:Script>
+		<![CDATA[
+			import com.j_nid.models.JNidModelLocator;
+			import mx.rpc.events.ResultEvent;
+			import mx.containers.ViewStack;
+			import mx.events.IndexChangedEvent;
+            import com.j_nid.models.Product;
+			import com.j_nid.models.ProductType;
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.FlexEvent;
+			import mx.events.ListEvent;
+			import mx.events.ValidationResultEvent;			
+			
+			private var product:Product;
+			private var isEditProduct:Boolean;
+			private var productTypeSelectedIndex:int = -1;
+			private var productSelectedIndex:int = -1;
+			[Bindable]
+			private var model:JNidModelLocator = JNidModelLocator.getInstance();
+			
+			private function init(e:FlexEvent):void {
+				parent.addEventListener(IndexChangedEvent.CHANGE, changePage);
+				loadProductTypes();
+			}
+			
+			private function changePage(e:IndexChangedEvent):void {
+				if (ViewStack(e.currentTarget).selectedChild == this) {
+					productTypeSelectedIndex = productTypeList.selectedIndex;
+					productSelectedIndex = productList.selectedIndex;
+					loadProductTypes();
+				}
+			}
+			
+			private function loadProductTypes():void {
+
+			}
+			
+			private function typeChangeListener(e:ListEvent):void {
+				currentState = null;
+                clearProductForm();
+			}
+			
+			private function productChangeListener(e:ListEvent):void {
+				setProdectFormData();
+			}
+			
+			private function setProdectFormData():void {
+				clearProductForm();
+				isEditProduct = true;
+				typeField.enabled = false;
+				product = Product(productList.selectedItem);
+				nameField.text = product.name;
+				unitField.value = product.unit;
+				typeField.selectedItem = product.type;
+				pricePerUnitField.value = product.pricePerUnit;
+				isSaleField.selected = product.isSale;
+			}
+            
+            private function clearProductForm():void {
+				isEditProduct = false;
+				/* Use UIComponent.errorString = "" to clear validate error style */
+				nameField.errorString = "";
+				typeField.errorString = "";
+				errorTxt.text = "";
+				product = new Product();
+				product.id = 0;
+				nameField.text = "";
+				typeField.enabled = true;
+				typeField.selectedIndex = -1;
+				unitField.value = 1;
+				pricePerUnitField.value = 1;
+				isSaleField.selected = false;
+			}
+			
+			private function newTypeClickListener(e:MouseEvent):void {
+				clearProductForm();
+				currentState = "NewType";
+				productTypeList.selectedIndex = -1;
+			}
+			
+			private function saveProductClickListener(e:MouseEvent):void {
+				errorTxt.text = "";
+				var validationResult:ValidationResultEvent = nameValidator.validate();
+				if (validationResult.type == ValidationResultEvent.INVALID) {
+					errorTxt.text += validationResult.message + "\n";
+				}
+				validationResult = typeValidator.validate();
+				if (validationResult.type == ValidationResultEvent.INVALID) {
+					errorTxt.text += validationResult.message;
+				}
+				if (errorTxt.text.length == 0) {
+					product.name = nameField.text;
+					product.unit = unitField.value;
+					product.type = ProductType(typeField.selectedItem);
+					product.pricePerUnit = pricePerUnitField.value;
+					product.isSale = isSaleField.selected;
+					var params:XML = <request/>;
+					params.appendChild(product.toXML());
+				}
+			}
+			
+			private function saveProductResultListener(e:ResultEvent):void {
+				if (e.result.product.length() > 0) {
+					if (!isEditProduct) {
+						product.id = e.result.product.id;
+						product.type.products.addItem(product);
+					}
+					isEditProduct = true;
+					productTypeList.selectedItem = product.type;
+					productList.dataProvider = product.type.products;
+					productList.selectedItem = product;
+					typeField.enabled = false;
+				} else {
+					Alert.show(e.result.message, "Error");
+				}
+			}
+			
+			private function saveProductTypeClickListener(e:MouseEvent):void {
+				errorTxt.text = "";
+				var validationResult:ValidationResultEvent = nameValidator.validate();
+				if (validationResult.type == ValidationResultEvent.INVALID) {
+					errorTxt.text += validationResult.message + "\n";
+				}
+				if (errorTxt.text.length == 0) {
+					var productType:ProductType = new ProductType()
+					productType.name = nameField.text;
+					var params:XML = <request/>;
+					params.appendChild(productType.toXML());
+				}
+			}
+			
+			private function saveProductTypeResultListener(e:ResultEvent):void {
+				
+			}
+			
+			private function newProductClickListener(e:MouseEvent):void {
+				clearProductForm();
+				productTypeList.selectedIndex = -1;
+				productList.selectedIndex = -1;
+			}
+			
+			private function backClickListener(e:MouseEvent):void {
+				currentState = null;
+				clearProductForm();
+			}
+		]]>
+	</mx:Script>
+
+    <mx:states>
+		<mx:State name="NewType">
+			<mx:RemoveChild target="{productListPnl}"/>
+			<mx:SetProperty target="{formHeading}" name="label" value="Product Type Form"/>
+			<mx:RemoveChild target="{typeFormItem}"/>
+			<mx:RemoveChild target="{unitFormItem}"/>
+			<mx:RemoveChild target="{pricePerUnitFormItem}"/>
+			<mx:RemoveChild target="{isSaleFormItem}"/>
+			<mx:SetEventHandler target="{saveBtn}" name="click" handler="saveProductTypeClickListener(MouseEvent(event))"/>
+			<mx:SetProperty target="{newTypeBtn}" name="label" value="Back"/>
+			<mx:SetEventHandler target="{newTypeBtn}" name="click" handler="backClickListener(MouseEvent(event))"/>
+		</mx:State>
+	</mx:states>
+    
+	<mx:Panel title="Types" width="275" height="100%" layout="vertical" styleName="panel">
+		<mx:List id="productTypeList" labelField="name" dataProvider="{model.productTypes}"
+			change="typeChangeListener(event)" width="100%" height="100%" styleName="list"/>
+        <mx:ControlBar horizontalAlign="right">
+			<mx:Button id="newTypeBtn" label="New" click="newTypeClickListener(event)"/>
+        </mx:ControlBar>
+	</mx:Panel>
+	
+	<mx:Panel id="productListPnl" title="Products" width="300" height="100%" layout="vertical"
+        styleName="panel">
+		<mx:List id="productList" dataProvider="{productTypeList.selectedItem.products}"
+			change="productChangeListener(event)" labelField="name"
+			width="100%" height="100%" styleName="list"/>
+        <mx:ControlBar horizontalAlign="right">
+			<mx:Button label="New" click="newProductClickListener(event)"/>
+		</mx:ControlBar>
+	</mx:Panel>
+	
+	<mx:Panel id="editorPnl" title="Editor" width="350" height="100%" layout="absolute"
+		styleName="panel">
+		<mx:Form width="100%" height="100%" verticalGap="15">
+			<mx:FormHeading id="formHeading" label="Product Form" width="100%"/>
+			<mx:FormItem label="Name" width="100%" required="true">
+				<mx:TextInput id="nameField"/>
+			</mx:FormItem>
+			<mx:FormItem id="typeFormItem" label="Type" width="100%" required="true">
+				<mx:ComboBox id="typeField" prompt="Choose ..."	labelField="name"/>
+			</mx:FormItem>
+			<mx:FormItem label="Unit" width="100%" id="unitFormItem">
+				<mx:NumericStepper id="unitField" minimum="1" maximum="100000"/>
+			</mx:FormItem>
+			<mx:FormItem label="Price/Unit" width="100%" id="pricePerUnitFormItem">
+				<mx:NumericStepper id="pricePerUnitField" minimum="1" stepSize="0.25"
+					maximum="100000"/>
+			</mx:FormItem>
+			<mx:FormItem label="Is Sale" width="100%" id="isSaleFormItem">
+				<mx:CheckBox id="isSaleField"/>
+			</mx:FormItem>
+			<mx:FormItem width="100%">
+				<mx:Text id="errorTxt" width="100%" color="#FF0000"/>
+			</mx:FormItem>
+		</mx:Form>
+		<mx:ControlBar horizontalAlign="right">
+			<mx:Button id="saveBtn" label="Save" click="saveProductClickListener(event)"/>
+		</mx:ControlBar>
+	</mx:Panel>
+    
+    <mx:StringValidator id="nameValidator" source="{nameField}" property="text" trigger="{saveBtn}"
+		triggerEvent="click" requiredFieldError="Please insert name."/>
+		
+	<mx:NumberValidator id="typeValidator" source="{typeField}" property="selectedIndex"
+		trigger="{saveBtn}" triggerEvent="click" allowNegative="false"
+		negativeError="Please choose type."/>
+</mx:HBox>

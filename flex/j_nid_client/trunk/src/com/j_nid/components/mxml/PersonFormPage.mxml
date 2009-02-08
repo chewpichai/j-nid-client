@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml"  xmlns:jn="com.j_nid.validators.*"
+	width="100%" height="100%" creationComplete="init(event)">
+	
+	<mx:Script>
+		<![CDATA[
+			import com.j_nid.models.JNidModelLocator;
+			import mx.rpc.events.ResultEvent;
+			import mx.collections.SortField;
+			import mx.collections.Sort;
+			import mx.events.ValidationResultEvent;
+			import mx.events.IndexChangedEvent;
+			import mx.containers.ViewStack;
+			import mx.controls.Alert;
+			import com.j_nid.models.BankAccount;
+			import com.j_nid.models.PhoneNumber;
+			import com.j_nid.models.Person;
+			import mx.collections.ArrayCollection;
+			import mx.events.ListEvent;
+			import mx.events.FlexEvent;
+			import mx.utils.StringUtil;
+			
+			[Bindable]
+			public var person:Person = new Person();
+			[Bindable]
+			private var phoneTypes:XMLList;
+			[Bindable]
+			private var banks:XMLList;
+			[Bindable]
+			private var people:ArrayCollection = new ArrayCollection();
+			private var isEdit:Boolean = false;
+			private var personSelectedIndex:int = -1;
+			private var errorMessage:String;
+			[Bindable]
+			private var model:JNidModelLocator = JNidModelLocator.getInstance();
+			
+			private function init(e:FlexEvent):void {
+
+			}
+			
+			private function changePage(e:IndexChangedEvent):void {
+
+			}
+			
+			private function phoneTypeResultListener(e:ResultEvent):void {
+				phoneTypes = e.result.phone_type;
+			}
+			
+			private function bankResultListener(e:ResultEvent):void {
+				banks = e.result.bank;
+			}
+			
+			private function searchFieldChangeListener(e:Event):void {
+				people.filterFunction = function(item:Object):Boolean {
+					var person:Person = Person(item);
+					person.sortIndex = person.name.indexOf(searchField.text);
+					return person.sortIndex != -1;
+				};
+				var sort:Sort = new Sort();
+				sort.fields = [new SortField("sortIndex")];
+				people.sort = sort;
+				people.refresh();
+			}
+			
+			private function personListChangeListener(e:ListEvent):void {
+				person = Person(personList.selectedItem);
+			}
+			
+			private function newClickListener(e:MouseEvent):void {
+				person = new Person();
+				personList.selectedIndex = -1;
+			}
+			
+			private function clearClickListener(e:MouseEvent):void {
+				
+			}
+			
+			private function saveClickListener(e:MouseEvent):void {
+				if (isValid()) {
+					person.name = nameField.text;
+					person.firstName = firstNameField.text;
+					person.lastName = lastNameField.text;
+					person.address = addressField.text;
+					person.idCardNumber = idCardNumberFiled.text;
+					person.detail1 = detail1Field.text;
+					person.detail2 = detail2Field.text;
+					var phoneNumbers:ArrayCollection = new ArrayCollection();
+					var bankAccounts:ArrayCollection = new ArrayCollection();
+					for (var i:int = 0; i < 4; i++) {
+						try {
+							var phoneNumber:TextInput = TextInput(this["phone" + i + "Field"]);
+							var phoneType:ComboBox = ComboBox(this["phoneType" + i + "Field"]);
+							if (phoneNumber.text.length > 0) {
+
+							}
+							var accountNumber:TextInput = TextInput(this["accountNumber" + i + "Field"]);
+							var bank:ComboBox = ComboBox(this["bank" + i + "Field"]);
+							if (accountNumber.text.length > 0) {
+								
+							}
+						} catch (err:TypeError) {
+							continue;
+						}
+					}
+					person.phoneNumbers = phoneNumbers;
+					person.bankAccounts = bankAccounts;
+					var params:XML = <request/>;
+					params.appendChild(person.toXML());
+					if (person.id > 0) {
+						isEdit = true;
+					} else {
+						isEdit = false;
+					}
+				} else {
+					Alert.show(errorMessage, "Error");
+				}
+			}
+			
+			private function isValid():Boolean {
+				errorMessage = "";
+				var validationResult:ValidationResultEvent = nameValidator.validate();
+				if (validationResult.type == ValidationResultEvent.INVALID) {
+					errorMessage += "Check name.\n";
+				}
+				for (var i:int = 0; i < 4; i++) {
+					validationResult = this["phone" + i + "Validator"].validate();
+					if (validationResult.type == ValidationResultEvent.INVALID) {
+						errorMessage += "Check phone number" + (i + 1) + ".\n";
+					}
+				}
+				return errorMessage.length == 0;
+			}
+			
+			private function savePersonResultListener(e:ResultEvent):void {
+				if (e.result.person.length() > 0) {
+					if (!isEdit) {
+						person.id = e.result.person.id;
+						people.addItem(person);
+					}
+					searchField.text = "";
+					people.filterFunction = null;
+					var sort:Sort = new Sort();
+					sort.fields = [new SortField("name")];
+					people.sort = sort;
+					people.refresh();
+					var index:int = people.getItemIndex(person);
+					personList.selectedIndex = index;
+					personList.validateNow();
+					var i:Number = personList.maxVerticalScrollPosition / people.length * index;
+					personList.verticalScrollPosition = i;
+				} else {
+					Alert.show(e.result.message, "Error");
+				}
+			}
+			
+			private function getPhoneTypeIndex(type:String):int {
+				for (var i:int = 0; i < phoneTypes.length(); i++) {
+					if (phoneTypes[i].data == type) {
+						return i;
+					}
+				}
+				return -1;
+			}
+			
+			private function getBankIndex(bank:String):int {
+				trace(bank);
+				for (var i:int = 0; i < banks.length(); i++) {
+					if (banks[i].data == bank) {
+						return i;
+					}
+				}
+				return -1;
+			}
+		]]>
+	</mx:Script>
+	
+	<mx:Panel width="200" height="100%" layout="vertical" title="Person List" paddingTop="10" borderStyle="solid">
+		<mx:FormItem label="Search" width="100%">
+			<mx:TextInput id="searchField" width="100%" change="searchFieldChangeListener(event)"/>
+		</mx:FormItem>
+		<mx:List id="personList" dataProvider="{model.people}" width="100%" height="100%" borderStyle="solid"
+			labelField="name" change="personListChangeListener(event)" borderThickness="2" cornerRadius="4"
+			borderColor="#74981C"/>
+		<mx:ControlBar horizontalAlign="right">
+			<mx:Button id="newBtn" label="New" click="newClickListener(event)"/>
+		</mx:ControlBar>
+	</mx:Panel>
+	
+	<mx:Panel layout="vertical" title="Person Form" horizontalAlign="center" height="100%">
+		<mx:HBox horizontalAlign="center">
+			<mx:Form>
+				<mx:FormItem label="Name" required="true">
+					<mx:TextInput id="nameField" text="{person.name}"/>
+				</mx:FormItem>
+				<mx:FormItem label="First Name">
+					<mx:TextInput id="firstNameField" text="{person.firstName}"/>
+				</mx:FormItem>
+				<mx:FormItem label="Last Name">
+					<mx:TextInput id="lastNameField" text="{person.lastName}"/>
+				</mx:FormItem>
+				<mx:FormItem label="ID Card No">
+					<mx:TextInput id="idCardNumberFiled" text="{person.idCardNumber}"/>
+				</mx:FormItem>
+				<mx:FormItem height="30"/>
+				<mx:FormItem label="Phone No.1">
+					<mx:HBox>
+						<mx:TextInput id="phone0Field" text="{person.phoneNumbers.getItemAt(0).number}"/>
+						<mx:ComboBox id="phoneType0Field" dataProvider="{phoneTypes}"
+							selectedIndex="{getPhoneTypeIndex(person.phoneNumbers.getItemAt(0).type)}"/>
+					</mx:HBox>
+				</mx:FormItem>
+				<mx:FormItem label="Phone No.2">
+					<mx:HBox>
+						<mx:TextInput id="phone1Field" text="{person.phoneNumbers.getItemAt(1).number}"/>
+						<mx:ComboBox id="phoneType1Field" dataProvider="{phoneTypes}"
+							selectedIndex="{getPhoneTypeIndex(person.phoneNumbers.getItemAt(1).type)}"/>
+					</mx:HBox>
+				</mx:FormItem>
+				<mx:FormItem label="Phone No.3">
+					<mx:HBox>
+						<mx:TextInput id="phone2Field" text="{person.phoneNumbers.getItemAt(2).number}"/>
+						<mx:ComboBox id="phoneType2Field" dataProvider="{phoneTypes}"
+							selectedIndex="{getPhoneTypeIndex(person.phoneNumbers.getItemAt(2).type)}"/>
+					</mx:HBox>
+				</mx:FormItem>
+				<mx:FormItem label="Phone No.4">
+					<mx:HBox>
+						<mx:TextInput id="phone3Field" text="{person.phoneNumbers.getItemAt(3).number}"/>
+						<mx:ComboBox id="phoneType3Field" dataProvider="{phoneTypes}"
+							selectedIndex="{getPhoneTypeIndex(person.phoneNumbers.getItemAt(3).type)}"/>
+					</mx:HBox>
+				</mx:FormItem>
+			</mx:Form>
+			<mx:Form>
+				<mx:FormItem label="Address">
+					<mx:TextArea id="addressField" text="{person.address}" height="80" width="200"/>
+				</mx:FormItem>
+				<mx:FormItem label="Detail">
+					<mx:TextArea id="detail1Field" text="{person.detail1}" height="80" width="200"/>
+				</mx:FormItem>
+				<mx:FormItem label="Detail" horizontalAlign="left">
+					<mx:TextArea id="detail2Field" text="{person.detail2}" height="80" width="200"/>
+				</mx:FormItem>
+			</mx:Form>
+		</mx:HBox>
+		<mx:HBox>
+			<mx:Form>
+				<mx:FormItem label="Bank Acc 1">
+					<mx:HBox>
+						<mx:TextInput id="accountNumber0Field" text="{person.bankAccounts.getItemAt(0).number}"/>
+						<mx:ComboBox id="bank0Field" dataProvider="{banks}"
+							selectedIndex="{getBankIndex(person.bankAccounts.getItemAt(0).bank)}"/>
+					</mx:HBox>
+				</mx:FormItem>
+				<mx:FormItem label="Bank Acc 2">
+					<mx:HBox>
+						<mx:TextInput id="accountNumber1Field" text="{person.bankAccounts.getItemAt(1).number}"/>
+						<mx:ComboBox id="bank1Field" dataProvider="{banks}"
+							selectedIndex="{getBankIndex(person.bankAccounts.getItemAt(1).bank)}"/>
+					</mx:HBox>
+				</mx:FormItem>
+				<mx:FormItem label="Bank Acc 3">
+					<mx:HBox>
+						<mx:TextInput id="accountNumber2Field" text="{person.bankAccounts.getItemAt(2).number}"/>
+						<mx:ComboBox id="bank2Field" dataProvider="{banks}"
+							selectedIndex="{getBankIndex(person.bankAccounts.getItemAt(2).bank)}"/>
+					</mx:HBox>
+				</mx:FormItem>
+				<mx:FormItem label="Bank Acc 4">
+					<mx:HBox>
+						<mx:TextInput id="accountNumber3Field" text="{person.bankAccounts.getItemAt(3).number}"/>
+						<mx:ComboBox id="bank3Field" dataProvider="{banks}"
+							selectedIndex="{getBankIndex(person.bankAccounts.getItemAt(3).bank)}"/>
+					</mx:HBox>
+				</mx:FormItem>
+			</mx:Form>
+		</mx:HBox>
+		<mx:ControlBar horizontalAlign="right">
+			<mx:Button label="Clear" id="clearBtn"/>
+			<mx:Button label="Save" id="saveBtn" click="saveClickListener(event)"/>
+		</mx:ControlBar>
+	</mx:Panel>
+	
+	<mx:StringValidator id="nameValidator" source="{nameField}" property="text"
+		trigger="{saveBtn}" triggerEvent="click"/>
+		
+	<jn:PhoneNumberValidator id="phone0Validator" source="{phone0Field}" property="text"
+		trigger="{saveBtn}" triggerEvent="click" required="false"/>
+		
+	<jn:PhoneNumberValidator id="phone1Validator" source="{phone1Field}" property="text"
+		trigger="{saveBtn}" triggerEvent="click" required="false"/>
+		
+	<jn:PhoneNumberValidator id="phone2Validator" source="{phone2Field}" property="text"
+		trigger="{saveBtn}" triggerEvent="click" required="false"/>
+		
+	<jn:PhoneNumberValidator id="phone3Validator" source="{phone3Field}" property="text"
+		trigger="{saveBtn}" triggerEvent="click" required="false"/>
+		
+	<jn:BankAccountNumberValidator id="accountNumber0Validator" source="{accountNumber0Field}" property="text"
+		trigger="{saveBtn}" triggerEvent="click" required="false"/>
+		
+	<jn:BankAccountNumberValidator id="accountNumber1Validator" source="{accountNumber1Field}" property="text"
+		trigger="{saveBtn}" triggerEvent="click" required="false"/>
+		
+	<jn:BankAccountNumberValidator id="accountNumber2Validator" source="{accountNumber2Field}" property="text"
+		trigger="{saveBtn}" triggerEvent="click" required="false"/>
+		
+	<jn:BankAccountNumberValidator id="accountNumber3Validator" source="{accountNumber3Field}" property="text"
+		trigger="{saveBtn}" triggerEvent="click" required="false"/>
+</mx:HBox>

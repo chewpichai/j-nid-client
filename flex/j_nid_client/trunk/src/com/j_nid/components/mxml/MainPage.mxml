@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%" creationComplete="init(event)">
+	
+	<mx:Script>
+		<![CDATA[
+			import com.j_nid.controls.EventNames;
+			import com.j_nid.utils.CairngormUtils;
+			import com.j_nid.models.JNidModelLocator;
+			import mx.containers.ViewStack;
+			import mx.events.IndexChangedEvent;
+			import mx.core.Application;
+			import com.j_nid.models.ProductType;
+			import com.j_nid.models.Product;
+			import mx.events.FlexEvent;
+			
+			[Bindable]
+			private var model:JNidModelLocator = JNidModelLocator.getInstance();
+			
+			private function init(e:FlexEvent):void {
+				
+			}
+			
+			private function changePage(e:IndexChangedEvent):void {
+				
+			}
+		]]>
+	</mx:Script>
+	
+	<mx:Accordion id="mainMenu" selectedIndex="5" width="250" left="0" top="50">
+		<mx:VBox label="Person" width="100%">
+			<mx:LinkButton label="New" width="100%" 
+				click="Application.application.changePage('personForm')"/>
+			<mx:LinkButton label="Edit" width="100%"/>
+			<mx:LinkButton label="Search" width="100%"/>
+			<mx:LinkButton label="Phone Number" width="100%" 
+				click="Application.application.changePage('phoneBook')"/>
+			<mx:LinkButton label="View" width="100%"/>
+		</mx:VBox>
+		<mx:VBox label="Product" width="100%" height="100%">
+			<mx:LinkButton label="New" width="100%"
+				click="Application.application.changePage('addProduct')"/>
+			<mx:LinkButton label="Manage" width="100%"
+				click="Application.application.changePage('manageProduct')"/>
+		</mx:VBox>
+		<mx:VBox label="Sell" width="100%" height="100%">
+			<mx:LinkButton label="New" width="100%"
+				click="Application.application.changePage('sellProduct')"/>
+			<mx:LinkButton label="Edit" width="100%"/>
+			<mx:LinkButton label="Search" width="100%"/>
+			<mx:LinkButton label="Delete" width="100%"/>
+		</mx:VBox>
+		<mx:VBox label="Buy" width="100%" height="100%">
+			<mx:LinkButton label="New" width="100%"/>
+			<mx:LinkButton label="Edit" width="100%"/>
+			<mx:LinkButton label="Search" width="100%"/>
+			<mx:LinkButton label="Delete" width="100%"/>
+		</mx:VBox>
+		<mx:VBox label="Account" width="100%" height="100%">
+			<mx:LinkButton label="Payment" width="100%"/>
+			<mx:LinkButton label="Search" width="100%"/>
+			<mx:LinkButton label="View" width="100%"/>
+			<mx:LinkButton label="View Debtor" width="100%"
+				click="Application.application.changePage('outstandingPersonPage')"/>
+			<mx:LinkButton label="Print" width="100%"/>
+		</mx:VBox>
+		<mx:VBox id="managementMenu" label="Management" width="100%" height="155">
+			<mx:LinkButton label="Change Pasword" width="100%"/>
+			<mx:LinkButton label="Log out" width="100%"/>
+		</mx:VBox>
+	</mx:Accordion>
+	
+	<mx:VBox left="265" height="100%" right="215" verticalGap="5">
+		<mx:Label text="Product List" width="100%" height="45" styleName="header"/>
+		<mx:HBox horizontalGap="0" width="100%" height="100%">
+			<mx:TileList width="100%" height="100%" dataProvider="{model.isSaleProducts}"
+				columnWidth="220" rowHeight="40" selectable="false">
+				<mx:itemRenderer>
+					<mx:Component>
+<mx:HBox horizontalAlign="right">
+	<mx:Label text="{data.name}" color="blue"/>
+	<mx:Label text="{data.pricePerUnit}" width="55" textAlign="right"/>
+</mx:HBox>
+					</mx:Component>
+				</mx:itemRenderer>
+			</mx:TileList>
+		</mx:HBox>
+	</mx:VBox>
+	
+	<mx:VBox width="200" verticalGap="10" right="0" top="50">
+		<mx:Button label="Make Sell Order" width="100%" height="35"
+			click="Application.application.changePage('sellProduct')"/>
+		<mx:Button label="Account" width="100%" height="35"/>
+	</mx:VBox>
+</mx:Canvas>

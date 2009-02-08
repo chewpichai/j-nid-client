@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:jn="com.j_nid.components.mxml.*"
+	creationComplete="init(event)" width="100%" height="100%">
+	
+	 <mx:Script>
+		<![CDATA[
+			import mx.rpc.events.ResultEvent;
+			import mx.events.ListEvent;
+			import mx.containers.ViewStack;
+			import mx.events.IndexChangedEvent;
+			import com.j_nid.models.Product;
+			import mx.collections.ArrayCollection;
+			import com.j_nid.models.ProductType;
+			import mx.events.FlexEvent;
+			
+			[Bindable]
+			private var productTypes:ArrayCollection = new ArrayCollection();
+			private var productTypeSelectedIndex:int = 0;
+			
+			private function init(e:FlexEvent):void {
+
+			}
+			
+			private function resultListener(e:ResultEvent):void {
+				
+			}
+			
+			private function changePage(e:IndexChangedEvent):void {
+
+			}
+			
+			private function changeListener(e:ListEvent):void {
+				productTypeSelectedIndex = productTypeList.selectedIndex;
+				showProducts();
+			}
+			
+			private function showProducts():void {
+				var products:ArrayCollection = ProductType(productTypes.getItemAt(productTypeSelectedIndex)).onSaleProducts;
+				productList.dataProvider = products;
+			}
+		]]>
+	</mx:Script>
+	
+	<mx:HBox width="100%" height="100%">
+		<mx:Panel title="Product Type List" height="100%">
+			<mx:List id="productTypeList" dataProvider="{productTypes}" labelField="name" change="changeListener(event)"
+				height="100%" borderStyle="none"/>
+		</mx:Panel>
+		<mx:Panel title="Product List" width="100%" height="100%" borderStyle="solid">
+			<mx:DataGrid id="productList" variableRowHeight="true" dragEnabled="true" width="100%" height="100%">
+				<mx:columns>
+					<mx:DataGridColumn headerText="Name" dataField="name" wordWrap="true"/>
+					<mx:DataGridColumn headerText="Unit" dataField="unit" width="50"/>
+					<mx:DataGridColumn headerText="Price/Unit" dataField="pricePerUnit" width="80"/>
+				</mx:columns>
+			</mx:DataGrid>
+		</mx:Panel>
+	</mx:HBox>
+	
+	<jn:OrderDetail />
+</mx:HBox>

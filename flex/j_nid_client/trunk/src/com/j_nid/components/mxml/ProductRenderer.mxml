@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" paddingLeft="20" paddingRight="20">
+
+	<mx:Script>
+		<![CDATA[
+			import mx.rpc.http.HTTPService;
+			import mx.rpc.events.ResultEvent;
+			import mx.events.FlexEvent;
+			import mx.controls.CheckBox;
+			
+			private function changeListener(e:Event):void {
+				var target:CheckBox = CheckBox(e.currentTarget);
+				target.enabled = false;
+				var params:XML = <request/>;
+				params.product.is_sale = target.selected ? 1:0;
+			}
+			
+			private function resultListener(e:ResultEvent):void {
+				checkBox.enabled = true;
+				data.isSale = checkBox.selected;
+			}
+		]]>
+	</mx:Script>
+
+	<mx:Label text="{data.name}" textAlign="left" width="100%"/>
+	<mx:CheckBox id="checkBox" selected="{data.isSale}" change="changeListener(event)"/>
+</mx:HBox>

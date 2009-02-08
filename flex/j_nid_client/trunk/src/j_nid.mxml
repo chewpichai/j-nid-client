@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:WindowedApplication xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:jn="com.j_nid.components.mxml.*" xmlns:control="com.j_nid.controls.*"
+	layout="vertical" initialize="init(event)">
+	
+	<mx:Style source="css/styles.css"/>
+	
+	<mx:Script>
+		<![CDATA[
+			import com.j_nid.controls.EventNames;
+			import com.j_nid.utils.CairngormUtils;
+			import mx.events.FlexEvent;
+			
+			private function init(e:FlexEvent):void {
+				CairngormUtils.dispatchEvent(EventNames.LIST_PRODUCT_TYPE);
+				CairngormUtils.dispatchEvent(EventNames.LIST_PERSON);
+			}
+			
+			public function changePage(page:String):void {
+				mainView.selectedChild = this[page];
+			}
+		]]>
+	</mx:Script>
+	
+	<control:JNidController/>
+	
+	<mx:HBox width="100%" height="100">
+		<mx:Button label="Main Menu" click="mainView.selectedChild=mainPage"/>
+	</mx:HBox>
+	
+	<mx:ViewStack id="mainView" width="100%" height="100%">
+		<jn:MainPage id="mainPage"/>
+		<jn:SellProductPage id="sellProduct"/>
+		<jn:ProductManagePage id="manageProduct"/>
+		<jn:ProductFormPage id="addProduct"/>
+		<jn:PersonFormPage id="personForm"/>
+		<jn:PhoneBookPage id="phoneBook"/>
+		<jn:OutstandingPersonPage id="outstandingPersonPage"/>
+	</mx:ViewStack>
+	
+	<mx:Canvas width="100%" height="25">
+		<mx:LinkButton label="Copyright (c) 2009 ChewLab. All rights reserved." styleName="copyright"/>
+	</mx:Canvas>
+</mx:WindowedApplication>

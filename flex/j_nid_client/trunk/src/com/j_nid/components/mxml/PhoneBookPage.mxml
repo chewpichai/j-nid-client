@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Panel xmlns:mx="http://www.adobe.com/2006/mxml" title="Phone Book" creationComplete="init(event)" 
+	width="100%" height="100%" horizontalAlign="center">
+	
+	<mx:Script>
+		<![CDATA[
+			import mx.rpc.events.ResultEvent;
+			import mx.collections.SortField;
+			import mx.collections.Sort;
+			import mx.collections.ArrayCollection;
+			import mx.events.FlexEvent;
+			import com.j_nid.models.Person;
+			
+			[Bindable]
+			private var people:ArrayCollection = new ArrayCollection();
+			
+			private function init(e:FlexEvent):void {
+
+			}
+			
+			private function resultListener(e:ResultEvent):void {
+
+			}
+			
+			private function changeListener(e:Event):void {
+				people.filterFunction = function(item:Object):Boolean {
+					var person:Person = Person(item);
+					person.sortIndex = person.name.indexOf(nameField.text);
+					return person.sortIndex != -1;
+				};
+				var sort:Sort = new Sort();
+				sort.fields = [new SortField("sortIndex"), new SortField("name")];
+				people.sort = sort;
+				people.refresh();
+			}
+		]]>
+	</mx:Script>
+	
+	<mx:Spacer height="30"/>
+	
+	<mx:HBox width="100%" horizontalAlign="center">
+		<mx:FormItem label="Name">
+			<mx:TextInput id="nameField" change="changeListener(event)"/>
+		</mx:FormItem>
+		<mx:Button label="Search"/>
+	</mx:HBox>
+	
+	<mx:Spacer height="30"/>
+	
+	<mx:List dataProvider="{people}" itemRenderer="com.j_nid.components.mxml.PhoneBookRenderer" 
+		variableRowHeight="true" width="60%" height="100%" selectable="false" borderStyle="none"/>
+	<mx:Spacer height="20"/>
+</mx:Panel>

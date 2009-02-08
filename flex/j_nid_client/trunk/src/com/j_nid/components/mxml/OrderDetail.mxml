@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Panel xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:jn="com.j_nid.components.mxml.*"
+	height="100%" layout="vertical" title="Order" creationComplete="init(event)">
+	
+	<mx:Style>
+		.cartItemList {
+   			alternatingItemColors: #ffffff, #ffff99;
+		}
+	</mx:Style>
+	
+	<mx:Script>
+		<![CDATA[
+			import com.j_nid.models.Product;
+			import mx.controls.Alert;
+			import com.j_nid.models.Order;
+            import mx.core.Application;
+			import mx.managers.PopUpManager;
+			import mx.events.CollectionEvent;
+			import mx.events.FlexEvent;
+			import com.j_nid.models.OrderItem;
+			import mx.collections.ArrayCollection;
+			import mx.managers.DragManager;
+			import mx.events.DragEvent;
+			
+			[Bindable]
+			private var total:Number = 0;
+			[Bindable]
+			private var order:Order;
+			
+			private function init(e:FlexEvent):void {
+				order = new Order();
+				order.orderItems.addEventListener(CollectionEvent.COLLECTION_CHANGE, collectionChangeListener);
+			}
+			
+			private function collectionChangeListener(e:CollectionEvent):void {
+				total = 0;
+				for each (var item:OrderItem in order.orderItems) {
+					total += item.amount;
+				}
+			}
+			
+			private function dragEnterListener(e:DragEvent):void {
+				DragManager.acceptDragDrop(DataGrid(e.currentTarget));
+			}
+			
+			private function dragDropListener(e:DragEvent):void {
+				var product:Product = e.dragSource.dataForFormat("items")[0];
+				var orderItem:OrderItem = new OrderItem(product);
+				addOrderItem(orderItem);
+			}
+			
+			private function addOrderItem(item:OrderItem):void {
+				for each (var obj:OrderItem in order.orderItems) {
+					if (item.product.id == obj.product.id) {
+						obj.amount += 1;
+						return;
+					}
+				}
+				order.addItem(item);
+			}
+			
+			private function clearListener(e:MouseEvent):void {
+				order.clearItems();
+			}
+			
+			private function removeListener(e:MouseEvent):void {
+				var item:OrderItem = OrderItem(orderItemList.selectedItem);
+				order.removeItem(item);
+			}
+			
+			private function processListener(e:MouseEvent):void {
+				if (order.orderItems.length > 0) {
+					var orderProcessForm:OrderProcessForm = OrderProcessForm(PopUpManager.createPopUp(Application(Application.application), OrderProcessForm, true));
+					orderProcessForm.order = order;
+				} else {
+					Alert.show("Your order must contain at least 1 item.", "Error");
+				}
+			}
+		]]>
+	</mx:Script>
+	
+	<mx:DataGrid id="orderItemList" height="100%" dataProvider="{order.orderItems}"
+		dragDrop="dragDropListener(event)" dragEnter="dragEnterListener(event)"
+		editable="true" styleName="cartItemList" wordWrap="true" variableRowHeight="true">
+		<mx:columns>
+			<mx:DataGridColumn headerText="Qty" dataField="quantity" editorDataField="value"
+				rendererIsEditor="true" width="70">
+				<mx:itemRenderer>
+					<mx:Component>
+						<mx:NumericStepper minimum="1" maximum="1000"/>
+					</mx:Component>
+				</mx:itemRenderer>
+			</mx:DataGridColumn>
+			<mx:DataGridColumn headerText="Name" dataField="name" editable="false" width="150"/>
+			<mx:DataGridColumn headerText="Unit" dataField="unit" editorDataField="value"
+				rendererIsEditor="true" width="70">
+				<mx:itemRenderer>
+					<mx:Component>
+						<mx:NumericStepper minimum="1" maximum="100000"/>
+					</mx:Component>
+				</mx:itemRenderer>
+			</mx:DataGridColumn>
+			<mx:DataGridColumn headerText="Price/Unit" dataField="pricePerUnit" editorDataField="value"
+				rendererIsEditor="true" width="85">
+				<mx:itemRenderer>
+					<mx:Component>
+						<mx:NumericStepper minimum="1" maximum="10000" stepSize="0.25"/>
+					</mx:Component>
+				</mx:itemRenderer>
+			</mx:DataGridColumn>
+			<mx:DataGridColumn headerText="Amount" dataField="amount" editable="false" width="85"/>
+		</mx:columns>
+	</mx:DataGrid>
+	
+	<mx:Text id="totalTxt" width="100%" height="30" text="Total: {total}" textAlign="right" paddingRight="15"/>
+	
+	<mx:ControlBar>
+		<mx:Spacer width="100%"/>
+		<mx:Button label="clear" click="clearListener(event)"/>
+		<mx:Button label="remove" click="removeListener(event)"/>
+		<mx:Button label="process" click="processListener(event)"/>
+	</mx:ControlBar>
+</mx:Panel>

@@ -1,0 +1,57 @@
+global {
+	fontFamily: Tahoma;
+   	fontSize: 14;
+}
+
+WindowedApplication {
+	padding-top: 0;
+	padding-bottom: 0;
+}
+
+Accordion {
+	headerHeight: 40;
+   	headerStyleName: "accordionHeader";
+}
+
+Button {
+	corner-radius: 0;
+}
+
+.accordionHeader {
+   fontFamily: Tahoma;
+   fontSize: 14;
+}
+
+TextInput {
+	corner-radius: 4;
+	border-style: solid;
+}
+
+LinkButton {
+   cornerRadius: 0;
+   textAlign: left;
+   paddingLeft: 30;
+}
+
+.header {
+	text-align: center;
+	font-weight: bold;
+	font-size: 20;
+	padding-top: 10;
+}
+
+.list {
+	borderStyle: none;
+}
+
+.panel {
+   borderStyle: solid;
+   roundedBottomCorners: true;
+}
+
+.copyright {
+	font-weight: normal;
+	font-size: 13;
+	color: #FFFFFF;
+	padding-left: 0;	
+}

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" 
+	width="100%" height="100%" horizontalAlign="center"
+	creationComplete="init(event)">
+	
+	<mx:Script>
+		<![CDATA[
+			import com.j_nid.models.Person;
+			import mx.collections.ArrayCollection;
+			import mx.rpc.events.ResultEvent;
+			import mx.events.FlexEvent;
+			
+			[Bindable]
+			private var people:ArrayCollection = new ArrayCollection();
+			
+			public function init(e:FlexEvent):void {
+
+			}
+		]]>
+	</mx:Script>
+	
+	<mx:Label text="Outstanding Person" styleName="header"/>
+	<mx:Spacer height="35"/>
+	<mx:FormItem label="Search">
+		<mx:TextInput id="searchTxt"/>
+	</mx:FormItem>
+	<mx:Spacer height="35"/>
+	<mx:DataGrid height="100%" dataProvider="{people}">
+		<mx:columns>
+			<mx:DataGridColumn headerText="Name" dataField="name"/>
+			<mx:DataGridColumn headerText="Outstanding Total" 
+				dataField="outstandingOrderTotal"/>
+			<mx:DataGridColumn headerText="Num Outstanding Order" 
+				dataField="numOutstandingOrders"/>
+		</mx:columns>
+	</mx:DataGrid>
+</mx:VBox>
