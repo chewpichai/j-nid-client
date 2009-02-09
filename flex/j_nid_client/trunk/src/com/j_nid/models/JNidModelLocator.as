@@ -3,7 +3,6 @@ package com.j_nid.models {
 	import com.adobe.cairngorm.model.IModelLocator;
 	import com.j_nid.controls.EventNames;
 	import com.j_nid.utils.CairngormUtils;
-	
 	import mx.collections.ArrayCollection;
 
 	[Bindable]

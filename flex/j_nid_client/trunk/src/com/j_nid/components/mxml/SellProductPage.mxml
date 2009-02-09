@@ -4,6 +4,7 @@
 	
 	 <mx:Script>
 		<![CDATA[
+			import com.j_nid.models.JNidModelLocator;
 			import mx.rpc.events.ResultEvent;
 			import mx.events.ListEvent;
 			import mx.containers.ViewStack;
@@ -14,7 +15,7 @@
 			import mx.events.FlexEvent;
 			
 			[Bindable]
-			private var productTypes:ArrayCollection = new ArrayCollection();
+			private var model:JNidModelLocator = JNidModelLocator.getInstance();
 			private var productTypeSelectedIndex:int = 0;
 			
 			private function init(e:FlexEvent):void {
@@ -28,26 +29,17 @@
 			private function changePage(e:IndexChangedEvent):void {
 
 			}
-			
-			private function changeListener(e:ListEvent):void {
-				productTypeSelectedIndex = productTypeList.selectedIndex;
-				showProducts();
-			}
-			
-			private function showProducts():void {
-				var products:ArrayCollection = ProductType(productTypes.getItemAt(productTypeSelectedIndex)).onSaleProducts;
-				productList.dataProvider = products;
-			}
 		]]>
 	</mx:Script>
 	
 	<mx:HBox width="100%" height="100%">
 		<mx:Panel title="Product Type List" height="100%">
-			<mx:List id="productTypeList" dataProvider="{productTypes}" labelField="name" change="changeListener(event)"
-				height="100%" borderStyle="none"/>
+			<mx:List id="productTypeList" dataProvider="{model.productTypes}" 
+				labelField="name" height="100%"	width="100%" borderStyle="none"/>
 		</mx:Panel>
 		<mx:Panel title="Product List" width="100%" height="100%" borderStyle="solid">
-			<mx:DataGrid id="productList" variableRowHeight="true" dragEnabled="true" width="100%" height="100%">
+			<mx:DataGrid id="productList" variableRowHeight="true" dragEnabled="true" 
+				width="100%" height="100%" dataProvider="{productTypeList.selectedItem.products}">
 				<mx:columns>
 					<mx:DataGridColumn headerText="Name" dataField="name" wordWrap="true"/>
 					<mx:DataGridColumn headerText="Unit" dataField="unit" width="50"/>

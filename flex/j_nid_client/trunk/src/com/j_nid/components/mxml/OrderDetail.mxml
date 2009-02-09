@@ -70,7 +70,10 @@
 			
 			private function processListener(e:MouseEvent):void {
 				if (order.orderItems.length > 0) {
-					var orderProcessForm:OrderProcessForm = OrderProcessForm(PopUpManager.createPopUp(Application(Application.application), OrderProcessForm, true));
+					var orderProcessForm:OrderProcessForm = OrderProcessForm(
+						PopUpManager.createPopUp(Application(Application.application), 
+						OrderProcessForm, true)
+					);
 					orderProcessForm.order = order;
 				} else {
 					Alert.show("Your order must contain at least 1 item.", "Error");
@@ -112,7 +115,8 @@
 		</mx:columns>
 	</mx:DataGrid>
 	
-	<mx:Text id="totalTxt" width="100%" height="30" text="Total: {total}" textAlign="right" paddingRight="15"/>
+	<mx:Text id="totalTxt" width="100%" height="30" text="Total: {total}" textAlign="right" 
+		paddingRight="15"/>
 	
 	<mx:ControlBar>
 		<mx:Spacer width="100%"/>
