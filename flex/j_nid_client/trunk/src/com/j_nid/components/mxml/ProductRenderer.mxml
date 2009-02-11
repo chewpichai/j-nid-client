@@ -3,6 +3,8 @@
 
 	<mx:Script>
 		<![CDATA[
+			import com.j_nid.controls.EventNames;
+			import com.j_nid.utils.CairngormUtils;
 			import mx.rpc.http.HTTPService;
 			import mx.rpc.events.ResultEvent;
 			import mx.events.FlexEvent;
@@ -10,14 +12,8 @@
 			
 			private function changeListener(e:Event):void {
 				var target:CheckBox = CheckBox(e.currentTarget);
-				target.enabled = false;
-				var params:XML = <request/>;
-				params.product.is_sale = target.selected ? 1:0;
-			}
-			
-			private function resultListener(e:ResultEvent):void {
-				checkBox.enabled = true;
-				data.isSale = checkBox.selected;
+				data.isSale = target.selected;
+				CairngormUtils.dispatchEvent(EventNames.UPDATE_PRODUCT, data);
 			}
 		]]>
 	</mx:Script>

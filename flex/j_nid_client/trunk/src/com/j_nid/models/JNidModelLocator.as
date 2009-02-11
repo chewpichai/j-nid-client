@@ -3,6 +3,7 @@ package com.j_nid.models {
 	import com.adobe.cairngorm.model.IModelLocator;
 	import com.j_nid.controls.EventNames;
 	import com.j_nid.utils.CairngormUtils;
+	
 	import mx.collections.ArrayCollection;
 
 	[Bindable]
@@ -12,7 +13,6 @@ package com.j_nid.models {
 		private var _productTypes:ArrayCollection;
 		private var _products:ArrayCollection;
 		private var _people:ArrayCollection;
-		private var _isSaleProducts:ArrayCollection;
 		private var _bankAccounts:ArrayCollection;
 		private var _phoneNumbers:ArrayCollection;
 		private var _productTypeIDMap:Object;
@@ -43,21 +43,17 @@ package com.j_nid.models {
 		}
 		
 		public function setProducts(obj:XML):void {
-			products = new ArrayCollection();
-			isSaleProducts = new ArrayCollection();
+			var productArray:Array = new Array();
 			var product:Product;
 			var productType:ProductType;
 			for each (var xml:XML in obj.children()) {
 				product = Product.fromXML(xml);
-				products.addItem(product);
+				productArray.push(product);
 				// Add product to product type.
 				productType = getProductType(xml.type_id);
 				productType.addProduct(product);
-				// Add to is sale product list.
-				if (product.isSale) {
-					isSaleProducts.addItem(product);
-				}
 			}
+			products = new ArrayCollection(productArray);
 		}
 		
 		public function setPeople(obj:XML):void {
@@ -113,6 +109,17 @@ package com.j_nid.models {
 			return _personIDMap[id];
 		}
 		
+		public function updateProduct(product:Product):void {
+			for (var i:int = 0; i < products.length; i++) {
+				if (product.id == products.getItemAt(i).id) {
+					products.setItemAt(product, i);
+					break;
+				}
+			}
+			// For trugger data binding.
+			products = new ArrayCollection(products.toArray());
+		}
+		
 /* ----- get-set function. --------------------------------------------------------------------- */
 		
 		public function set productTypes(obj:ArrayCollection):void {
@@ -137,14 +144,6 @@ package com.j_nid.models {
 		
 		public function get people():ArrayCollection {
 			return _people;
-		}
-		
-		public function set isSaleProducts(obj:ArrayCollection):void {
-			_isSaleProducts = obj;
-		}
-		
-		public function get isSaleProducts():ArrayCollection {
-			return _isSaleProducts;
 		}
 		
 		public function set bankAccounts(obj:ArrayCollection):void {

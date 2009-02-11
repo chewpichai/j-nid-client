@@ -17,9 +17,10 @@ package com.j_nid.utils {
 			service.method = method;
 			service.url = ROOT_URL + url;
 			if (request != null) {
-				service.request = request;
+				var xml:XML = <request/>
+				xml.appendChild(request);
+				service.request = xml;
 				service.contentType = HTTPService.CONTENT_TYPE_XML;
-				trace(request);
 			}
 			if (method == "PUT" || method == "DELETE") {
 				service.request.method = method;

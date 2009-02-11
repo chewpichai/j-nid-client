@@ -18,7 +18,7 @@ package com.j_nid.controls {
 			// Product commands.
 			addCommand(EventNames.LIST_PRODUCT, ListProductCommand);
 //			addCommand(EventNames.CREATE_PRODUCT, CreateProductCommand);
-//			addCommand(EventNames.UPDATE_PRODUCT, UpdateProductCommand);
+			addCommand(EventNames.UPDATE_PRODUCT, UpdateProductCommand);
 //			addCommand(EventNames.DELETE_PRODUCT, DeleteProductCommand);
 			// Person commands.
 			addCommand(EventNames.LIST_PERSON, ListPersonCommand);

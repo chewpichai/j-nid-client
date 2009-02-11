@@ -3,6 +3,7 @@
 
 	<mx:Script>
 		<![CDATA[
+			import com.j_nid.models.JNidModelLocator;
 			import mx.rpc.events.ResultEvent;
 			import mx.containers.ViewStack;
 			import mx.events.IndexChangedEvent;
@@ -12,9 +13,7 @@
 			import mx.events.FlexEvent;
 			
 			[Bindable]
-			private var productTypes:ArrayCollection = new ArrayCollection();
-			[Bindable]
-			private var products:ArrayCollection = new ArrayCollection();
+			private var model:JNidModelLocator = JNidModelLocator.getInstance();			
 			private var selecedIndex:int = 0;
 			
 			private function init(e:FlexEvent):void {
@@ -28,16 +27,13 @@
 			private function resultListener(e:ResultEvent):void {
 				
 			}
-			
-			private function itemClickListener(e:ItemClickEvent):void {
-				products = ProductType(productTypes.getItemAt(productTypeList.selectedIndex)).products;
-			}
 		]]>
 	</mx:Script>
 	
 	<mx:Label text="Product Management" width="100%" height="45" styleName="header"/>
-	<mx:TabBar id="productTypeList" dataProvider="{productTypes}" labelField="name" itemClick="itemClickListener(event)"
+	<mx:TabBar id="productTypeList" dataProvider="{model.productTypes}" labelField="name"
 		width="100%"/>
-	<mx:TileList id="productList" dataProvider="{products}" itemRenderer="com.j_nid.components.mxml.ProductRenderer"
+	<mx:TileList id="productList" itemRenderer="com.j_nid.components.mxml.ProductRenderer"
+		dataProvider="{model.productTypes.getItemAt(productTypeList.selectedIndex).products}"
 		columnCount="3"	selectable="false" width="100%" height="100%"/>
 </mx:VBox>

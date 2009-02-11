@@ -29,7 +29,8 @@
 			
 			private function init(e:FlexEvent):void {
 				order = new Order();
-				order.orderItems.addEventListener(CollectionEvent.COLLECTION_CHANGE, collectionChangeListener);
+				order.orderItems.addEventListener(CollectionEvent.COLLECTION_CHANGE,
+					collectionChangeListener);
 			}
 			
 			private function collectionChangeListener(e:CollectionEvent):void {
@@ -84,13 +85,14 @@
 	
 	<mx:DataGrid id="orderItemList" height="100%" dataProvider="{order.orderItems}"
 		dragDrop="dragDropListener(event)" dragEnter="dragEnterListener(event)"
-		editable="true" styleName="cartItemList" wordWrap="true" variableRowHeight="true">
+		itemEditEnd="event.preventDefault()" editable="true" styleName="cartItemList" 
+		wordWrap="true" variableRowHeight="true">
 		<mx:columns>
 			<mx:DataGridColumn headerText="Qty" dataField="quantity" editorDataField="value"
 				rendererIsEditor="true" width="70">
 				<mx:itemRenderer>
 					<mx:Component>
-						<mx:NumericStepper minimum="1" maximum="1000"/>
+						<mx:NumericStepper minimum="1" maximum="1000" change="{data.quantity = value}"/>
 					</mx:Component>
 				</mx:itemRenderer>
 			</mx:DataGridColumn>
@@ -99,15 +101,16 @@
 				rendererIsEditor="true" width="70">
 				<mx:itemRenderer>
 					<mx:Component>
-						<mx:NumericStepper minimum="1" maximum="100000"/>
+						<mx:NumericStepper minimum="1" maximum="100000" change="{data.unit = value}"/>
 					</mx:Component>
 				</mx:itemRenderer>
 			</mx:DataGridColumn>
-			<mx:DataGridColumn headerText="Price/Unit" dataField="pricePerUnit" editorDataField="value"
-				rendererIsEditor="true" width="85">
+			<mx:DataGridColumn headerText="Price/Unit" dataField="pricePerUnit" 
+				editorDataField="value"	rendererIsEditor="true" width="85">
 				<mx:itemRenderer>
 					<mx:Component>
-						<mx:NumericStepper minimum="1" maximum="10000" stepSize="0.25"/>
+						<mx:NumericStepper minimum="1" maximum="10000" stepSize="0.25" 
+							change="{data.pricePerUnit = value}"/>
 					</mx:Component>
 				</mx:itemRenderer>
 			</mx:DataGridColumn>

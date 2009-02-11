@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:comp="com.j_nid.components.*"
-	xmlns:jn="com.j_nid.components.mxml.*" title="Process Order" layout="vertical" width="500"
-	creationComplete="init(event)" borderAlpha="0.8">
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" 
+	xmlns:adobe="http://www.adobe.com/2006/fc" xmlns:jn="com.j_nid.components.mxml.*" 
+	title="Process Order" layout="vertical" width="500"	creationComplete="init(event)"
+	borderAlpha="0.8">
 	
 	<mx:Script>
 		<![CDATA[
+			import com.j_nid.models.JNidModelLocator;
 			import mx.rpc.events.ResultEvent;
 			import com.j_nid.models.Person;
 			import mx.collections.ArrayCollection;
@@ -14,6 +16,8 @@
 			import mx.events.FlexEvent;
 			
 			public var order:Order;
+			[Bindable]
+			private var model:JNidModelLocator = JNidModelLocator.getInstance();
 			
 			private function init(e:FlexEvent):void {
 				PopUpManager.centerPopUp(this);
@@ -24,7 +28,8 @@
 			}
 			
 			private function submitBtnClickListener(e:MouseEvent):void {
-				if (customerChooser.person == null) {
+				trace(customerAC.selectedItem.name);
+				/*if (customerChooser.person == null) {
 					customerChooser.errorString = "Not found person.";
 				} else {
 					customerChooser.errorString = "";
@@ -32,7 +37,7 @@
 					order.notation = notationField.text;
 					var params:XML = <request/>;
 					params.appendChild(order.toXML());
-				}
+				}*/
 			}
 			
 			private function saveOrderResultListener(e:ResultEvent):void {
@@ -57,14 +62,15 @@
 			</mx:AddChild>
 			<mx:RemoveChild target="{selectCustomerForm}"/>
 			<mx:RemoveChild target="{submitBtn}"/>
-			<mx:SetEventHandler target="{cancelBtn}" name="click" handler="cancelFromClick(MouseEvent(event))"/>
+			<mx:SetEventHandler target="{cancelBtn}" name="click" 
+				handler="cancelFromClick(MouseEvent(event))"/>
 		</mx:State>
 	</mx:states>
 	
 	<mx:Form width="100%" id="selectCustomerForm">
 		<mx:FormItem label="Customer" width="100%">
 			<mx:HBox width="100%">
-				<comp:SearchPersonBox id="customerChooser" width="150"/>
+				<adobe:AutoComplete id="customerAC" dataProvider="{model.people}" labelField="name" width="150"/>
 				<mx:Button label="new" click="newBtnClickListener(event)"/>
 			</mx:HBox>
 		</mx:FormItem>

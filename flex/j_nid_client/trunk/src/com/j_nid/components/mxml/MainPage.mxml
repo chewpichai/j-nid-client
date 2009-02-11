@@ -3,6 +3,8 @@
 	
 	<mx:Script>
 		<![CDATA[
+			import mx.collections.IViewCursor;
+			import mx.collections.ArrayCollection;
 			import com.j_nid.controls.EventNames;
 			import com.j_nid.utils.CairngormUtils;
 			import com.j_nid.models.JNidModelLocator;
@@ -22,6 +24,18 @@
 			
 			private function changePage(e:IndexChangedEvent):void {
 				
+			}
+			
+			private function filterIsSale(products:ArrayCollection):ArrayCollection {
+				trace("len = " + products.length);
+				var isSaleProducts:Array = new Array();
+				var cursor:IViewCursor = products.createCursor();
+				do {
+					if (cursor.current.isSale) {
+						isSaleProducts.push(cursor.current);
+					}
+				} while (cursor.moveNext());
+				return new ArrayCollection(isSaleProducts);
 			}
 		]]>
 	</mx:Script>
@@ -72,7 +86,7 @@
 	<mx:VBox left="265" height="100%" right="215" verticalGap="5">
 		<mx:Label text="Product List" width="100%" height="45" styleName="header"/>
 		<mx:HBox horizontalGap="0" width="100%" height="100%">
-			<mx:TileList width="100%" height="100%" dataProvider="{model.isSaleProducts}"
+			<mx:TileList width="100%" height="100%" dataProvider="{filterIsSale(model.products)}"
 				columnWidth="220" rowHeight="40" selectable="false">
 				<mx:itemRenderer>
 					<mx:Component>
