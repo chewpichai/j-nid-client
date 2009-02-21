@@ -17,6 +17,8 @@ package com.j_nid.models {
 		private var _phoneNumbers:ArrayCollection;
 		private var _productTypeIDMap:Object;
 		private var _personIDMap:Object;
+		private var _productTypesWithAll:ArrayCollection;
+		public const ALL_TYPE:ProductType = new ProductType(0, "All");
 		
 		public function JNidModelLocator() {
 			
@@ -30,15 +32,17 @@ package com.j_nid.models {
 		}
 		
 		public function setProductTypes(obj:XML):void {
-			productTypes = new ArrayCollection();
+			var typeArray:Array = new Array();
 			var productType:ProductType;
 			_productTypeIDMap = {};
 			for each (var xml:XML in obj.children()) {
 				productType = ProductType.fromXML(xml);
-				productTypes.addItem(productType);
+				typeArray.push(productType);
 				// Create hash of productType.
 				_productTypeIDMap[productType.id] = productType;
 			}
+			productTypes = new ArrayCollection(typeArray);
+			ProductTypesWithAll = new ArrayCollection(typeArray);
 			CairngormUtils.dispatchEvent(EventNames.LIST_PRODUCT);
 		}
 		
@@ -160,6 +164,16 @@ package com.j_nid.models {
 		
 		public function get phoneNumbers():ArrayCollection {
 			return _phoneNumbers;
+		}
+		
+		public function set ProductTypesWithAll(obj:ArrayCollection):void {
+			// Copy original array.
+			_productTypesWithAll = new ArrayCollection(obj.toArray().slice(0));
+			_productTypesWithAll.addItemAt(ALL_TYPE, 0);
+		}
+		
+		public function get ProductTypesWithAll():ArrayCollection {
+			return _productTypesWithAll;
 		}
 	}
 }

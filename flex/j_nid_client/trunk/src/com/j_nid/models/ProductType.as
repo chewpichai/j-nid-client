@@ -15,8 +15,10 @@ package com.j_nid.models {
 			return productType;
 		}
 		
-		public function ProductType() {
+		public function ProductType(id:int=0, name:String="") {
 			super();
+			this.id = id;
+			this.name = name;
 			products = new ArrayCollection();
 		}
 		
@@ -40,6 +42,10 @@ package com.j_nid.models {
 			}
 			xml.name = name;
 			return xml;
+		}
+		
+		public function toString():String {
+			return name;
 		}
 		
 /* ----- get-set function. --------------------------------------------------------------------- */

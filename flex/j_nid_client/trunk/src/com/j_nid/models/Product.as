@@ -35,6 +35,10 @@ package com.j_nid.models {
 			xml.is_sale = isSale ? 1:0;
 			return xml;
 		}
+		
+		public function toString():String {
+			return name;
+		}
 
 /* ----- get-set function. --------------------------------------------------------------------- */
 		

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" paddingLeft="20" paddingRight="20">
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" paddingLeft="10">
 
 	<mx:Script>
 		<![CDATA[
@@ -18,6 +18,5 @@
 		]]>
 	</mx:Script>
 
-	<mx:Label text="{data.name}" textAlign="left" width="100%"/>
 	<mx:CheckBox id="checkBox" selected="{data.isSale}" change="changeListener(event)"/>
 </mx:HBox>
