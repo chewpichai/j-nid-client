@@ -17,6 +17,7 @@ package com.j_nid.utils {
 			service.method = method;
 			service.url = ROOT_URL + url;
 			if (request != null) {
+				trace(request);
 				var xml:XML = <request/>
 				xml.appendChild(request);
 				service.request = xml;

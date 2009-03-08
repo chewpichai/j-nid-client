@@ -6,6 +6,8 @@
 	
 	<mx:Script>
 		<![CDATA[
+			import com.j_nid.controls.EventNames;
+			import com.j_nid.utils.CairngormUtils;
 			import com.j_nid.models.JNidModelLocator;
 			import mx.rpc.events.ResultEvent;
 			import com.j_nid.models.Person;
@@ -28,16 +30,15 @@
 			}
 			
 			private function submitBtnClickListener(e:MouseEvent):void {
-				trace(customerAC.selectedItem.name);
-				/*if (customerChooser.person == null) {
-					customerChooser.errorString = "Not found person.";
-				} else {
-					customerChooser.errorString = "";
-					order.person = customerChooser.person;
+				var person:Person = model.getPersonByName(customerAC.text);
+				if (person != null) {
+					order.person = person;
 					order.notation = notationField.text;
-					var params:XML = <request/>;
-					params.appendChild(order.toXML());
-				}*/
+					model.orderToCreate = order;
+					CairngormUtils.dispatchEvent(EventNames.CREATE_ORDER, order);
+				} else {
+					customerAC.errorString = "Not found person.";
+				}
 			}
 			
 			private function saveOrderResultListener(e:ResultEvent):void {

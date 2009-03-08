@@ -54,18 +54,19 @@
 					dataProvider="{model.ProductTypesWithAll}" 
 					change="filterByType(ProductType(productTypeCombo.selectedItem))"/>
 			</mx:HBox>
-			<mx:DataGrid width="100%" height="100%" id="productDg" dataProvider="{model.products}">
-				<mx:columns>
-					<mx:DataGridColumn headerText="Name" dataField="name"/>
-					<mx:DataGridColumn headerText="Type" dataField="type"/>
-					<mx:DataGridColumn headerText="Unit" dataField="unit"/>
-					<mx:DataGridColumn headerText="Price/Unit" dataField="pricePerUnit"/>
-					<mx:DataGridColumn headerText="Is Sale" dataField="isSale" 
-						itemRenderer="com.j_nid.components.mxml.ProductRenderer"/>
-				</mx:columns>
-			</mx:DataGrid>
-			<mx:Panel width="100%" height="300" layout="absolute" title="Product Detail">
-			</mx:Panel>
+			<mx:VDividedBox width="100%" height="100%">
+				<mx:DataGrid width="100%" height="100%" id="productDg" dataProvider="{model.products}">
+					<mx:columns>
+						<mx:DataGridColumn headerText="Name" dataField="name"/>
+						<mx:DataGridColumn headerText="Type" dataField="type"/>
+						<mx:DataGridColumn headerText="Unit" dataField="unit"/>
+						<mx:DataGridColumn headerText="Price/Unit" dataField="pricePerUnit"/>
+						<mx:DataGridColumn headerText="Is Sale" dataField="isSale" 
+							itemRenderer="com.j_nid.components.mxml.ProductRenderer"/>
+					</mx:columns>
+				</mx:DataGrid>
+				<mx:Panel width="100%" height="0" layout="absolute" title="Product Detail"/>
+			</mx:VDividedBox>
 		</mx:VBox>
 		<mx:VBox label="Product Type" width="100%" height="100%">
 		</mx:VBox>

@@ -36,7 +36,7 @@
 			private function collectionChangeListener(e:CollectionEvent):void {
 				total = 0;
 				for each (var item:OrderItem in order.orderItems) {
-					total += item.amount;
+					total += item.total;
 				}
 			}
 			
@@ -53,7 +53,7 @@
 			private function addOrderItem(item:OrderItem):void {
 				for each (var obj:OrderItem in order.orderItems) {
 					if (item.product.id == obj.product.id) {
-						obj.amount += 1;
+						obj.unit += item.unit;
 						return;
 					}
 				}
@@ -114,7 +114,7 @@
 					</mx:Component>
 				</mx:itemRenderer>
 			</mx:DataGridColumn>
-			<mx:DataGridColumn headerText="Amount" dataField="amount" editable="false" width="85"/>
+			<mx:DataGridColumn headerText="Total" dataField="total" editable="false" width="85"/>
 		</mx:columns>
 	</mx:DataGrid>
 	

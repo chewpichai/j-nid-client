@@ -12,13 +12,22 @@ package com.j_nid.models {
 		private static var modelLocator:JNidModelLocator;
 		private var _productTypes:ArrayCollection;
 		private var _products:ArrayCollection;
+		private var _productIDMap:Object;
 		private var _people:ArrayCollection;
 		private var _bankAccounts:ArrayCollection;
 		private var _phoneNumbers:ArrayCollection;
 		private var _productTypeIDMap:Object;
 		private var _personIDMap:Object;
+		private var _personNameMap:Object;
 		private var _productTypesWithAll:ArrayCollection;
+		private var _orders:ArrayCollection;
+		private var _orderIDMap:Object;
+		private var _orderItems:ArrayCollection;
+		private var _orderItemIDMap:Object;
+		private var _orderToCreate:Order;
 		public const ALL_TYPE:ProductType = new ProductType(0, "All");
+		private var _loadedProduct:Boolean = false;
+		private var _loadedOrder:Boolean = false;
 		
 		public function JNidModelLocator() {
 			
@@ -33,10 +42,9 @@ package com.j_nid.models {
 		
 		public function setProductTypes(obj:XML):void {
 			var typeArray:Array = new Array();
-			var productType:ProductType;
 			_productTypeIDMap = {};
 			for each (var xml:XML in obj.children()) {
-				productType = ProductType.fromXML(xml);
+				var productType:ProductType = ProductType.fromXML(xml);
 				typeArray.push(productType);
 				// Create hash of productType.
 				_productTypeIDMap[productType.id] = productType;
@@ -48,55 +56,109 @@ package com.j_nid.models {
 		
 		public function setProducts(obj:XML):void {
 			var productArray:Array = new Array();
-			var product:Product;
-			var productType:ProductType;
+			_productIDMap = {};
 			for each (var xml:XML in obj.children()) {
-				product = Product.fromXML(xml);
+				var product:Product = Product.fromXML(xml);
+				_productIDMap[product.id] = product;
 				productArray.push(product);
 				// Add product to product type.
-				productType = getProductType(xml.type_id);
+				var productType:ProductType = getProductType(xml.type_id);
 				productType.addProduct(product);
 			}
 			products = new ArrayCollection(productArray);
+			_loadedProduct = true;
+			getOrderItemList();
 		}
 		
 		public function setPeople(obj:XML):void {
 			people = new ArrayCollection();
 			_personIDMap = {};
-			var person:Person;
+			_personNameMap = {};
 			for each (var xml:XML in obj.children()) {
-				person = Person.fromXML(xml);
+				var person:Person = Person.fromXML(xml);
 				people.addItem(person);
 				_personIDMap[person.id] = person;
+				_personNameMap[person.name] = person;
 			}
 			CairngormUtils.dispatchEvent(EventNames.LIST_BANK_ACCOUNT);
 			CairngormUtils.dispatchEvent(EventNames.LIST_PHONE_NUMBER);
+			CairngormUtils.dispatchEvent(EventNames.LIST_ORDER);
 		}
 		
 		public function setBankAccounts(obj:XML):void {
-			bankAccounts = new ArrayCollection();
-			var bankAccount:BankAccount;
-			var person:Person;
+			var bankAccountArray:Array = new Array();
 			for each (var xml:XML in obj.children()) {
-				bankAccount = BankAccount.fromXML(xml);
-				bankAccounts.addItem(bankAccount);
+				var bankAccount:BankAccount = BankAccount.fromXML(xml);
+				bankAccountArray.push(bankAccount);
 				// Add bank account to person.
-				person = getPerson(xml.person_id);
+				var person:Person = getPerson(xml.person_id);
 				person.addBankAccount(bankAccount);
 			}
+			bankAccounts = new ArrayCollection(bankAccountArray);
 		}
 		
 		public function setPhoneNumbers(obj:XML):void {
-			phoneNumbers = new ArrayCollection();
-			var phoneNumber:PhoneNumber;
-			var person:Person;
+			var phoneNumberArray:Array = new Array();
 			for each (var xml:XML in obj.children()) {
-				phoneNumber = PhoneNumber.fromXML(xml);
-				phoneNumbers.addItem(phoneNumber);
+				var phoneNumber:PhoneNumber = PhoneNumber.fromXML(xml);
+				phoneNumberArray.push(phoneNumber);
 				// Add phone number to person.
-				person = getPerson(xml.person_id);
+				var person:Person = getPerson(xml.person_id);
 				person.addPhoneNumber(phoneNumber);
 			}
+			phoneNumbers = new ArrayCollection(phoneNumberArray);
+		}
+		
+		public function setOrders(obj:XML):void {
+			var orderArray:Array = new Array();
+			_orderIDMap = {};
+			for each (var xml:XML in obj.children()) {
+				var order:Order = Order.fromXML(xml);
+				orderArray.push(order);
+				_orderIDMap[order.id] = order;
+				var person:Person = getPerson(xml.person_id);
+				person.addOrder(order);
+			}
+			orders = new ArrayCollection(orderArray);
+			_loadedOrder = true;
+			getOrderItemList();
+		}
+		
+		public function setOrderItems(obj:XML):void {
+			var itemArray:Array = new Array();
+			_orderItemIDMap = {};
+			for each (var xml:XML in obj.children()) {
+				var item:OrderItem = OrderItem.fromXML(xml);
+				_orderItemIDMap[item.id] = item;
+				var order:Order = getOrder(xml.order_id);
+				order.addItem(item);
+				item.product = getProduct(xml.product_id);
+			}
+			orderItems = new ArrayCollection(itemArray);
+		}
+		
+		public function createOrder(obj:XML):void {
+			var order:Order = Order.fromXML(obj);
+			_orderIDMap[order.id] = order;
+			var person:Person = getPerson(obj.person_id);
+			person.addOrder(order);
+			for each (var item:OrderItem in _orderToCreate.orderItems) {
+				item.order = order;
+				CairngormUtils.dispatchEvent(EventNames.CREATE_ORDER_ITEM, item);
+			}
+			var orderArray:Array = orders.toArray();
+			orderArray.push(order);
+			orders = new ArrayCollection(orderArray);
+		}
+		
+		public function createOrderItem(obj:XML):void {
+			var item:OrderItem = OrderItem.fromXML(obj);
+			_orderItemIDMap[item.id] = item;
+			var order:Order = getOrder(obj.order_id);
+			order.addItem(item);
+			var itemArray:Array = orderItems.toArray();
+			itemArray.push(item);
+			orderItems = new ArrayCollection(itemArray);
 		}
 		
 		public function getProductType(id:int):ProductType {
@@ -113,15 +175,43 @@ package com.j_nid.models {
 			return _personIDMap[id];
 		}
 		
-		public function updateProduct(product:Product):void {
-			for (var i:int = 0; i < products.length; i++) {
-				if (product.id == products.getItemAt(i).id) {
-					products.setItemAt(product, i);
-					break;
-				}
-			}
-			// For trugger data binding.
+		public function updateProduct(xml:XML):void {
+			// For trigger data binding.
 			products = new ArrayCollection(products.toArray());
+		}
+		
+		public function getPersonByName(name:String):Person {
+			if (_personNameMap == null) {
+				return null;
+			}
+			return _personNameMap[name];
+		}
+		
+		public function getOrder(id:int):Order {
+			if (_orderIDMap == null) {
+				return null;
+			}
+			return _orderIDMap[id];
+		}
+		
+		public function getOrderItem(id:int):OrderItem {
+			if (_orderItemIDMap == null) {
+				return null;
+			}
+			return _orderItemIDMap[id];
+		}
+		
+		private function getProduct(id:int):Product {
+			if (_productIDMap == null) {
+				return null;
+			}
+			return _productIDMap[id];
+		}
+		
+		private function getOrderItemList():void {
+			if (_loadedOrder && _loadedProduct) {
+				CairngormUtils.dispatchEvent(EventNames.LIST_ORDER_ITEM);
+			}
 		}
 		
 /* ----- get-set function. --------------------------------------------------------------------- */
@@ -174,6 +264,26 @@ package com.j_nid.models {
 		
 		public function get ProductTypesWithAll():ArrayCollection {
 			return _productTypesWithAll;
+		}
+		
+		public function set orders(obj:ArrayCollection):void {
+			_orders = obj;
+		}
+		
+		public function get orders():ArrayCollection {
+			return _orders;
+		}
+		
+		public function set orderItems(obj:ArrayCollection):void {
+			_orderItems = obj;
+		}
+		
+		public function get orderItems():ArrayCollection {
+			return _orderItems;
+		}
+		
+		public function set orderToCreate(obj:Order):void {
+			_orderToCreate = obj;
 		}
 	}
 }

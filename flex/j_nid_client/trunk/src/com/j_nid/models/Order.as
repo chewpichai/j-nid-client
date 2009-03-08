@@ -7,15 +7,29 @@ package com.j_nid.models {
 		
 		private var _person:Person;
 		private var _notation:String;
+		private var _status:int;
+		private var _created:Date;
 		private var _orderItems:ArrayCollection;
+		
+		public static function fromXML(obj:XML):Order {
+    		var order:Order = new Order();
+    		order.id = obj.id;
+    		order.notation = obj.notation;
+    		order.status = obj.status;
+    		order.created = new Date(Date.parse(obj.created));
+			return order;
+    	}
 		
 		public function Order()	{
 			super();
 			notation = "";
+			status = 0;
+			created = new Date();
 			orderItems = new ArrayCollection();
 		}
 		
 		public function addItem(obj:OrderItem):void {
+			obj.order = this;
 			orderItems.addItem(obj);
 		}
 		
@@ -33,13 +47,18 @@ package com.j_nid.models {
 		
 		public function toXML():XML {
 			var xml:XML = <order/>
-			xml.person = person.id;
+			xml.person_id = person.id;
 			xml.notation = notation;
-			for each (var item:OrderItem in orderItems) {
-				xml.appendChild(item.toXML());
-			}
+			xml.status = status;
+			xml.created = created;
 			return xml;
 		}
+		
+		public function toString():String {
+			return created.toLocaleDateString();
+		}
+		
+/* ----- get-set function. --------------------------------------------------------------------- */
 		
 		public function set person(obj:Person):void {
 			_person = obj;
@@ -55,6 +74,22 @@ package com.j_nid.models {
 
 		public function set notation(obj:String):void {
 			_notation = obj;
+		}
+		
+		public function get status():int {
+			return _status;
+		}
+
+		public function set status(obj:int):void {
+			_status = obj;
+		}
+		
+		public function get created():Date {
+			return _created;
+		}
+
+		public function set created(obj:Date):void {
+			_created = obj;
 		}
 		
 		public function set orderItems(obj:ArrayCollection):void {

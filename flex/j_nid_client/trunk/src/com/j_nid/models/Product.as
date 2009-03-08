@@ -25,11 +25,8 @@ package com.j_nid.models {
 		
 		public function toXML():XML {
 			var xml:XML = <product/>
-			if (id != 0) {
-				xml.id = id;
-			}
 			xml.name = name;
-			xml.type = type.id;
+			xml.type_id = type.id;
 			xml.unit = unit;
 			xml.price_per_unit = pricePerUnit;
 			xml.is_sale = isSale ? 1:0;

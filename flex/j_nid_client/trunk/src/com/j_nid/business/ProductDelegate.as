@@ -17,6 +17,10 @@ package com.j_nid.business {
 			ServiceUtils.send("/products/", "GET", _responder);
 		}
 		
+		public function createProduct(product:Product):void {
+			ServiceUtils.send("/products/", "POST", _responder, product.toXML());
+		}
+		
 		public function updateProduct(product:Product):void {
 			ServiceUtils.send("/products/" + product.id + "/", "PUT", _responder, product.toXML());
 		}

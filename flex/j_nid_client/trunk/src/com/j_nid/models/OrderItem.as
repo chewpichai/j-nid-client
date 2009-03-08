@@ -11,30 +11,41 @@ package com.j_nid.models {
     	private var _product:Product;
     	private var _unit:int;
     	private var _pricePerUnit:Number;
-    	private var _quantity:int;
-    	private var _amount:Number;
+    	private var _quantity:uint;
+    	private var _total:Number;
+    	
+    	public static function fromXML(obj:XML):OrderItem {
+    		var item:OrderItem = new OrderItem();
+    		item.id = obj.id;
+    		item.unit = obj.unit;
+    		item.pricePerUnit = obj.price_per_unit;
+    		return item;
+    	}
 		
-		public function OrderItem(obj:Product) {
+		public function OrderItem(product:Product=null) {
 			super();
-			product = obj;
-			pricePerUnit = obj.pricePerUnit;
-			quantity = 1;
-			unit = obj.unit;
-			amount = calcAmount();
-			addEventListener(Event.CHANGE, changeListener);
+			if (product != null) {
+				this.product = product;
+				pricePerUnit = product.pricePerUnit;
+				unit = product.unit;
+			}
+			_quantity = 1;
 		}
 		
 		public function toXML():XML {
 			var xml:XML = <order_item/>
-			xml.product = product.id;
+			xml.order_id = order.id;
+			xml.product_id = product.id;
 			xml.unit = unit;
 			xml.price_per_unit = pricePerUnit;
 			return xml;
 		}
 		
-		private function changeListener(e:Event):void {
-			amount = calcAmount();
+		public function calcTotal():void {
+			total = unit * pricePerUnit;
 		}
+		
+/* ----- get-set function. --------------------------------------------------------------------- */
 		
 		public function set order(obj:Order):void {
 			_order = obj;
@@ -52,50 +63,50 @@ package com.j_nid.models {
 			return _product;
 		}
 		
-		public function get name():String {
-			return _product.name;
-		}
-		
-		public function set unit(obj:Object):void {
-			_unit = int(obj);
-			_quantity = _unit / product.unit;
-			dispatchEvent(new Event(Event.CHANGE));
+		public function set unit(obj:int):void {
+			_unit = obj;
+			if (product != null) {
+				_quantity = _unit / product.unit;
+			}
+			calcTotal();
 		}
 		
 		public function get unit():int {
 			return _unit;
 		}
 		
-		public function set pricePerUnit(obj:Object):void {
-			_pricePerUnit = Number(obj);
-			dispatchEvent(new Event(Event.CHANGE));
+		public function set pricePerUnit(obj:Number):void {
+			_pricePerUnit = obj;
+			calcTotal();
 		}
 		
 		public function get pricePerUnit():Number {
 			return _pricePerUnit;
 		}
 		
-		public function set quantity(obj:Object):void {
-			var diff:int = int(obj) - _quantity;
-			_quantity = int(obj);
-			_unit += product.unit * diff;
-			dispatchEvent(new Event(Event.CHANGE));
+		public function set quantity(obj:uint):void {
+			var diff:int = obj - quantity;
+			if (product != null) {
+				_unit = unit + diff * product.unit;
+			}
+			_quantity = obj;
+			calcTotal();
 		}
 		
-		public function get quantity():int {
+		public function get quantity():uint {
 			return _quantity;
 		}
 		
-		public function set amount(obj:Object):void {
-			_amount = Number(obj);
+		public function set total(obj:Number):void {
+			_total = obj;
 		}
 		
-		public function get amount():Number {
-			return _amount;
+		public function get total():Number {
+			return _total;
 		}
 		
-		public function calcAmount():Number {
-			return unit * pricePerUnit;
+		public function get name():String {
+			return product.name;
 		}
 	}
 }

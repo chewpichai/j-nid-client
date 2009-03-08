@@ -22,10 +22,17 @@ package com.j_nid.controls {
 //			addCommand(EventNames.DELETE_PRODUCT, DeleteProductCommand);
 			// Person commands.
 			addCommand(EventNames.LIST_PERSON, ListPersonCommand);
+			addCommand(EventNames.CREATE_PERSON, CreatePersonCommand);
 			// BankAccount commands.
 			addCommand(EventNames.LIST_BANK_ACCOUNT, ListBankAccountCommand);
 			// PhoneNumber commands.
 			addCommand(EventNames.LIST_PHONE_NUMBER, ListPhoneNumberCommand);
+			// Order commands.
+			addCommand(EventNames.LIST_ORDER, ListOrderCommand);
+			addCommand(EventNames.CREATE_ORDER, CreateOrderCommand);
+			// OrderItem commands.
+			addCommand(EventNames.LIST_ORDER_ITEM, ListOrderItemCommand);
+			addCommand(EventNames.CREATE_ORDER_ITEM, CreateOrderItemCommand);
 		}
 	}
 }

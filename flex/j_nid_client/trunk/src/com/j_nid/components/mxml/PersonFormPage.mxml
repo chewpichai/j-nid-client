@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml"  xmlns:jn="com.j_nid.validators.*"
-	width="100%" height="100%" creationComplete="init(event)">
+	width="100%" height="100%">
 	
 	<mx:Script>
 		<![CDATA[
@@ -21,7 +21,7 @@
 			import mx.utils.StringUtil;
 			
 			[Bindable]
-			public var person:Person = new Person();
+			public var person:Person;
 			[Bindable]
 			private var phoneTypes:XMLList;
 			[Bindable]
@@ -31,15 +31,7 @@
 			private var errorMessage:String;
 			[Bindable]
 			private var model:JNidModelLocator = JNidModelLocator.getInstance();
-			
-			private function init(e:FlexEvent):void {
-
-			}
-			
-			private function changePage(e:IndexChangedEvent):void {
-
-			}
-			
+						
 			private function phoneTypeResultListener(e:ResultEvent):void {
 				phoneTypes = e.result.phone_type;
 			}
@@ -285,7 +277,7 @@
 			<mx:Button label="Clear" id="clearBtn"/>
 			<mx:Button label="Save" id="saveBtn" click="saveClickListener(event)"/>
 		</mx:ControlBar>
-	</mx:Panel>
+	</mx:Panel>	
 	
 	<mx:StringValidator id="nameValidator" source="{nameField}" property="text"
 		trigger="{saveBtn}" triggerEvent="click"/>

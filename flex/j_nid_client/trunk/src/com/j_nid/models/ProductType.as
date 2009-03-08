@@ -10,7 +10,7 @@ package com.j_nid.models {
 		
 		public static function fromXML(obj:XML):ProductType {
 			var productType:ProductType = new ProductType();
-			productType.id = int(obj.id);
+			productType.id = obj.id;
 			productType.name = obj.name;
 			return productType;
 		}
@@ -37,9 +37,6 @@ package com.j_nid.models {
 		
 		public function toXML():XML {
 			var xml:XML = <product_type/>
-			if (id != 0) {
-				xml.id = id;
-			}
 			xml.name = name;
 			return xml;
 		}

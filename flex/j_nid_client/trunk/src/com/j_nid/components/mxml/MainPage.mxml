@@ -27,7 +27,6 @@
 			}
 			
 			private function filterIsSale(products:ArrayCollection):ArrayCollection {
-				trace("len = " + products.length);
 				var isSaleProducts:Array = new Array();
 				var cursor:IViewCursor = products.createCursor();
 				do {
@@ -70,7 +69,8 @@
 			<mx:LinkButton label="Delete" width="100%"/>
 		</mx:VBox>
 		<mx:VBox label="Account" width="100%" height="100%">
-			<mx:LinkButton label="Payment" width="100%"/>
+			<mx:LinkButton label="Payment" width="100%"
+				click="Application.application.changePage('orderPage')"/>
 			<mx:LinkButton label="Search" width="100%"/>
 			<mx:LinkButton label="View" width="100%"/>
 			<mx:LinkButton label="View Debtor" width="100%"

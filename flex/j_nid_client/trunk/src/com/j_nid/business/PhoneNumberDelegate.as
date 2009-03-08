@@ -1,6 +1,8 @@
 package com.j_nid.business {
 	
+	import com.j_nid.models.PhoneNumber;
 	import com.j_nid.utils.ServiceUtils;
+	
 	import mx.rpc.IResponder;
 	
 	public class PhoneNumberDelegate {
@@ -13,6 +15,10 @@ package com.j_nid.business {
 		
 		public function listPhoneNumber():void {
 			ServiceUtils.send("/phonenumbers/", "GET", _responder);
+		}
+		
+		public function createPhoneNumber(phoneNumber:PhoneNumber):void {
+			ServiceUtils.send("/phonenumbers/", "POST", _responder, phoneNumber.toXML());
 		}
 	}
 }

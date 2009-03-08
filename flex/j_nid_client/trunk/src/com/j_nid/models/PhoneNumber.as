@@ -21,9 +21,6 @@ package com.j_nid.models {
 		
 		public function toXML():XML {
 			var xml:XML = <phone_number/>
-			if (id != 0) {
-				xml.id = id;
-			}
 			xml.number = number;
 			xml.type = type;
 			return xml;

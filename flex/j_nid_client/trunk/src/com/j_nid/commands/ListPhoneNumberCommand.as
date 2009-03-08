@@ -19,7 +19,7 @@ package com.j_nid.commands {
 			model.setPhoneNumbers(event.result);
 		}
 		
-		public function fault(event:Object):void	{
+		public function fault(event:Object):void {
 			
 		}
 	}

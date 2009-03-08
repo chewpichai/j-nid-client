@@ -16,10 +16,11 @@ package com.j_nid.models {
     	private var _numOutstandingOrders:int;
     	private var _phoneNumbers:ArrayCollection;
     	private var _bankAccounts:ArrayCollection;
+    	private var _orders:ArrayCollection;
     	    	
     	public static function fromXML(obj:XML):Person {
     		var person:Person = new Person();
-    		person.id = int(obj.id);
+    		person.id = obj.id;
 			person.name = obj.name;
 			person.firstName = obj.first_name;
 			person.lastName = obj.last_name;
@@ -27,15 +28,19 @@ package com.j_nid.models {
 			person.idCardNumber = obj.id_card_number;
 			person.detail1 = obj.detail1;
 			person.detail2 = obj.detail2;
-			person.outstandingOrderTotal = Number(obj.outstanding_order_total);
-			person.numOutstandingOrders = int(obj.num_outstanding_orders);
+			person.outstandingOrderTotal = obj.outstanding_order_total;
+			person.numOutstandingOrders = obj.num_outstanding_orders;
 			return person;
     	}
         
 		public function Person() {
 			super();
+			idCardNumber = "";
+			detail1 = "";
+			detail2 = "";
 			phoneNumbers = new ArrayCollection();
 			bankAccounts = new ArrayCollection();
+			orders = new ArrayCollection();
 		}
 		
 		public function clearPhoneNumbers():void {
@@ -56,11 +61,13 @@ package com.j_nid.models {
 			bankAccounts.addItem(bankAccount);
 		}
 		
+		public function addOrder(order:Order):void {
+			order.person = this;
+			orders.addItem(order);
+		}
+		
 		public function toXML():XML {
 			var xml:XML = <person/>
-			if (id != 0) {
-				xml.id = id;
-			}
 			xml.name = name;
 			xml.first_name = firstName;
 			xml.last_name = lastName;
@@ -68,23 +75,9 @@ package com.j_nid.models {
 			xml.id_card_number = idCardNumber;
 			xml.detail1 = detail1;
 			xml.detail2 = detail2;
-			for each (var phoneNumber:PhoneNumber in phoneNumbers) {
-				xml.appendChild(phoneNumber.toXML());
-			}
-			for each (var bankAccount:BankAccount in bankAccounts) {
-				xml.appendChild(bankAccount.toXML());
-			}
 			return xml;
 		}
-		
-		private function addPhoneNumbers(list:XMLList):void {
-			_phoneNumbers.removeAll();
-			var phoneNumber:PhoneNumber;
-			for each (var obj:XML in list) {
 				
-			}
-		}
-		
 /* ----- get-set function. --------------------------------------------------------------------- */
 		
         public function set name(obj:String):void {
@@ -173,6 +166,14 @@ package com.j_nid.models {
 		
 		public function get numOutstandingOrders():int {
 			return _numOutstandingOrders;
+		}
+		
+		public function set orders(obj:ArrayCollection):void {
+			_orders = obj;
+		}
+		
+		public function get orders():ArrayCollection {
+			return _orders;
 		}
 	}
 }

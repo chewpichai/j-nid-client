@@ -36,6 +36,7 @@
 		<jn:PersonFormPage id="personForm"/>
 		<jn:PhoneBookPage id="phoneBook"/>
 		<jn:OutstandingPersonPage id="outstandingPersonPage"/>
+		<jn:OrderPage id="orderPage"/>
 	</mx:ViewStack>
 	
 	<mx:Canvas width="100%" height="25">

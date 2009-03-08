@@ -1,6 +1,8 @@
 package com.j_nid.business {
 	
+	import com.j_nid.models.BankAccount;
 	import com.j_nid.utils.ServiceUtils;
+	
 	import mx.rpc.IResponder;
 	
 	public class BankAccountDelegate {
@@ -13,6 +15,10 @@ package com.j_nid.business {
 		
 		public function listBankAccount():void {
 			ServiceUtils.send("/bankaccounts/", "GET", _responder);
+		}
+		
+		public function createBankAccount(bankAccount:BankAccount):void {
+			ServiceUtils.send("/bankaccounts/", "POST", _responder, bankAccount.toXML());
 		}
 	}
 }

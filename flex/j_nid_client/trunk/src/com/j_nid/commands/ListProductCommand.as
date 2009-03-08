@@ -22,8 +22,8 @@ package com.j_nid.commands {
 			model.setProducts(event.result);
 		}
 		
-		public function fault(event:Object):void	{
-			
+		public function fault(event:Object):void {
+			trace(event.message);
 		}
 	}
 }

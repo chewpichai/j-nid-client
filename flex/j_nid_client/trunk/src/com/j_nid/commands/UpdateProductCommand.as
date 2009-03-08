@@ -5,10 +5,11 @@ package com.j_nid.commands {
 	import com.j_nid.business.ProductDelegate;
 	import com.j_nid.models.JNidModelLocator;
 	import com.j_nid.models.Product;
+	import com.j_nid.models.ProductType;
 	
 	import mx.rpc.IResponder;
 
-	public class UpdateProductCommand implements ICommand, IResponder	{
+	public class UpdateProductCommand implements ICommand, IResponder {
 		
 		public function UpdateProductCommand() {
 			
@@ -21,10 +22,10 @@ package com.j_nid.commands {
 		
 		public function result(event:Object):void {
 			var model:JNidModelLocator = JNidModelLocator.getInstance();
-			model.updateProduct(Product.fromXML(event.result));
+			model.updateProduct(event.result);
 		}
 		
-		public function fault(event:Object):void	{
+		public function fault(event:Object):void {
 			
 		}
 	}

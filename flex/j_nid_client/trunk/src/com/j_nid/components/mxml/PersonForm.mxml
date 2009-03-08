@@ -4,6 +4,8 @@
 	
 	<mx:Script>
 		<![CDATA[
+			import com.j_nid.controls.EventNames;
+			import com.j_nid.utils.CairngormUtils;
 			import mx.rpc.events.ResultEvent;
 			import mx.events.FlexEvent;
 			import com.j_nid.models.PhoneNumber;
@@ -43,8 +45,7 @@
 						phoneNumber.type = phoneTypeField.value.data;
 						person.addPhoneNumber(phoneNumber);
 					}
-					var params:XML = <request/>;
-					params.appendChild(person.toXML()); 
+					CairngormUtils.dispatchEvent(EventNames.CREATE_PERSON, person);
 				}
 			}
 			

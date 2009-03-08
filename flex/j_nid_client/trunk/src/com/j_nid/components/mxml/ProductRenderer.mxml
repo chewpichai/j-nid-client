@@ -3,6 +3,7 @@
 
 	<mx:Script>
 		<![CDATA[
+			import com.j_nid.models.Product;
 			import com.j_nid.controls.EventNames;
 			import com.j_nid.utils.CairngormUtils;
 			import mx.rpc.http.HTTPService;
@@ -12,8 +13,9 @@
 			
 			private function changeListener(e:Event):void {
 				var target:CheckBox = CheckBox(e.currentTarget);
-				data.isSale = target.selected;
-				CairngormUtils.dispatchEvent(EventNames.UPDATE_PRODUCT, data);
+				var product:Product = Product(data);
+				product.isSale = target.selected;
+				CairngormUtils.dispatchEvent(EventNames.UPDATE_PRODUCT, product);
 			}
 		]]>
 	</mx:Script>

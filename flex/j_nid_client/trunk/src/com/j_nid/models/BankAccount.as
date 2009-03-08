@@ -21,9 +21,6 @@ package com.j_nid.models {
 		
 		public function toXML():XML {
 			var xml:XML = <bank_account/>
-			if (id != 0) {
-				xml.id = id;
-			}
 			xml.number = number;
 			xml.bank = bank;
 			return xml;
