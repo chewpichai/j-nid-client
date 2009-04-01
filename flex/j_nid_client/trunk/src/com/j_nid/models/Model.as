@@ -1,5 +1,5 @@
 package com.j_nid.models {
-
+	
 	public class Model extends Object {
 		
 		private var _id:int;
@@ -7,7 +7,7 @@ package com.j_nid.models {
 		
 		public function Model()	{
 			super();
-		}
+	    }
 		
 		public function set id(obj:int):void {
 			_id = obj;

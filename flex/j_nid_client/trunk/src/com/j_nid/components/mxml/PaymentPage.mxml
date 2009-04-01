@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%">
+
+	<mx:Script>
+		<![CDATA[
+			import mx.collections.ListCollectionView;
+			import mx.collections.ICollectionView;
+			import com.j_nid.controls.EventNames;
+			import com.j_nid.utils.CairngormUtils;
+			import mx.collections.SortField;
+			import mx.collections.Sort;
+			import mx.messaging.channels.AMFChannel;
+			import com.j_nid.models.Payment;
+			import com.j_nid.models.Order;
+			import mx.collections.IViewCursor;
+			import mx.collections.ArrayCollection;
+			import com.j_nid.models.Person;
+			import com.j_nid.models.JNidModelLocator;
+			
+			[Bindable]
+			private var model:JNidModelLocator = JNidModelLocator.getInstance();
+			
+			private function createTransaction(person:Person):ArrayCollection {
+				var transactionArray:Array = new Array();
+				var cursor:IViewCursor = person.orders.createCursor();
+				var transaction:Object;
+				while (!cursor.afterLast) {
+					var order:Order = Order(cursor.current);
+					transaction = new Object();
+					transaction["created"] = order.created;
+					transaction["ordered"] = order.total;
+					transactionArray.push(transaction);
+					cursor.moveNext();
+				}
+				cursor = person.payments.createCursor();
+				while (!cursor.afterLast) {
+					var payment:Payment = Payment(cursor.current);
+					transaction = new Object();
+					transaction["created"] = payment.created;
+					transaction["paid"] = payment.amount;
+					transactionArray.push(transaction);
+					cursor.moveNext();
+				}
+				var transactions:ArrayCollection = new ArrayCollection(transactionArray);
+				var sort:Sort = new Sort();
+				sort.fields = [new SortField("created", false, true)];
+				transactions.sort = sort;
+				transactions.refresh();
+				return transactions;
+			}
+			
+			private function payBtnClickListener(evt:MouseEvent):void {
+				var payment:Payment = new Payment();
+				payment.amount = amountField.value;
+				payment.personID = Person(personList.selectedItem).id;
+				CairngormUtils.dispatchEvent(EventNames.CREATE_PAYMENT, payment);
+			}
+		]]>
+	</mx:Script>
+	
+	<mx:DateFormatter id="dateFormatter" formatString="DD-MM-YY J:NN:SS"/>
+
+	<mx:Panel width="380" height="100%" layout="absolute" title="Person List">
+		<mx:DataGrid id="personList" dataProvider="{model.people.toArray()}" 
+			width="100%" height="100%">
+			<mx:columns>
+				<mx:DataGridColumn dataField="name" headerText="Name"/>
+				<mx:DataGridColumn dataField="outstandingOrderTotal" 
+					headerText="Outstanding Order Total"/>
+			</mx:columns>
+		</mx:DataGrid>
+	</mx:Panel>
+	
+	<mx:Panel width="100%" height="100%" layout="vertical" title="Detail">
+		<mx:HBox width="100%" paddingLeft="10" paddingRight="10" verticalAlign="middle" 
+			paddingTop="10" paddingBottom="10">
+			<mx:Label text="Payment:"/>
+			<mx:NumericStepper id="amountField" maximum="1000000" width="100%"/>
+			<mx:Button id="payBtn" label="pay" click="payBtnClickListener(event)" width="100"/>
+		</mx:HBox>
+		
+		<mx:DataGrid dataProvider="{createTransaction(
+			Person(ListCollectionView(
+			personList.dataProvider).getItemAt(personList.selectedIndex)))}" 
+			width="100%" height="100%">
+			<mx:columns>
+				<mx:DataGridColumn headerText="Created">
+					<mx:itemRenderer>
+						<mx:Component>
+<mx:Label text="{outerDocument.dateFormatter.format(data.created)}"/>
+						</mx:Component>
+					</mx:itemRenderer>
+				</mx:DataGridColumn>
+				<mx:DataGridColumn dataField="ordered" headerText="Ordered"/>
+				<mx:DataGridColumn dataField="paid" headerText="Paid"/>
+			</mx:columns>
+		</mx:DataGrid>
+	</mx:Panel>
+	
+	<mx:NumberValidator id="numberValidator" minValue="1" source="{amountField}" property="value"
+		trigger="{payBtn}" triggerEvent="click"/>
+</mx:HBox>

@@ -4,12 +4,14 @@ package com.j_nid.models {
 	public class BankAccount extends Model {
 		
 		private var _person:Person;
+		private var _personID:int;
 		private var _number:String;
 		private var _bank:String;
 		
 		public static function fromXML(obj:XML):BankAccount {
 			var bankAccount:BankAccount = new BankAccount();
-			bankAccount.id = int(obj.id);
+			bankAccount.id = obj.id;
+			bankAccount.personID = obj.person_id;
 			bankAccount.number = obj.number;
 			bankAccount.bank = obj.bank;
 			return bankAccount;
@@ -23,6 +25,7 @@ package com.j_nid.models {
 			var xml:XML = <bank_account/>
 			xml.number = number;
 			xml.bank = bank;
+			xml.person_id = personID;
 			return xml;
 		}
 		
@@ -34,6 +37,14 @@ package com.j_nid.models {
 		
 		public function get person():Person {
 			return _person;
+		}
+		
+		public function set personID(obj:int):void {
+			_personID = obj;
+		}
+		
+		public function get personID():int {
+			return _personID;
 		}
 		
 		public function set number(obj:String):void {

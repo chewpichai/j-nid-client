@@ -5,16 +5,20 @@ package com.j_nid.models {
 		
 		private var _name:String;
     	private var _type:ProductType;
-    	private var _unit:int;
+    	private var _typeID:int;
+    	private var _unit:uint;
     	private var _pricePerUnit:Number;
+    	private var _costPerUnit:Number;
     	private var _isSale:Boolean;
     	
     	public static function fromXML(obj:XML):Product {
     		var product:Product = new Product();
-    		product.id = int(obj.id);
+    		product.id = obj.id;
+    		product.typeID = obj.type_id;
 			product.name = obj.name;
-			product.unit = int(obj.unit);
-			product.pricePerUnit = Number(obj.price_per_unit);
+			product.unit = obj.unit;
+			product.costPerUnit = obj.cost_per_unit;
+			product.pricePerUnit = obj.price_per_unit;
 			product.isSale = Boolean(int(obj.is_sale));
 			return product;
     	}
@@ -26,7 +30,7 @@ package com.j_nid.models {
 		public function toXML():XML {
 			var xml:XML = <product/>
 			xml.name = name;
-			xml.type_id = type.id;
+			xml.type_id = typeID;
 			xml.unit = unit;
 			xml.price_per_unit = pricePerUnit;
 			xml.is_sale = isSale ? 1:0;
@@ -55,12 +59,28 @@ package com.j_nid.models {
 			return _type;
 		}
 		
-		public function set unit(obj:int):void {
+		public function set typeID(obj:int):void {
+			_typeID = obj;
+		}
+		
+		public function get typeID():int {
+			return _typeID;
+		}
+		
+		public function set unit(obj:uint):void {
 			_unit = obj;
 		}
 		
-		public function get unit():int {
+		public function get unit():uint {
 			return _unit;
+		}
+		
+		public function set costPerUnit(obj:Number):void {
+			_costPerUnit = obj;
+		}
+		
+		public function get costPerUnit():Number {
+			return _costPerUnit;
 		}
 		
 		public function set pricePerUnit(obj:Number):void {

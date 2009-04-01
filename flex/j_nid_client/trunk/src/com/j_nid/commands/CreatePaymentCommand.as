@@ -2,25 +2,26 @@ package com.j_nid.commands {
 	
 	import com.adobe.cairngorm.commands.ICommand;
 	import com.adobe.cairngorm.control.CairngormEvent;
-	import com.j_nid.business.PersonDelegate;
+	import com.j_nid.business.PaymentDelegate;
 	import com.j_nid.models.JNidModelLocator;
+	import com.j_nid.models.Payment;
 	
 	import mx.rpc.IResponder;
 
-	public class CreatePersonCommand implements ICommand, IResponder {
+	public class CreatePaymentCommand implements ICommand, IResponder	{
 		
-		public function CreatePersonCommand() {
+		public function CreatePaymentCommand() {
 			
 		}
 
 		public function execute(event:CairngormEvent):void {
-			var delegate:PersonDelegate = new PersonDelegate(this);
-			delegate.createPerson(event.data);
+			var delegate:PaymentDelegate = new PaymentDelegate(this);
+			delegate.createPayment(event.data);
 		}
 		
 		public function result(event:Object):void {
 			var model:JNidModelLocator = JNidModelLocator.getInstance();
-			model.createPerson(event.result);
+			model.createPayment(event.result);
 		}
 		
 		public function fault(event:Object):void {

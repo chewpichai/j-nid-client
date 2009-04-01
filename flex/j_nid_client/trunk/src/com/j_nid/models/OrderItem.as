@@ -1,17 +1,15 @@
 package com.j_nid.models {
 	
-	import flash.events.Event;
-	
-	[Event(name="change", type="flash.events.Event")]
-	
 	[Bindable]
 	public class OrderItem extends Model {
 		
 		private var _order:Order;
+		private var _orderID:int;
     	private var _product:Product;
+    	private var _productID:int;
     	private var _unit:int;
     	private var _pricePerUnit:Number;
-    	private var _quantity:uint;
+    	private var _quantity:int;
     	private var _total:Number;
     	
     	public static function fromXML(obj:XML):OrderItem {
@@ -19,6 +17,9 @@ package com.j_nid.models {
     		item.id = obj.id;
     		item.unit = obj.unit;
     		item.pricePerUnit = obj.price_per_unit;
+    		item.total = item.unit * item.pricePerUnit;
+    		item.orderID = obj.order_id;
+    		item.productID = obj.product_id;
     		return item;
     	}
 		
@@ -34,8 +35,8 @@ package com.j_nid.models {
 		
 		public function toXML():XML {
 			var xml:XML = <order_item/>
-			xml.order_id = order.id;
-			xml.product_id = product.id;
+			xml.order_id = orderID;
+			xml.product_id = productID;
 			xml.unit = unit;
 			xml.price_per_unit = pricePerUnit;
 			return xml;
@@ -56,6 +57,7 @@ package com.j_nid.models {
 		}
 		
 		public function set product(obj:Product):void {
+			productID = obj.id;
 			_product = obj;
 		}
 		
@@ -66,7 +68,7 @@ package com.j_nid.models {
 		public function set unit(obj:int):void {
 			_unit = obj;
 			if (product != null) {
-				_quantity = _unit / product.unit;
+				_quantity = Math.round(_unit / product.unit);
 			}
 			calcTotal();
 		}
@@ -84,7 +86,7 @@ package com.j_nid.models {
 			return _pricePerUnit;
 		}
 		
-		public function set quantity(obj:uint):void {
+		public function set quantity(obj:int):void {
 			var diff:int = obj - quantity;
 			if (product != null) {
 				_unit = unit + diff * product.unit;
@@ -93,7 +95,7 @@ package com.j_nid.models {
 			calcTotal();
 		}
 		
-		public function get quantity():uint {
+		public function get quantity():int {
 			return _quantity;
 		}
 		
@@ -103,6 +105,22 @@ package com.j_nid.models {
 		
 		public function get total():Number {
 			return _total;
+		}
+		
+		public function set orderID(obj:int):void {
+			_orderID = obj;
+		}
+		
+		public function get orderID():int {
+			return _orderID;
+		}
+		
+		public function set productID(obj:int):void {
+			_productID = obj;
+		}
+		
+		public function get productID():int {
+			return _productID;
 		}
 		
 		public function get name():String {

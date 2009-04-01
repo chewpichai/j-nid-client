@@ -13,10 +13,18 @@
 			
 			private function init(e:FlexEvent):void {
 				CairngormUtils.dispatchEvent(EventNames.LIST_PRODUCT_TYPE);
+				CairngormUtils.dispatchEvent(EventNames.LIST_PRODUCT);
 				CairngormUtils.dispatchEvent(EventNames.LIST_PERSON);
+				CairngormUtils.dispatchEvent(EventNames.LIST_BANK_ACCOUNT);
+				CairngormUtils.dispatchEvent(EventNames.LIST_ORDER);
+				CairngormUtils.dispatchEvent(EventNames.LIST_ORDER_ITEM);
+				CairngormUtils.dispatchEvent(EventNames.LIST_PHONE_NUMBER);
+				CairngormUtils.dispatchEvent(EventNames.LIST_PAYMENT);
+				CairngormUtils.dispatchEvent(EventNames.LIST_BANK_NAME);
+				CairngormUtils.dispatchEvent(EventNames.LIST_PHONE_TYPE);
 			}
 			
-			public function changePage(page:String):void {
+			public function setPage(page:String):void {
 				mainView.selectedChild = this[page];
 			}
 		]]>
@@ -24,22 +32,22 @@
 	
 	<control:JNidController/>
 	
-	<mx:HBox width="100%" height="100">
-		<mx:Button label="Main Menu" click="mainView.selectedChild=mainPage"/>
+	<mx:HBox width="100%" height="75" verticalAlign="bottom">
+		<mx:Image width="150" height="75"/>
+		<mx:TabBar dataProvider="mainView" width="500" height="30"/>
 	</mx:HBox>
 	
 	<mx:ViewStack id="mainView" width="100%" height="100%">
-		<jn:MainPage id="mainPage"/>
-		<jn:SellProductPage id="sellProduct"/>
-		<jn:ProductManagePage id="manageProduct"/>
-		<jn:ProductFormPage id="addProduct"/>
-		<jn:PersonFormPage id="personForm"/>
-		<jn:PhoneBookPage id="phoneBook"/>
-		<jn:OutstandingPersonPage id="outstandingPersonPage"/>
-		<jn:OrderPage id="orderPage"/>
+		<jn:MainPage id="mainPage" label="Main"/>
+		<jn:SellProductPage id="sellProduct" label="Sell"/>
+		<jn:ProductFormPage id="productPage" label="Product"/>
+		<jn:PersonFormPage id="personForm" label="Person"/>
+		<jn:OrderPage id="orderPage" label="Order"/>
+		<jn:PaymentPage id="paymentPage" label="Payment"/>
 	</mx:ViewStack>
 	
 	<mx:Canvas width="100%" height="25">
-		<mx:LinkButton label="Copyright (c) 2009 ChewLab. All rights reserved." styleName="copyright"/>
+		<mx:Label text="Copyright (c) 2009 ChewLab. All rights reserved." styleName="copyright" 
+			horizontalCenter="0"/>
 	</mx:Canvas>
 </mx:WindowedApplication>

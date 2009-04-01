@@ -20,5 +20,9 @@ package com.j_nid.business {
 		public function createBankAccount(bankAccount:BankAccount):void {
 			ServiceUtils.send("/bankaccounts/", "POST", _responder, bankAccount.toXML());
 		}
+		
+		public function listBankName():void {
+			ServiceUtils.send("/banknames/", "GET", _responder);
+		}
 	}
 }

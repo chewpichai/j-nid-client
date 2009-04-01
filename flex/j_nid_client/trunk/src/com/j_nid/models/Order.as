@@ -1,19 +1,27 @@
 package com.j_nid.models {
 	
 	import mx.collections.ArrayCollection;
+	import mx.collections.IViewCursor;
+	import mx.events.CollectionEvent;
 	
 	[Bindable]
 	public class Order extends Model {
 		
 		private var _person:Person;
+		private var _personID:int;
 		private var _notation:String;
 		private var _status:int;
 		private var _created:Date;
+		private var _total:Number;
 		private var _orderItems:ArrayCollection;
+		public static var CANCELED:int = -1;
+		public static var OUTSTANDING:int = 0;
+		public static var PAID:int = 1;
 		
 		public static function fromXML(obj:XML):Order {
     		var order:Order = new Order();
     		order.id = obj.id;
+    		order.personID = obj.person_id;
     		order.notation = obj.notation;
     		order.status = obj.status;
     		order.created = new Date(Date.parse(obj.created));
@@ -25,12 +33,23 @@ package com.j_nid.models {
 			notation = "";
 			status = 0;
 			created = new Date();
+			total = 0;
 			orderItems = new ArrayCollection();
+			orderItems.addEventListener(CollectionEvent.COLLECTION_CHANGE, itemChangeListener);
 		}
 		
-		public function addItem(obj:OrderItem):void {
-			obj.order = this;
-			orderItems.addItem(obj);
+		private function itemChangeListener(evt:CollectionEvent):void {
+			total = 0;
+			var cursor:IViewCursor = orderItems.createCursor();
+			while (!cursor.afterLast) {
+				total += OrderItem(cursor.current).total;
+				cursor.moveNext();
+			}
+		}
+		
+		public function addItem(item:OrderItem):void {
+			item.order = this;
+			orderItems.addItem(item);
 		}
 		
 		public function removeItem(obj:OrderItem):void {
@@ -68,6 +87,14 @@ package com.j_nid.models {
 			return _person;
 		}
 		
+		public function get personID():int {
+			return _personID;
+		}
+
+		public function set personID(obj:int):void {
+			_personID = obj;
+		}
+		
 		public function get notation():String {
 			return _notation;
 		}
@@ -90,6 +117,14 @@ package com.j_nid.models {
 
 		public function set created(obj:Date):void {
 			_created = obj;
+		}
+		
+		public function get total():Number {
+			return _total;
+		}
+		
+		public function set total(obj:Number):void {
+			_total = obj;
 		}
 		
 		public function set orderItems(obj:ArrayCollection):void {

@@ -1,5 +1,6 @@
 package com.j_nid.business {
 	
+	import com.j_nid.models.JNidModelLocator;
 	import com.j_nid.models.Person;
 	import com.j_nid.utils.ServiceUtils;
 	
@@ -19,6 +20,14 @@ package com.j_nid.business {
 		
 		public function createPerson(person:Person):void {
 			ServiceUtils.send("/people/", "POST", _responder, person.toXML());
+		}
+		
+		public function updatePerson(person:Person):void {
+			ServiceUtils.send("/people/" + person.id + "/", "PUT", _responder, person.toXML());
+		}
+		
+		public function createdPerson():void {
+			
 		}
 	}
 }

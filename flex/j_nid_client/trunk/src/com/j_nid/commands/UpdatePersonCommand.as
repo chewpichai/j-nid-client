@@ -7,20 +7,19 @@ package com.j_nid.commands {
 	
 	import mx.rpc.IResponder;
 
-	public class CreatePersonCommand implements ICommand, IResponder {
+	public class UpdatePersonCommand implements ICommand, IResponder {
 		
-		public function CreatePersonCommand() {
+		public function UpdatePersonCommand() {
 			
 		}
 
 		public function execute(event:CairngormEvent):void {
 			var delegate:PersonDelegate = new PersonDelegate(this);
-			delegate.createPerson(event.data);
+			delegate.updatePerson(event.data);
 		}
 		
 		public function result(event:Object):void {
 			var model:JNidModelLocator = JNidModelLocator.getInstance();
-			model.createPerson(event.result);
 		}
 		
 		public function fault(event:Object):void {

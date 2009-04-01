@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:Panel xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:jn="com.j_nid.components.mxml.*"
-	height="100%" layout="vertical" title="Order" creationComplete="init(event)">
+	layout="vertical" title="Order" creationComplete="init(event)" xmlns:adobe="http://www.adobe.com/2006/fc">
 	
 	<mx:Style>
 		.cartItemList {
@@ -23,21 +23,12 @@
 			import mx.events.DragEvent;
 			
 			[Bindable]
-			private var total:Number = 0;
-			[Bindable]
 			private var order:Order;
+			[Bindable]
+			public var people:ArrayCollection;
 			
 			private function init(e:FlexEvent):void {
 				order = new Order();
-				order.orderItems.addEventListener(CollectionEvent.COLLECTION_CHANGE,
-					collectionChangeListener);
-			}
-			
-			private function collectionChangeListener(e:CollectionEvent):void {
-				total = 0;
-				for each (var item:OrderItem in order.orderItems) {
-					total += item.total;
-				}
 			}
 			
 			private function dragEnterListener(e:DragEvent):void {
@@ -73,7 +64,7 @@
 				if (order.orderItems.length > 0) {
 					var orderProcessForm:OrderProcessForm = OrderProcessForm(
 						PopUpManager.createPopUp(Application(Application.application), 
-						OrderProcessForm, true)
+							OrderProcessForm, true)
 					);
 					orderProcessForm.order = order;
 				} else {
@@ -83,10 +74,16 @@
 		]]>
 	</mx:Script>
 	
+	<mx:HBox width="100%" horizontalAlign="right" 
+		paddingTop="5" paddingLeft="5" paddingRight="5">
+		<mx:Label text="Name"/>
+		<adobe:AutoComplete labelField="name" width="100%" dataProvider="{people}"/>
+	</mx:HBox>
+	
 	<mx:DataGrid id="orderItemList" height="100%" dataProvider="{order.orderItems}"
 		dragDrop="dragDropListener(event)" dragEnter="dragEnterListener(event)"
 		itemEditEnd="event.preventDefault()" editable="true" styleName="cartItemList" 
-		wordWrap="true" variableRowHeight="true">
+		wordWrap="true" variableRowHeight="true" width="100%">
 		<mx:columns>
 			<mx:DataGridColumn headerText="Qty" dataField="quantity" editorDataField="value"
 				rendererIsEditor="true" width="70">
@@ -118,11 +115,11 @@
 		</mx:columns>
 	</mx:DataGrid>
 	
-	<mx:Text id="totalTxt" width="100%" height="30" text="Total: {total}" textAlign="right" 
+	<mx:Text id="totalTxt" width="100%" height="30" text="Total: {order.total}" textAlign="right" 
 		paddingRight="15"/>
 	
 	<mx:ControlBar>
-		<mx:Spacer width="100%"/>
+		<mx:TextArea height="60" width="100%"/>
 		<mx:Button label="clear" click="clearListener(event)"/>
 		<mx:Button label="remove" click="removeListener(event)"/>
 		<mx:Button label="process" click="processListener(event)"/>

@@ -20,7 +20,7 @@ package com.j_nid.commands {
 		
 		public function result(event:Object):void {
 			var model:JNidModelLocator = JNidModelLocator.getInstance();
-			
+			model.createOrderItem(event.result);
 		}
 		
 		public function fault(event:Object):void {

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" 
-	xmlns:adobe="http://www.adobe.com/2006/fc" xmlns:jn="com.j_nid.components.mxml.*" 
+	xmlns:adobe="http://www.adobe.com/2006/fc" 
+	xmlns:jn="com.j_nid.components.mxml.*" 
 	title="Process Order" layout="vertical" width="500"	creationComplete="init(event)"
 	borderAlpha="0.8">
 	
@@ -36,6 +37,7 @@
 					order.notation = notationField.text;
 					model.orderToCreate = order;
 					CairngormUtils.dispatchEvent(EventNames.CREATE_ORDER, order);
+					PopUpManager.removePopUp(this);
 				} else {
 					customerAC.errorString = "Not found person.";
 				}
@@ -53,6 +55,10 @@
 				personForm.clearForm();
 				currentState = null;
 			}
+			
+			private function getDefaultPersonName():String {
+				return "เงินสด" + new Date().getHours();
+			}
 		]]>
 	</mx:Script>
 	
@@ -69,14 +75,16 @@
 	</mx:states>
 	
 	<mx:Form width="100%" id="selectCustomerForm">
-		<mx:FormItem label="Customer" width="100%">
+		<mx:FormItem label="Customer:" width="100%">
 			<mx:HBox width="100%">
-				<adobe:AutoComplete id="customerAC" dataProvider="{model.people}" labelField="name" width="150"/>
+				<adobe:AutoComplete id="customerAC" dataProvider="{model.people}"
+					typedText="{getDefaultPersonName()}"
+					labelField="name" width="100%"/>
 				<mx:Button label="new" click="newBtnClickListener(event)"/>
 			</mx:HBox>
 		</mx:FormItem>
-		<mx:FormItem label="Notation">
-			<mx:TextArea id="notationField" height="90" width="200"/>
+		<mx:FormItem label="Notation:" width="100%">
+			<mx:TextArea id="notationField" height="90" width="100%"/>
 		</mx:FormItem>
 	</mx:Form>
 	

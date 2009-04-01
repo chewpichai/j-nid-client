@@ -2,25 +2,25 @@ package com.j_nid.commands {
 	
 	import com.adobe.cairngorm.commands.ICommand;
 	import com.adobe.cairngorm.control.CairngormEvent;
-	import com.j_nid.business.PersonDelegate;
+	import com.j_nid.business.PhoneNumberDelegate;
 	import com.j_nid.models.JNidModelLocator;
 	
 	import mx.rpc.IResponder;
 
-	public class CreatePersonCommand implements ICommand, IResponder {
+	public class CreatePhoneNumberCommand implements ICommand, IResponder	{
 		
-		public function CreatePersonCommand() {
+		public function CreatePhoneNumberCommand() {
 			
 		}
 
 		public function execute(event:CairngormEvent):void {
-			var delegate:PersonDelegate = new PersonDelegate(this);
-			delegate.createPerson(event.data);
+			var delegate:PhoneNumberDelegate = new PhoneNumberDelegate(this);
+			delegate.createPhoneNumber(event.data);
 		}
 		
 		public function result(event:Object):void {
 			var model:JNidModelLocator = JNidModelLocator.getInstance();
-			model.createPerson(event.result);
+			model.createPhoneNumber(event.result);
 		}
 		
 		public function fault(event:Object):void {

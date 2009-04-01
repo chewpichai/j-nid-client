@@ -6,19 +6,23 @@ package com.j_nid.models {
 	public class ProductType extends Model {
 		
 		private var _name:String;
+		private var _color:uint;
 		private var _products:ArrayCollection;
 		
 		public static function fromXML(obj:XML):ProductType {
+			trace(obj);
 			var productType:ProductType = new ProductType();
 			productType.id = obj.id;
 			productType.name = obj.name;
+			productType.color = 0xFFFFFF;
 			return productType;
 		}
 		
-		public function ProductType(id:int=0, name:String="") {
+		public function ProductType(id:int=0, name:String="", color:uint=0xFFFFFF) {
 			super();
 			this.id = id;
 			this.name = name;
+			this.color = color;
 			products = new ArrayCollection();
 		}
 		
@@ -61,6 +65,14 @@ package com.j_nid.models {
 		
 		public function get name():String {
 			return _name;
+		}
+		
+		public function set color(obj:uint):void {
+			_color = obj;
+		}
+		
+		public function get color():uint {
+			return _color;
 		}
 	}
 }

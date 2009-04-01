@@ -1,18 +1,20 @@
 <?xml version="1.0"?>
 <!-- Custom control to print the DataGrid control on multiple pages. -->
 
-<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" xmlns="*" backgroundColor="#FFFFFF"
-    paddingTop="50" paddingBottom="50" paddingLeft="50" xmlns:ns="com.j_nid.components.mxml.print.*">
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:ns="com.j_nid.components.mxml.print.*"
+	backgroundColor="#FFFFFF"
+    paddingTop="30" paddingBottom="30" paddingLeft="30">
 
     <mx:Script>
         <![CDATA[
-            import mx.core.*
+            
             // Declare and initialize the variables used in the component.
             // The application sets the actual prodTotal value.
             [Bindable]
             public var pageNumber:Number = 1;
             [Bindable]
-            public var prodTotal:Number = 0;
+            public var total:Number = 0;
 
             // Control the page contents by selectively hiding the header and
             // footer based on the page type.
@@ -39,14 +41,14 @@
     </mx:Script>
 
     <!-- The template for the printed page, with the contents for all pages. -->
-    <mx:VBox width="80%" horizontalAlign="left">
+    <mx:VBox width="100%" horizontalAlign="left" x="0" y="0">
         <mx:Label text="Page {pageNumber}"/>
     </mx:VBox>
 
-    <ns:OrderPrintHeader id="header" />
+    <ns:OrderPrintHeader id="header" top="30" horizontalCenter="0" width="100%"/>
     <!-- The data grid. The sizeToPage property is true by default, so the last
         page has only as many grid rows as are needed for the data. -->
-    <mx:PrintDataGrid id="myDataGrid" width="95%" height="100%">
+    <mx:PrintDataGrid id="myDataGrid" width="100%" height="100%" top="60">
     <!-- Specify the columns to ensure that their order is correct. -->
         <mx:columns>
 			<mx:DataGridColumn headerText="Qty" dataField="quantity" width="50"/>
@@ -58,6 +60,5 @@
     </mx:PrintDataGrid>
 
     <!-- Create a FormPrintFooter control and set its prodTotal variable. -->
-    <ns:OrderPrintFooter id="footer" pTotal="{prodTotal}" />
-
-</mx:VBox>
+    <ns:OrderPrintFooter id="footer" total="{total}" bottom="0" width="100%"/>
+</mx:Canvas>

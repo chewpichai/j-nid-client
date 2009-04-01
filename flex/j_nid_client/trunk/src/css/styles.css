@@ -27,12 +27,6 @@ TextInput {
 	border-style: solid;
 }
 
-LinkButton {
-   cornerRadius: 0;
-   textAlign: left;
-   paddingLeft: 30;
-}
-
 .header {
 	text-align: center;
 	font-weight: bold;
@@ -53,5 +47,5 @@ LinkButton {
 	font-weight: normal;
 	font-size: 13;
 	color: #FFFFFF;
-	padding-left: 0;	
+	padding-left: 0;
 }

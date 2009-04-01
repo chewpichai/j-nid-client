@@ -20,5 +20,9 @@ package com.j_nid.business {
 		public function createPhoneNumber(phoneNumber:PhoneNumber):void {
 			ServiceUtils.send("/phonenumbers/", "POST", _responder, phoneNumber.toXML());
 		}
+		
+		public function listPhoneType():void {
+			ServiceUtils.send("/phonetypes/", "GET", _responder);
+		}
 	}
 }

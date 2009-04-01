@@ -3,6 +3,10 @@
 	
 	<mx:Script>
 		<![CDATA[
+			import com.j_nid.controls.EventNames;
+			import com.j_nid.utils.CairngormUtils;
+			import mx.collections.ArrayCollection;
+			import com.j_nid.models.Product;
 			import com.j_nid.models.ProductType;
 			import com.j_nid.models.JNidModelLocator;
 			
@@ -10,52 +14,98 @@
 			private var model:JNidModelLocator = JNidModelLocator.getInstance();
 			
 			private function filterByType(type:ProductType):void {
-				if (type == model.ALL_TYPE) {
+				if (type == JNidModelLocator.ALL_TYPE) {
 					model.products.filterFunction = null;
 				} else {
 					model.products.filterFunction = function(obj:Object):Boolean {
-						return obj.type == type;
+						return Product(obj).type == type;
 					}
 				}
 				model.products.refresh();
 			}
+			
+			private function productTypeWithAll(types:ArrayCollection):ArrayCollection {
+				types = new ArrayCollection(types.toArray());
+				types.addItemAt(JNidModelLocator.ALL_TYPE, 0);
+				return types;
+			}
+			
+			private function saveProductListener(e:MouseEvent):void {
+				if (isProductValid()) {
+					var product:Product = new Product();
+					product.name = productName.text;
+					product.typeID = productType.selectedItem.id;
+					product.unit = productUnit.value;
+					product.pricePerUnit = productPricePerUnit.value;
+					product.isSale = productIsSale.selected;
+					CairngormUtils.dispatchEvent(EventNames.CREATE_PRODUCT, product);
+				}
+			}
+			
+			private function isProductValid():Boolean {
+				return true;
+			}
+			
+			private function saveProductTypeListener(e:MouseEvent):void {
+				if (isProductTypeValid()) {
+					var type:ProductType = new ProductType();
+					type.name = productTypeName.text;
+					CairngormUtils.dispatchEvent(EventNames.CREATE_PRODUCT_TYPE, type);
+				}
+			}
+			
+			private function isProductTypeValid():Boolean {
+				return true;
+			}
 		]]>
 	</mx:Script>
 	
-	<mx:Accordion width="300" height="100%">
+	<mx:Accordion width="310" height="100%">
 		<mx:Form label="New Product" width="100%" height="100%">
-			<mx:FormItem label="Name">
-				<mx:TextInput width="160" height="30" id="productName"/>
+			<mx:FormItem label="Name" width="100%">
+				<mx:TextInput id="productName" width="100%" height="30"/>
 			</mx:FormItem>
-			<mx:FormItem label="Type">
-				<mx:ComboBox width="160" height="30" id="productType" dataProvider="{model.productTypes}"></mx:ComboBox>
+			<mx:FormItem label="Type" width="100%">
+				<mx:ComboBox id="productType" width="100%" height="30" 
+					dataProvider="{model.productTypes}"/>
 			</mx:FormItem>
-			<mx:FormItem label="Unit">
-				<mx:NumericStepper width="160" height="30" id="productUnit"/>
+			<mx:FormItem label="Unit" width="100%">
+				<mx:NumericStepper id="productUnit" maximum="100000" 
+					width="100%" height="30"/>
 			</mx:FormItem>
-			<mx:FormItem label="Price Per Unit">
-				<mx:NumericStepper width="160" height="30" id="productPricePerUnit"/>
+			<mx:FormItem label="Price Per Unit" width="100%">
+				<mx:NumericStepper id="productPricePerUnit" maximum="100000" 
+					stepSize="0.25" width="100%" height="30"/>
 			</mx:FormItem>
 			<mx:FormItem label="Is Sale">
 				<mx:CheckBox id="productIsSale"/>
 			</mx:FormItem>
+			<mx:FormItem>
+				<mx:Button label="Save" click="saveProductListener(event)"/>
+			</mx:FormItem>
 		</mx:Form>
+		
 		<mx:Form label="New Product Type" width="100%" height="100%">
 			<mx:FormItem label="Name">
-				<mx:TextInput width="160" height="30" id="productTypeName"/>
+				<mx:TextInput id="productTypeName" width="160" height="30"/>
+			</mx:FormItem>
+			<mx:FormItem>
+				<mx:Button label="Save" click="saveProductTypeListener(event)"/>
 			</mx:FormItem>
 		</mx:Form>
 	</mx:Accordion>
+	
 	<mx:TabNavigator width="100%" height="100%">
 		<mx:VBox label="Product" width="100%" height="100%">
-			<mx:HBox width="100%" verticalAlign="middle">
+			<mx:HBox width="100%" verticalAlign="middle" paddingLeft="5">
 				<mx:Label text="Product Type"/>
-				<mx:ComboBox id="productTypeCombo" width="160" height="30" 
-					dataProvider="{model.ProductTypesWithAll}" 
+				<mx:ComboBox id="productTypeCombo" width="200" height="30" 
+					dataProvider="{productTypeWithAll(model.productTypes)}" 
 					change="filterByType(ProductType(productTypeCombo.selectedItem))"/>
 			</mx:HBox>
 			<mx:VDividedBox width="100%" height="100%">
-				<mx:DataGrid width="100%" height="100%" id="productDg" dataProvider="{model.products}">
+				<mx:DataGrid id="productDg" width="100%" height="100%" 
+					dataProvider="{model.products}">
 					<mx:columns>
 						<mx:DataGridColumn headerText="Name" dataField="name"/>
 						<mx:DataGridColumn headerText="Type" dataField="type"/>
@@ -65,10 +115,33 @@
 							itemRenderer="com.j_nid.components.mxml.ProductRenderer"/>
 					</mx:columns>
 				</mx:DataGrid>
-				<mx:Panel width="100%" height="0" layout="absolute" title="Product Detail"/>
+				<mx:Panel title="Product Detail" width="100%" height="0" layout="absolute"/>
 			</mx:VDividedBox>
 		</mx:VBox>
+		
 		<mx:VBox label="Product Type" width="100%" height="100%">
+			<mx:DataGrid id="productTypeDg" width="100%" height="100%"
+				dataProvider="{model.productTypes}">
+				<mx:columns>
+					<mx:DataGridColumn headerText="Name">
+						<mx:itemRenderer>
+							<mx:Component>
+<mx:Label text="{data.name}" color="{data.color}"/>
+							</mx:Component>
+						</mx:itemRenderer>
+					</mx:DataGridColumn>
+					<mx:DataGridColumn headerText="Color">
+						<mx:itemRenderer>
+							<mx:Component>
+<mx:Canvas>
+	<mx:ColorPicker id="colorPicker" selectedColor="{data.color}" 
+		change="{data.color = colorPicker.selectedColor}"/>
+</mx:Canvas>
+							</mx:Component>
+						</mx:itemRenderer>
+					</mx:DataGridColumn>
+				</mx:columns>
+			</mx:DataGrid>
 		</mx:VBox>
 	</mx:TabNavigator>
 </mx:HBox>

@@ -3,31 +3,53 @@ package com.j_nid.models {
 	import com.adobe.cairngorm.model.IModelLocator;
 	import com.j_nid.controls.EventNames;
 	import com.j_nid.utils.CairngormUtils;
+	import com.j_nid.utils.PrinterUtils;
 	
 	import mx.collections.ArrayCollection;
+	import mx.collections.IViewCursor;
+	import mx.collections.Sort;
+	import mx.collections.SortField;
+	import mx.core.Application;
 
 	[Bindable]
 	public class JNidModelLocator implements IModelLocator {
 		
 		private static var modelLocator:JNidModelLocator;
+		public static const ALL_TYPE:ProductType = new ProductType(0, "All");
+		private var _bankNames:XMLList;
+		private var _phoneTypes:XMLList;
+		// Array Collection for models.
 		private var _productTypes:ArrayCollection;
 		private var _products:ArrayCollection;
-		private var _productIDMap:Object;
 		private var _people:ArrayCollection;
 		private var _bankAccounts:ArrayCollection;
 		private var _phoneNumbers:ArrayCollection;
+		private var _orders:ArrayCollection;
+		private var _orderItems:ArrayCollection;
+		private var _payments:ArrayCollection;
+		// Map for get object by key.
+		private var _productIDMap:Object;
 		private var _productTypeIDMap:Object;
 		private var _personIDMap:Object;
 		private var _personNameMap:Object;
-		private var _productTypesWithAll:ArrayCollection;
-		private var _orders:ArrayCollection;
 		private var _orderIDMap:Object;
-		private var _orderItems:ArrayCollection;
 		private var _orderItemIDMap:Object;
-		private var _orderToCreate:Order;
-		public const ALL_TYPE:ProductType = new ProductType(0, "All");
+		private var _bankAccountIDMap:Object;
+		private var _phoneNumberIDMap:Object;
+		// Flag for check loaded model.
+		private var _loadedProductType:Boolean = false;
 		private var _loadedProduct:Boolean = false;
+		private var _loadedPerson:Boolean = false;
 		private var _loadedOrder:Boolean = false;
+		private var _loadedOrderItem:Boolean = false;
+		private var _loadedBankAccount:Boolean = false;
+		private var _loadedPhoneNumber:Boolean = false;
+		private var _loadedPayment:Boolean = false;
+		private var _loadedPhoneType:Boolean = false;
+		private var _loadedBankName:Boolean = false;		
+		// Temporary create object.
+		private var _orderToCreate:Order;
+		private var _personToCreate:Person;
 		
 		public function JNidModelLocator() {
 			
@@ -46,12 +68,11 @@ package com.j_nid.models {
 			for each (var xml:XML in obj.children()) {
 				var productType:ProductType = ProductType.fromXML(xml);
 				typeArray.push(productType);
-				// Create hash of productType.
 				_productTypeIDMap[productType.id] = productType;
 			}
 			productTypes = new ArrayCollection(typeArray);
-			ProductTypesWithAll = new ArrayCollection(typeArray);
-			CairngormUtils.dispatchEvent(EventNames.LIST_PRODUCT);
+			_loadedProductType = true;
+			setRelateModels();
 		}
 		
 		public function setProducts(obj:XML):void {
@@ -59,30 +80,27 @@ package com.j_nid.models {
 			_productIDMap = {};
 			for each (var xml:XML in obj.children()) {
 				var product:Product = Product.fromXML(xml);
-				_productIDMap[product.id] = product;
 				productArray.push(product);
-				// Add product to product type.
-				var productType:ProductType = getProductType(xml.type_id);
-				productType.addProduct(product);
+				_productIDMap[product.id] = product;
 			}
 			products = new ArrayCollection(productArray);
 			_loadedProduct = true;
-			getOrderItemList();
+			setRelateModels();
 		}
 		
 		public function setPeople(obj:XML):void {
-			people = new ArrayCollection();
+			var personArray:Array = new Array();
 			_personIDMap = {};
 			_personNameMap = {};
 			for each (var xml:XML in obj.children()) {
 				var person:Person = Person.fromXML(xml);
-				people.addItem(person);
+				personArray.push(person);
 				_personIDMap[person.id] = person;
 				_personNameMap[person.name] = person;
 			}
-			CairngormUtils.dispatchEvent(EventNames.LIST_BANK_ACCOUNT);
-			CairngormUtils.dispatchEvent(EventNames.LIST_PHONE_NUMBER);
-			CairngormUtils.dispatchEvent(EventNames.LIST_ORDER);
+			people = new ArrayCollection(personArray);
+			_loadedPerson = true;
+			setRelateModels();
 		}
 		
 		public function setBankAccounts(obj:XML):void {
@@ -90,11 +108,10 @@ package com.j_nid.models {
 			for each (var xml:XML in obj.children()) {
 				var bankAccount:BankAccount = BankAccount.fromXML(xml);
 				bankAccountArray.push(bankAccount);
-				// Add bank account to person.
-				var person:Person = getPerson(xml.person_id);
-				person.addBankAccount(bankAccount);
 			}
 			bankAccounts = new ArrayCollection(bankAccountArray);
+			_loadedBankAccount = true;
+			setRelateModels();
 		}
 		
 		public function setPhoneNumbers(obj:XML):void {
@@ -102,11 +119,10 @@ package com.j_nid.models {
 			for each (var xml:XML in obj.children()) {
 				var phoneNumber:PhoneNumber = PhoneNumber.fromXML(xml);
 				phoneNumberArray.push(phoneNumber);
-				// Add phone number to person.
-				var person:Person = getPerson(xml.person_id);
-				person.addPhoneNumber(phoneNumber);
 			}
 			phoneNumbers = new ArrayCollection(phoneNumberArray);
+			_loadedPhoneNumber = true;
+			setRelateModels();
 		}
 		
 		public function setOrders(obj:XML):void {
@@ -116,12 +132,10 @@ package com.j_nid.models {
 				var order:Order = Order.fromXML(xml);
 				orderArray.push(order);
 				_orderIDMap[order.id] = order;
-				var person:Person = getPerson(xml.person_id);
-				person.addOrder(order);
 			}
 			orders = new ArrayCollection(orderArray);
 			_loadedOrder = true;
-			getOrderItemList();
+			setRelateModels();
 		}
 		
 		public function setOrderItems(obj:XML):void {
@@ -129,36 +143,169 @@ package com.j_nid.models {
 			_orderItemIDMap = {};
 			for each (var xml:XML in obj.children()) {
 				var item:OrderItem = OrderItem.fromXML(xml);
+				itemArray.push(item);
 				_orderItemIDMap[item.id] = item;
-				var order:Order = getOrder(xml.order_id);
-				order.addItem(item);
-				item.product = getProduct(xml.product_id);
 			}
 			orderItems = new ArrayCollection(itemArray);
+			_loadedOrderItem = true;
+			setRelateModels();
+		}
+		
+		public function setPayments(obj:XML):void {
+			var paymentArray:Array = new Array();
+			for each (var xml:XML in obj.children()) {
+				var payment:Payment = Payment.fromXML(xml);
+				paymentArray.push(payment);
+			}
+			payments = new ArrayCollection(paymentArray);
+			_loadedPayment = true;
+			setRelateModels();
+		}
+		
+		private function setRelateModels():void {
+			if (_loadedBankAccount && _loadedOrder && _loadedOrderItem &&
+				_loadedPerson && _loadedPhoneNumber && _loadedProduct &&
+				_loadedProductType && _loadedPayment) {
+					// Set relate for order items.
+					var cursor:IViewCursor = orderItems.createCursor();
+					while (!cursor.afterLast) {
+						var item:OrderItem = OrderItem(cursor.current);
+						getOrder(item.orderID).addItem(item);;
+						item.product = getProduct(item.productID);;
+						cursor.moveNext();
+					}
+					// Set relate for orders.
+					cursor = orders.createCursor();
+					while (!cursor.afterLast) {
+						var order:Order = Order(cursor.current);
+						getPerson(order.personID).addOrder(order);
+						cursor.moveNext();
+					}
+					// Set relate for payments.
+					cursor = payments.createCursor();
+					while (!cursor.afterLast) {
+						var payment:Payment = Payment(cursor.current);
+						getPerson(payment.personID).addPayment(payment);
+						cursor.moveNext();
+					}
+					// Set relate for products.
+					cursor = products.createCursor();
+					while (!cursor.afterLast) {
+						var product:Product = Product(cursor.current);
+						getProductType(product.typeID).addProduct(product);
+						cursor.moveNext();
+					}
+					// Set relate for bank accounts.
+					cursor = bankAccounts.createCursor();
+					while (!cursor.afterLast) {
+						var bankAccount:BankAccount = BankAccount(cursor.current);
+						getPerson(bankAccount.personID).addBankAccount(bankAccount);
+						cursor.moveNext();
+					}
+					// Set relate for bank accounts.
+					cursor = phoneNumbers.createCursor();
+					while (!cursor.afterLast) {
+						var phoneNumber:PhoneNumber = PhoneNumber(cursor.current);
+						getPerson(phoneNumber.personID).addPhoneNumber(phoneNumber);
+						cursor.moveNext();
+					}
+					sortModels();
+				}
+		}
+		
+		public function sortModels():void {
+			// Add sort for people.
+			var sort:Sort = new Sort();
+			sort.fields = [new SortField("name")]
+			people.sort = sort;
+			people.refresh();
+			// Add sort for productTypes.
+			sort = new Sort();
+			sort.fields = [new SortField("name")]
+			productTypes.sort = sort;
+			productTypes.refresh();
+			// Add sort for products.
+			sort = new Sort();
+			sort.fields = [new SortField("type"), new SortField("name")];
+			products.sort = sort;
+			products.refresh();
+			// Add sort for orders.
+			sort = new Sort();
+			sort.fields = [new SortField("created", false, true)];
+			orders.sort = sort;
+			orders.refresh();
 		}
 		
 		public function createOrder(obj:XML):void {
 			var order:Order = Order.fromXML(obj);
 			_orderIDMap[order.id] = order;
-			var person:Person = getPerson(obj.person_id);
+			var person:Person = getPerson(order.personID);
 			person.addOrder(order);
 			for each (var item:OrderItem in _orderToCreate.orderItems) {
-				item.order = order;
+				item.orderID = order.id;
 				CairngormUtils.dispatchEvent(EventNames.CREATE_ORDER_ITEM, item);
 			}
-			var orderArray:Array = orders.toArray();
-			orderArray.push(order);
-			orders = new ArrayCollection(orderArray);
+			orders.addItem(order);
 		}
 		
 		public function createOrderItem(obj:XML):void {
 			var item:OrderItem = OrderItem.fromXML(obj);
 			_orderItemIDMap[item.id] = item;
-			var order:Order = getOrder(obj.order_id);
-			order.addItem(item);
-			var itemArray:Array = orderItems.toArray();
-			itemArray.push(item);
-			orderItems = new ArrayCollection(itemArray);
+			item.product = getProduct(item.productID);
+			getOrder(item.orderID).addItem(item);
+			orderItems.addItem(item);
+			if (item.order.orderItems.length == _orderToCreate.orderItems.length) {
+				PrinterUtils.printOrder(item.order);
+				Application.application.setPage("paymentPage");
+			}
+		}
+		
+		public function createPerson(obj:XML):void {
+			var person:Person = Person.fromXML(obj);
+			_personIDMap[person.id] = person;
+			_personNameMap[person.name] = person;
+			for each (var bankAccount:BankAccount in _personToCreate.bankAccounts) {
+				bankAccount.personID = person.id;
+				CairngormUtils.dispatchEvent(EventNames.CREATE_BANK_ACCOUNT, bankAccount);
+			}
+			for each (var phoneNumber:PhoneNumber in _personToCreate.phoneNumbers) {
+				phoneNumber.personID = person.id;
+				CairngormUtils.dispatchEvent(EventNames.CREATE_PHONE_NUMBER, phoneNumber);
+			}
+			people.addItem(person);
+		}
+		
+		public function createBankAccount(obj:XML):void {
+			var bankAccount:BankAccount = BankAccount.fromXML(obj);
+			_bankAccountIDMap[bankAccount.id] = bankAccount;
+			getPerson(bankAccount.personID).addBankAccount(bankAccount);
+			bankAccounts.addItem(bankAccount);
+		}
+		
+		public function createPhoneNumber(obj:XML):void {
+			var phoneNumber:PhoneNumber = PhoneNumber.fromXML(obj);
+			_phoneNumberIDMap[phoneNumber.id] = phoneNumber;
+			getPerson(phoneNumber.personID).addPhoneNumber(phoneNumber);
+			phoneNumbers.addItem(phoneNumber);
+		}
+		
+		public function createProductType(obj:XML):void {
+			var productType:ProductType = ProductType.fromXML(obj);
+			_productTypeIDMap[productType.id] = productType;
+			productTypes.addItem(productType);
+		}
+		
+		public function createProduct(obj:XML):void {
+			var product:Product = Product.fromXML(obj);
+			_productIDMap[product.id] = product;
+			getProductType(product.typeID).addProduct(product);
+			products.addItem(product);
+		}
+		
+		public function createPayment(obj:XML):void {
+			var payment:Payment = Payment.fromXML(obj);
+			getPerson(payment.personID).addPayment(payment);
+			payments.addItem(payment);
 		}
 		
 		public function getProductType(id:int):ProductType {
@@ -177,7 +324,7 @@ package com.j_nid.models {
 		
 		public function updateProduct(xml:XML):void {
 			// For trigger data binding.
-			products = new ArrayCollection(products.toArray());
+			products.refresh();
 		}
 		
 		public function getPersonByName(name:String):Person {
@@ -201,17 +348,11 @@ package com.j_nid.models {
 			return _orderItemIDMap[id];
 		}
 		
-		private function getProduct(id:int):Product {
+		public function getProduct(id:int):Product {
 			if (_productIDMap == null) {
 				return null;
 			}
 			return _productIDMap[id];
-		}
-		
-		private function getOrderItemList():void {
-			if (_loadedOrder && _loadedProduct) {
-				CairngormUtils.dispatchEvent(EventNames.LIST_ORDER_ITEM);
-			}
 		}
 		
 /* ----- get-set function. --------------------------------------------------------------------- */
@@ -256,16 +397,6 @@ package com.j_nid.models {
 			return _phoneNumbers;
 		}
 		
-		public function set ProductTypesWithAll(obj:ArrayCollection):void {
-			// Copy original array.
-			_productTypesWithAll = new ArrayCollection(obj.toArray().slice(0));
-			_productTypesWithAll.addItemAt(ALL_TYPE, 0);
-		}
-		
-		public function get ProductTypesWithAll():ArrayCollection {
-			return _productTypesWithAll;
-		}
-		
 		public function set orders(obj:ArrayCollection):void {
 			_orders = obj;
 		}
@@ -284,6 +415,36 @@ package com.j_nid.models {
 		
 		public function set orderToCreate(obj:Order):void {
 			_orderToCreate = obj;
+		}
+		
+		public function get payments():ArrayCollection {
+			return _payments;
+		}
+		
+		public function set payments(obj:ArrayCollection):void {
+			_payments = obj;
+		}
+		
+		public function get bankNames():XMLList {
+			return _bankNames;
+		}
+		
+		public function set bankNames(obj:XMLList):void {
+			_bankNames = obj;
+			_loadedBankName = true;
+		}
+		
+		public function get phoneTypes():XMLList {
+			return _phoneTypes;
+		}
+		
+		public function set phoneTypes(obj:XMLList):void {
+			_phoneTypes = obj;
+			_loadedPhoneType = true;
+		}
+		
+		public function set personToCreate(obj:Person):void {
+			_personToCreate = obj;
 		}
 	}
 }

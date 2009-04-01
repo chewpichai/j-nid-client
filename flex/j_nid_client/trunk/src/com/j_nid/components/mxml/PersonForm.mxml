@@ -64,24 +64,24 @@
 
 	<mx:FormHeading label="Person Form" width="100%"/>
 	<mx:FormItem label="Name" width="100%" required="true">
-		<mx:TextInput id="nameField"/>
+		<mx:TextInput id="nameField" width="100%"/>
 	</mx:FormItem>
 	<mx:FormItem label="First Name" width="100%">
-		<mx:TextInput id="firstNameField"/>
+		<mx:TextInput id="firstNameField" width="100%"/>
 	</mx:FormItem>
 	<mx:FormItem label="Last Name" width="100%">
-		<mx:TextInput id="lastNameField"/>
+		<mx:TextInput id="lastNameField" width="100%"/>
 	</mx:FormItem>
 	<mx:FormItem label="Address" width="100%">
-		<mx:TextArea id="addressField" height="80"/>
+		<mx:TextArea id="addressField" height="80" width="100%"/>
 	</mx:FormItem>
 	<mx:FormItem id="phoneFormItem" label="Phone Number" width="100%">
 		<mx:HBox width="100%">
-			<mx:TextInput id="phoneNumberField"/>
-			<mx:ComboBox id="phoneTypeField" width="90"/>
+			<mx:TextInput id="phoneNumberField" width="100%"/>
+			<mx:ComboBox id="phoneTypeField" width="100"/>
 		</mx:HBox>
 	</mx:FormItem>
-	<mx:FormItem height="100%"/>
+	<mx:Spacer height="100%"/>
 	<mx:FormItem width="100%">
 		<mx:HBox width="100%">
 			<mx:Button id="saveBtn" label="save" click="saveBtnClickListener(event)"/>
