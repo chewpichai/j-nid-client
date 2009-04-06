@@ -9,6 +9,7 @@ package com.j_nid.models {
     	private var _productID:int;
     	private var _unit:int;
     	private var _pricePerUnit:Number;
+    	private var _costPerUnit:Number;
     	private var _quantity:int;
     	private var _total:Number;
     	
@@ -17,6 +18,7 @@ package com.j_nid.models {
     		item.id = obj.id;
     		item.unit = obj.unit;
     		item.pricePerUnit = obj.price_per_unit;
+    		item.costPerUnit = obj.cost_per_unit;
     		item.total = item.unit * item.pricePerUnit;
     		item.orderID = obj.order_id;
     		item.productID = obj.product_id;
@@ -39,6 +41,7 @@ package com.j_nid.models {
 			xml.product_id = productID;
 			xml.unit = unit;
 			xml.price_per_unit = pricePerUnit;
+			xml.cost_per_unit = costPerUnit;
 			return xml;
 		}
 		
@@ -75,6 +78,14 @@ package com.j_nid.models {
 		
 		public function get unit():int {
 			return _unit;
+		}
+		
+		public function set costPerUnit(obj:Number):void {
+			_costPerUnit = obj;
+		}
+		
+		public function get costPerUnit():Number {
+			return _costPerUnit;
 		}
 		
 		public function set pricePerUnit(obj:Number):void {

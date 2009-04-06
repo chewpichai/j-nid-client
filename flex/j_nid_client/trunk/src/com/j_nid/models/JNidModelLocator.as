@@ -327,6 +327,10 @@ package com.j_nid.models {
 			products.refresh();
 		}
 		
+		public function updateProductType(xml:XML):void {
+			productTypes.refresh();
+		}
+		
 		public function getPersonByName(name:String):Person {
 			if (_personNameMap == null) {
 				return null;

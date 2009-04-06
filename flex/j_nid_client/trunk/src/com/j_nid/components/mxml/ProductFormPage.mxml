@@ -57,6 +57,11 @@
 			private function isProductTypeValid():Boolean {
 				return true;
 			}
+			
+			internal function updateProductTypeColor(type:ProductType, color:uint):void {
+				type.color = color;
+				CairngormUtils.dispatchEvent(EventNames.UPDATE_PRODUCT_TYPE, type);
+			}
 		]]>
 	</mx:Script>
 	
@@ -134,8 +139,13 @@
 						<mx:itemRenderer>
 							<mx:Component>
 <mx:Canvas>
+	<mx:Script>
+		<![CDATA[
+			import com.j_nid.models.ProductType;
+		]]>
+	</mx:Script>
 	<mx:ColorPicker id="colorPicker" selectedColor="{data.color}" 
-		change="{data.color = colorPicker.selectedColor}"/>
+		change="{outerDocument.updateProductTypeColor(ProductType(data), colorPicker.selectedColor)}"/>
 </mx:Canvas>
 							</mx:Component>
 						</mx:itemRenderer>

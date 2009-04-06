@@ -27,7 +27,8 @@
 				
 			}
 			
-			private function filterIsSale(products:ArrayCollection):ArrayCollection {
+			private function filterIsSale(productArray:Array):ArrayCollection {
+				var products:ArrayCollection = new ArrayCollection(productArray);
 				products.filterFunction = function(obj:Object):Boolean {
 					return Product(obj).isSale;
 				};
@@ -37,17 +38,7 @@
 		]]>
 	</mx:Script>
 	
-	<mx:HBox horizontalGap="0" width="100%" height="100%">
-		<mx:TileList width="100%" height="100%" dataProvider="{filterIsSale(model.products)}"
-			columnWidth="220" rowHeight="40" selectable="false" direction="vertical">
-			<mx:itemRenderer>
-				<mx:Component>
-<mx:HBox horizontalAlign="right">
-	<mx:Label text="{data.name}" color="blue"/>
-	<mx:Label text="{data.pricePerUnit}" width="55" textAlign="right"/>
-</mx:HBox>
-				</mx:Component>
-			</mx:itemRenderer>
-		</mx:TileList>
-	</mx:HBox>
+	<mx:TileList width="100%" height="100%" dataProvider="{filterIsSale(model.products.toArray())}"
+		columnWidth="370" rowHeight="40" selectable="false" direction="vertical" 
+		itemRenderer="com.j_nid.components.mxml.MainProductRenderer"/>
 </mx:VBox>

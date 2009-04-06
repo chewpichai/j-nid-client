@@ -33,6 +33,7 @@ package com.j_nid.models {
 			xml.type_id = typeID;
 			xml.unit = unit;
 			xml.price_per_unit = pricePerUnit;
+			xml.cost_per_unit = costPerUnit;
 			xml.is_sale = isSale ? 1:0;
 			return xml;
 		}

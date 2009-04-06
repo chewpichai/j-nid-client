@@ -10,15 +10,14 @@ package com.j_nid.models {
 		private var _products:ArrayCollection;
 		
 		public static function fromXML(obj:XML):ProductType {
-			trace(obj);
 			var productType:ProductType = new ProductType();
 			productType.id = obj.id;
 			productType.name = obj.name;
-			productType.color = 0xFFFFFF;
+			productType.color = obj.color;
 			return productType;
 		}
 		
-		public function ProductType(id:int=0, name:String="", color:uint=0xFFFFFF) {
+		public function ProductType(id:int=0, name:String="", color:uint=0) {
 			super();
 			this.id = id;
 			this.name = name;
@@ -42,6 +41,7 @@ package com.j_nid.models {
 		public function toXML():XML {
 			var xml:XML = <product_type/>
 			xml.name = name;
+			xml.color = color;
 			return xml;
 		}
 		

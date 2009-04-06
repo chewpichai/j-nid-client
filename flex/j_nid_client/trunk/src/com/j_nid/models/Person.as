@@ -7,6 +7,9 @@ package com.j_nid.models {
 	[Bindable]
 	public class Person	extends Model {
 		
+        private static const GENERAL:uint = 1;
+        private static const CUSTOMER:uint = 2;
+        private static const SUPPLIER:uint = 4;
         private var _name:String;
     	private var _firstName:String;
     	private var _lastName:String;
@@ -18,6 +21,7 @@ package com.j_nid.models {
     	private var _numOutstandingOrders:int;
     	private var _paidTotal:Number;
     	private var _orderTotal:Number;
+    	private var _type:uint;
     	private var _phoneNumbers:ArrayCollection;
     	private var _bankAccounts:ArrayCollection;
     	private var _orders:ArrayCollection;
@@ -33,6 +37,7 @@ package com.j_nid.models {
 			person.idCardNumber = obj.id_card_number;
 			person.detail1 = obj.detail1;
 			person.detail2 = obj.detail2;
+			person.type = obj.type;
 			return person;
     	}
         
@@ -174,6 +179,10 @@ package com.j_nid.models {
 			return _detail2;
 		}
 		
+		public function set type(obj:uint):void {
+			_type = obj;
+		}
+		
 		public function set phoneNumbers(obj:ArrayCollection):void {
 			_phoneNumbers = obj;
 		}
@@ -236,6 +245,42 @@ package com.j_nid.models {
 		
 		public function get payments():ArrayCollection {
 			return _payments;
+		}
+		
+		public function set isGeneral(obj:Boolean):void {
+			if (obj) {
+				_type &= (SUPPLIER | CUSTOMER | GENERAL);
+			} else {
+				_type &= (SUPPLIER | CUSTOMER);
+			}
+		}
+		
+		public function get isGeneral():Boolean {
+			return Boolean(_type & GENERAL);
+		}
+		
+		public function set isCustomer(obj:Boolean):void {
+			if (obj) {
+				_type &= (SUPPLIER | CUSTOMER | GENERAL);
+			} else {
+				_type &= (SUPPLIER | GENERAL);
+			}
+		}
+		
+		public function get isCustomer():Boolean {
+			return Boolean(_type & CUSTOMER);
+		}
+		
+		public function set isSupplier(obj:Boolean):void {
+			if (obj) {
+				_type &= (SUPPLIER | CUSTOMER | GENERAL);
+			} else {
+				_type &= (CUSTOMER | GENERAL);
+			}
+		}
+		
+		public function get isSupplier():Boolean {
+			return Boolean(_type & SUPPLIER);
 		}
 	}
 }

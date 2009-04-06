@@ -2,24 +2,25 @@ package com.j_nid.commands {
 	
 	import com.adobe.cairngorm.commands.ICommand;
 	import com.adobe.cairngorm.control.CairngormEvent;
-	import com.j_nid.business.ProductDelegate;
+	import com.j_nid.business.ProductTypeDelegate;
 	import com.j_nid.models.JNidModelLocator;
+	
 	import mx.rpc.IResponder;
 
-	public class UpdateProductCommand implements ICommand, IResponder {
+	public class UpdateProductTypeCommand implements ICommand, IResponder {
 		
-		public function UpdateProductCommand() {
+		public function UpdateProductTypeCommand() {
 			
 		}
 
 		public function execute(event:CairngormEvent):void {
-			var delegate:ProductDelegate = new ProductDelegate(this);
-			delegate.updateProduct(event.data);
+			var delegate:ProductTypeDelegate = new ProductTypeDelegate(this);
+			delegate.updateProductType(event.data);
 		}
 		
 		public function result(event:Object):void {
 			var model:JNidModelLocator = JNidModelLocator.getInstance();
-			model.updateProduct(event.result);
+			model.updateProductType(event.result);
 		}
 		
 		public function fault(event:Object):void {

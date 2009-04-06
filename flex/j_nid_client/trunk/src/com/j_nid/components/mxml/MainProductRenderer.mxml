@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" paddingLeft="10" paddingRight="10"
+	doubleClickEnabled="true" doubleClick="{currentState='edit'}"
+	rollOut="rollOutListener(event)">
+	
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.NumericStepper;
+			import mx.core.UIComponent;
+			
+			private function rollOutListener(e:MouseEvent):void {
+				if (currentState == 'edit') {
+					for each (var obj:UIComponent in getChildren()) {
+						if (obj is NumericStepper) {
+							obj.drawFocus(false);
+						}
+					}
+					currentState = null;
+				}
+			}
+		]]>
+	</mx:Script>
+	
+	<mx:states>
+		<mx:State name="edit">
+			<mx:RemoveChild target="{costLbl}"/>
+			<mx:RemoveChild target="{priceLbl}"/>
+			<mx:AddChild position="lastChild">
+				<mx:NumericStepper value="{data.costPerUnit}" 
+					maximum="100000" textAlign="right"/>
+			</mx:AddChild>
+			<mx:AddChild position="lastChild">
+				<mx:NumericStepper value="{data.pricePerUnit}" 
+					maximum="100000" textAlign="right"/>
+			</mx:AddChild>
+		</mx:State>
+	</mx:states>
+	
+	<mx:Fade id="fadeIn" alphaFrom="0" alphaTo="0.8"/>
+	<mx:Fade id="fadeOut" alphaFrom="0.8" alphaTo="0"/>
+	
+	<mx:Label text="{data.name}" color="{data.type.color}" 
+		width="100%" textAlign="left"/>
+	<mx:Label id="costLbl" text="{data.costPerUnit}" textAlign="right" 
+		alpha="0" rollOverEffect="{fadeIn}" rollOutEffect="{fadeOut}"/>
+	<mx:Label id="priceLbl" text="{data.pricePerUnit}" textAlign="right"/>
+</mx:HBox>

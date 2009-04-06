@@ -13,7 +13,7 @@ package com.j_nid.controls {
 			// ProductType commands.
 			addCommand(EventNames.LIST_PRODUCT_TYPE, ListProductTypeCommand);
 			addCommand(EventNames.CREATE_PRODUCT_TYPE, CreateProductTypeCommand);
-//			addCommand(EventNames.UPDATE_PRODUCT_TYPE, UpdateProductTypeCommand);
+			addCommand(EventNames.UPDATE_PRODUCT_TYPE, UpdateProductTypeCommand);
 //			addCommand(EventNames.DELETE_PRODUCT_TYPE, DeleteProductTypeCommand);
 			// Product commands.
 			addCommand(EventNames.LIST_PRODUCT, ListProductCommand);
