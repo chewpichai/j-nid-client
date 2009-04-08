@@ -323,12 +323,11 @@ package com.j_nid.models {
 		}
 		
 		public function updateProduct(xml:XML):void {
-			// For trigger data binding.
-			products.refresh();
+			
 		}
 		
 		public function updateProductType(xml:XML):void {
-			productTypes.refresh();
+			
 		}
 		
 		public function getPersonByName(name:String):Person {

@@ -4,6 +4,8 @@
 	
 	<mx:Script>
 		<![CDATA[
+			import mx.collections.SortField;
+			import mx.collections.Sort;
 			import mx.collections.IViewCursor;
 			import mx.collections.ArrayCollection;
 			import com.j_nid.controls.EventNames;
@@ -32,13 +34,17 @@
 				products.filterFunction = function(obj:Object):Boolean {
 					return Product(obj).isSale;
 				};
+				var sort:Sort = new Sort();
+				sort.fields = [new SortField("type"), new SortField("name")];
+				products.sort = sort;
 				products.refresh();
 				return products;
 			}
 		]]>
 	</mx:Script>
 	
-	<mx:TileList width="100%" height="100%" dataProvider="{filterIsSale(model.products.toArray())}"
-		columnWidth="370" rowHeight="40" selectable="false" direction="vertical" 
-		itemRenderer="com.j_nid.components.mxml.MainProductRenderer"/>
+	<mx:TileList dataProvider="{filterIsSale(model.products.toArray())}"
+		columnWidth="245" rowHeight="40" selectable="false" direction="vertical" 
+		itemRenderer="com.j_nid.components.mxml.MainProductRenderer"
+		width="100%" height="100%"/>
 </mx:VBox>

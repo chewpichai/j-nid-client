@@ -1,40 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" paddingLeft="10" paddingRight="10"
-	doubleClickEnabled="true" doubleClick="{currentState='edit'}"
-	rollOut="rollOutListener(event)">
+	doubleClickEnabled="true" doubleClick="doubleClickListener(event)"
+	width="100%" height="100%">
 	
 	<mx:Script>
 		<![CDATA[
-			import mx.controls.NumericStepper;
+			import com.j_nid.models.Product;
+			import mx.core.Application;
+			import mx.managers.PopUpManager;
 			import mx.core.UIComponent;
 			
-			private function rollOutListener(e:MouseEvent):void {
-				if (currentState == 'edit') {
-					for each (var obj:UIComponent in getChildren()) {
-						if (obj is NumericStepper) {
-							obj.drawFocus(false);
-						}
-					}
-					currentState = null;
+			private function doubleClickListener(e:MouseEvent):void {
+				var index:int = e.currentTarget.parent.parent.itemRendererToIndex(e.currentTarget);
+				var product:Product = e.currentTarget.parent.parent.dataProvider.getItemAt(index);
+				var priceEditor:ProductPriceEditor = ProductPriceEditor(
+					PopUpManager.createPopUp(Application(Application.application), 
+						ProductPriceEditor, true)
+				);
+				priceEditor.product = product;
+				priceEditor.x = e.stageX;
+				if (e.stageX + priceEditor.width > Application.application.width) {
+					priceEditor.x = Application.application.width - priceEditor.width;
+				}
+				priceEditor.y = e.stageY;
+				if (e.stageY + priceEditor.height > Application.application.height) {
+					priceEditor.y = Application.application.height - priceEditor.height;
 				}
 			}
 		]]>
 	</mx:Script>
-	
-	<mx:states>
-		<mx:State name="edit">
-			<mx:RemoveChild target="{costLbl}"/>
-			<mx:RemoveChild target="{priceLbl}"/>
-			<mx:AddChild position="lastChild">
-				<mx:NumericStepper value="{data.costPerUnit}" 
-					maximum="100000" textAlign="right"/>
-			</mx:AddChild>
-			<mx:AddChild position="lastChild">
-				<mx:NumericStepper value="{data.pricePerUnit}" 
-					maximum="100000" textAlign="right"/>
-			</mx:AddChild>
-		</mx:State>
-	</mx:states>
 	
 	<mx:Fade id="fadeIn" alphaFrom="0" alphaTo="0.8"/>
 	<mx:Fade id="fadeOut" alphaFrom="0.8" alphaTo="0"/>
