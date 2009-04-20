@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" 
 	layout="vertical" alpha="0.75"
-	paddingLeft="10" paddingRight="10"
-	paddingTop="10" paddingBottom="10"
+	borderThicknessLeft="0" borderThicknessRight="0"
+	paddingLeft="5" paddingRight="5"
+	paddingTop="5" paddingBottom="5"
 	title="{product.name}"
 	borderColor="{product.type.color}">
 	

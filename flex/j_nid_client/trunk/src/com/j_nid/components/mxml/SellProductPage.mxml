@@ -16,39 +16,38 @@
 			
 			[Bindable]
 			private var model:JNidModelLocator = JNidModelLocator.getInstance();
-			private var productTypeSelectedIndex:int = 0;
 			
 			private function init(e:FlexEvent):void {
-
-			}
-			
-			private function resultListener(e:ResultEvent):void {
-				
-			}
-			
-			private function changePage(e:IndexChangedEvent):void {
 
 			}
 		]]>
 	</mx:Script>
 	
 	<mx:HBox height="100%">
+		
 		<mx:Panel title="Product Type List" height="100%" width="220">
 			<mx:List id="productTypeList" dataProvider="{model.productTypes}" 
 				labelField="name" height="100%"	width="100%" borderStyle="none"/>
 		</mx:Panel>
-		<mx:Panel title="Product List" height="100%" borderStyle="solid" width="350">
+		
+		<mx:Panel title="Product List" 
+			borderStyle="solid" 
+			width="350" height="100%">
+			
 			<mx:DataGrid id="productList" variableRowHeight="true" dragEnabled="true" 
 				dataProvider="{productTypeList.selectedItem.products}"
 				width="100%" height="100%">
 				<mx:columns>
-					<mx:DataGridColumn headerText="Name" dataField="name" wordWrap="true"/>
-					<mx:DataGridColumn headerText="Unit" dataField="unit" width="50"/>
-					<mx:DataGridColumn headerText="Price/Unit" dataField="pricePerUnit" width="80"/>
+					<mx:DataGridColumn headerText="Name" 
+						dataField="name" wordWrap="true"/>
+					<mx:DataGridColumn headerText="Unit" 
+						dataField="unit" width="50"/>
+					<mx:DataGridColumn headerText="Price/Unit" 
+						dataField="pricePerUnit" width="80"/>
 				</mx:columns>
 			</mx:DataGrid>
 		</mx:Panel>
 	</mx:HBox>
 	
-	<jn:OrderDetail people="{model.people}" width="100%" height="100%"/>
+	<jn:OrderDetail width="100%" height="100%"/>
 </mx:HBox>

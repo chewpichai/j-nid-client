@@ -7,9 +7,9 @@ package com.j_nid.models {
 	[Bindable]
 	public class Person	extends Model {
 		
-        private static const GENERAL:uint = 1;
-        private static const CUSTOMER:uint = 2;
-        private static const SUPPLIER:uint = 4;
+        private static const GENERAL:uint = 0;
+        private static const CUSTOMER:uint = 1;
+        private static const SUPPLIER:uint = 2;
         private var _name:String;
     	private var _firstName:String;
     	private var _lastName:String;
@@ -91,6 +91,11 @@ package com.j_nid.models {
 			orders.addItem(order);
 		}
 		
+		public function removeOrder(order:Order):void {
+			order.person = null;
+			orders.removeItemAt(orders.getItemIndex(order));
+		}
+		
 		private function calcOrder(order:Order):void {
 			if (order.status == Order.OUTSTANDING) {
 				numOutstandingOrders += 1;
@@ -118,6 +123,7 @@ package com.j_nid.models {
 			xml.id_card_number = idCardNumber;
 			xml.detail1 = detail1;
 			xml.detail2 = detail2;
+			xml.type = _type;
 			return xml;
 		}
 				
@@ -249,38 +255,47 @@ package com.j_nid.models {
 		
 		public function set isGeneral(obj:Boolean):void {
 			if (obj) {
-				_type &= (SUPPLIER | CUSTOMER | GENERAL);
+				_type = (int(isSupplier) << SUPPLIER | 
+					1 << GENERAL |
+					int(isCustomer) << CUSTOMER);
 			} else {
-				_type &= (SUPPLIER | CUSTOMER);
+				_type = (int(isSupplier) << SUPPLIER |
+					int(isCustomer) << CUSTOMER);
 			}
 		}
 		
 		public function get isGeneral():Boolean {
-			return Boolean(_type & GENERAL);
+			return Boolean(_type & (1 << GENERAL));
 		}
 		
 		public function set isCustomer(obj:Boolean):void {
 			if (obj) {
-				_type &= (SUPPLIER | CUSTOMER | GENERAL);
+				_type = (int(isSupplier) << SUPPLIER | 
+					1 << CUSTOMER |
+					int(isGeneral) << GENERAL);
 			} else {
-				_type &= (SUPPLIER | GENERAL);
+				_type = (int(isSupplier) << SUPPLIER |
+					int(isGeneral) << GENERAL);
 			}
 		}
 		
 		public function get isCustomer():Boolean {
-			return Boolean(_type & CUSTOMER);
+			return Boolean(_type & (1 << CUSTOMER));
 		}
 		
 		public function set isSupplier(obj:Boolean):void {
 			if (obj) {
-				_type &= (SUPPLIER | CUSTOMER | GENERAL);
+				_type = (int(isCustomer) << CUSTOMER | 
+					1 << SUPPLIER |
+					int(isGeneral) << GENERAL);
 			} else {
-				_type &= (CUSTOMER | GENERAL);
+				_type = (int(isCustomer) << CUSTOMER |
+					int(isGeneral) << GENERAL);
 			}
 		}
 		
 		public function get isSupplier():Boolean {
-			return Boolean(_type & SUPPLIER);
+			return Boolean(_type & (1 << SUPPLIER));
 		}
 	}
 }

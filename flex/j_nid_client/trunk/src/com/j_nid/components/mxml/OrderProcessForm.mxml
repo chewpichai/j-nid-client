@@ -2,7 +2,10 @@
 <mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" 
 	xmlns:adobe="http://www.adobe.com/2006/fc" 
 	xmlns:jn="com.j_nid.components.mxml.*" 
-	title="Process Order" layout="vertical" width="500"	creationComplete="init(event)"
+	title="Process Order" 
+	layout="vertical" 
+	width="500"	
+	creationComplete="init(event)"
 	borderAlpha="0.8">
 	
 	<mx:Script>
@@ -18,6 +21,7 @@
 			import mx.managers.PopUpManager;
 			import mx.events.FlexEvent;
 			
+			[Bindable]
 			public var order:Order;
 			[Bindable]
 			private var model:JNidModelLocator = JNidModelLocator.getInstance();
@@ -26,67 +30,51 @@
 				PopUpManager.centerPopUp(this);
 			}
 			
-			private function newBtnClickListener(e:MouseEvent):void {
-				currentState = "ShowForm";
-			}
-			
 			private function submitBtnClickListener(e:MouseEvent):void {
-				var person:Person = model.getPersonByName(customerAC.text);
-				if (person != null) {
-					order.person = person;
-					order.notation = notationField.text;
-					model.orderToCreate = order;
-					CairngormUtils.dispatchEvent(EventNames.CREATE_ORDER, order);
-					PopUpManager.removePopUp(this);
-				} else {
-					customerAC.errorString = "Not found person.";
-				}
-			}
-			
-			private function saveOrderResultListener(e:ResultEvent):void {
-				
+				model.orderToCreate = order;
+				CairngormUtils.dispatchEvent(EventNames.CREATE_ORDER, order);
+				PopUpManager.removePopUp(this);
 			}
 			
 			private function cancelBtnClickListener(e:MouseEvent):void {
 				PopUpManager.removePopUp(this);
 			}
-			
-			private function cancelFromClick(e:MouseEvent):void {
-				personForm.clearForm();
-				currentState = null;
-			}
-			
-			private function getDefaultPersonName():String {
-				return "เงินสด" + new Date().getHours();
-			}
 		]]>
 	</mx:Script>
 	
-	<mx:states>
-		<mx:State name="ShowForm">
-			<mx:AddChild relativeTo="{mainControlBar}" position="before">
-				<jn:PersonForm id="personForm" width="100%" height="100%"/>
-			</mx:AddChild>
-			<mx:RemoveChild target="{selectCustomerForm}"/>
-			<mx:RemoveChild target="{submitBtn}"/>
-			<mx:SetEventHandler target="{cancelBtn}" name="click" 
-				handler="cancelFromClick(MouseEvent(event))"/>
-		</mx:State>
-	</mx:states>
+	<mx:HBox width="100%">
+		<mx:Label text="Customer:"/>
+		<mx:Label text="{order.person.name}"/>
+		<mx:Spacer width="100%"/>
+		<mx:Label text="Date:"/>
+		<mx:Label text="{order.created}"/>
+	</mx:HBox>
 	
-	<mx:Form width="100%" id="selectCustomerForm">
-		<mx:FormItem label="Customer:" width="100%">
-			<mx:HBox width="100%">
-				<adobe:AutoComplete id="customerAC" dataProvider="{model.people}"
-					typedText="{getDefaultPersonName()}"
-					labelField="name" width="100%"/>
-				<mx:Button label="new" click="newBtnClickListener(event)"/>
-			</mx:HBox>
-		</mx:FormItem>
-		<mx:FormItem label="Notation:" width="100%">
-			<mx:TextArea id="notationField" height="90" width="100%"/>
-		</mx:FormItem>
-	</mx:Form>
+	<mx:DataGrid id="orderItemList" 
+		dataProvider="{order.orderItems}"
+		wordWrap="true" variableRowHeight="true" 
+		width="100%" height="100%">
+		<mx:columns>
+			<mx:DataGridColumn headerText="Qty" 
+				dataField="quantity"/>
+			<mx:DataGridColumn headerText="Name" 
+				dataField="name" width="150"/>
+			<mx:DataGridColumn headerText="Unit" 
+				dataField="unit" width="70"/>
+			<mx:DataGridColumn headerText="Price/Unit" 
+				dataField="pricePerUnit" width="85"/>
+			<mx:DataGridColumn headerText="Total" 
+				dataField="total" width="85"/>
+		</mx:columns>
+	</mx:DataGrid>
+	
+	<mx:HBox width="100%">
+		<mx:Label text="Notation:"/>
+		<mx:Text text="{order.notation}" width="100%"/>
+	</mx:HBox>
+	
+	<mx:Label text="Total: {order.total}" 
+		textAlign="right" width="100%"/>
 	
 	<mx:ControlBar id="mainControlBar" horizontalAlign="right">
 		<mx:Button id="submitBtn" label="submit" click="submitBtnClickListener(event)"/>

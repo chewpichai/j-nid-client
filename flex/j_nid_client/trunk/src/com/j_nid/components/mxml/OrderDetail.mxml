@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:Panel xmlns:mx="http://www.adobe.com/2006/mxml" xmlns:jn="com.j_nid.components.mxml.*"
-	layout="vertical" title="Order" creationComplete="init(event)" xmlns:adobe="http://www.adobe.com/2006/fc">
+<mx:Panel xmlns:mx="http://www.adobe.com/2006/mxml" 
+	xmlns:jn="com.j_nid.components.mxml.*"
+	xmlns:adobe="http://www.adobe.com/2006/fc"
+	layout="vertical" title="Order" 
+	paddingLeft="5" paddingRight="5"
+	paddingTop="5"
+	creationComplete="init(event)">
 	
 	<mx:Style>
 		.cartItemList {
@@ -10,6 +15,8 @@
 	
 	<mx:Script>
 		<![CDATA[
+			import com.j_nid.events.ViewChangeEvent;
+			import com.j_nid.models.JNidModelLocator;
 			import com.j_nid.models.Product;
 			import mx.controls.Alert;
 			import com.j_nid.models.Order;
@@ -25,10 +32,21 @@
 			[Bindable]
 			private var order:Order;
 			[Bindable]
-			public var people:ArrayCollection;
+			public var model:JNidModelLocator = JNidModelLocator.getInstance();
 			
 			private function init(e:FlexEvent):void {
+				Application.application.addEventListener("viewChange", applicationViewChange);
+			}
+			
+			private function applicationViewChange(e:ViewChangeEvent):void {
+				if (e.relatedObject == this.parent) {
+					initData();
+				}
+			}
+			
+			private function initData():void {
 				order = new Order();
+				setDefaultPerson();
 			}
 			
 			private function dragEnterListener(e:DragEvent):void {
@@ -61,7 +79,9 @@
 			}
 			
 			private function processListener(e:MouseEvent):void {
-				if (order.orderItems.length > 0) {
+				if (isValid()) {
+					order.person = model.getPersonByName(personFiled.text);
+					order.notation = notationField.text;
 					var orderProcessForm:OrderProcessForm = OrderProcessForm(
 						PopUpManager.createPopUp(Application(Application.application), 
 							OrderProcessForm, true)
@@ -71,34 +91,53 @@
 					Alert.show("Your order must contain at least 1 item.", "Error");
 				}
 			}
+			
+			private function isValid():Boolean {
+				return true;
+			}
+			
+			private function setDefaultPerson():void {
+				personFiled.typedText = model.people.source[new Date().hours].name;
+			}
 		]]>
 	</mx:Script>
 	
-	<mx:HBox width="100%" horizontalAlign="right" 
-		paddingTop="5" paddingLeft="5" paddingRight="5">
-		<mx:Label text="Name"/>
-		<adobe:AutoComplete labelField="name" width="100%" dataProvider="{people}"/>
+	<mx:HBox width="100%" verticalAlign="middle">
+		
+		<mx:Label text="Name:"/>
+		
+		<adobe:AutoComplete id="personFiled" 
+			labelField="name" 
+			dataProvider="{model.people.source}"
+			width="100%"/>
 	</mx:HBox>
 	
-	<mx:DataGrid id="orderItemList" height="100%" dataProvider="{order.orderItems}"
+	<mx:DataGrid id="orderItemList" dataProvider="{order.orderItems}"
 		dragDrop="dragDropListener(event)" dragEnter="dragEnterListener(event)"
-		itemEditEnd="event.preventDefault()" editable="true" styleName="cartItemList" 
-		wordWrap="true" variableRowHeight="true" width="100%">
+		itemEditEnd="event.preventDefault()" editable="true" 
+		wordWrap="true" variableRowHeight="true" 
+		width="100%" height="100%"
+		styleName="cartItemList">
 		<mx:columns>
-			<mx:DataGridColumn headerText="Qty" dataField="quantity" editorDataField="value"
-				rendererIsEditor="true" width="70">
+			<mx:DataGridColumn headerText="Qty" dataField="quantity" 
+				editorDataField="value"	rendererIsEditor="true" 
+				width="70">
 				<mx:itemRenderer>
 					<mx:Component>
-						<mx:NumericStepper minimum="1" maximum="1000" change="{data.quantity = value}"/>
+<mx:NumericStepper minimum="1" maximum="1000" 
+	change="{data.quantity = value}"/>
 					</mx:Component>
 				</mx:itemRenderer>
 			</mx:DataGridColumn>
-			<mx:DataGridColumn headerText="Name" dataField="name" editable="false" width="150"/>
-			<mx:DataGridColumn headerText="Unit" dataField="unit" editorDataField="value"
-				rendererIsEditor="true" width="70">
+			<mx:DataGridColumn headerText="Name" dataField="name" 
+				editable="false" width="150"/>
+			<mx:DataGridColumn headerText="Unit" dataField="unit" 
+				editorDataField="value" rendererIsEditor="true" 
+				width="70">
 				<mx:itemRenderer>
 					<mx:Component>
-						<mx:NumericStepper minimum="1" maximum="100000" change="{data.unit = value}"/>
+<mx:NumericStepper minimum="1" maximum="100000" 
+	change="{data.unit = value}"/>
 					</mx:Component>
 				</mx:itemRenderer>
 			</mx:DataGridColumn>
@@ -106,20 +145,24 @@
 				editorDataField="value"	rendererIsEditor="true" width="85">
 				<mx:itemRenderer>
 					<mx:Component>
-						<mx:NumericStepper minimum="1" maximum="10000" stepSize="0.25" 
-							change="{data.pricePerUnit = value}"/>
+<mx:NumericStepper minimum="1" maximum="10000" stepSize="0.25" 
+	change="{data.pricePerUnit = value}"/>
 					</mx:Component>
 				</mx:itemRenderer>
 			</mx:DataGridColumn>
-			<mx:DataGridColumn headerText="Total" dataField="total" editable="false" width="85"/>
+			<mx:DataGridColumn headerText="Total" dataField="total" 
+				editable="false" width="85"/>
 		</mx:columns>
 	</mx:DataGrid>
 	
-	<mx:Text id="totalTxt" width="100%" height="30" text="Total: {order.total}" textAlign="right" 
-		paddingRight="15"/>
+	<mx:Text id="totalTxt" 
+		text="Total: {order.total}" 
+		textAlign="right" 
+		paddingRight="10"
+		width="100%" height="20"/>
 	
 	<mx:ControlBar>
-		<mx:TextArea height="60" width="100%"/>
+		<mx:TextArea id="notationField" width="100%" height="60"/>
 		<mx:Button label="clear" click="clearListener(event)"/>
 		<mx:Button label="remove" click="removeListener(event)"/>
 		<mx:Button label="process" click="processListener(event)"/>

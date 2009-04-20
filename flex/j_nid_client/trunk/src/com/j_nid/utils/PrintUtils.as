@@ -1,23 +1,24 @@
 package com.j_nid.utils {
 	
 	import com.j_nid.components.mxml.print.OrderPrintView;
-	import com.j_nid.models.Order;	
+	import com.j_nid.components.mxml.print.TransactionPrintView;
+	import com.j_nid.models.Order;
+	
 	import mx.core.Application;
 	import mx.printing.FlexPrintJob;
 	
-	public class PrinterUtils {
+	public class PrintUtils {
 		
 		public static function printOrder(order:Order):void {
 			var printJob:FlexPrintJob = new FlexPrintJob();
             if (printJob.start()) {
                 // Create a FormPrintView control as a child of the current view.
                 var thePrintView:OrderPrintView = new OrderPrintView();
-               Application.application.addChild(thePrintView);
-
+				Application.application.addChild(thePrintView);
                 //Set the print view properties.
                 thePrintView.width = printJob.pageWidth;
                 thePrintView.height = printJob.pageHeight;
-                thePrintView.total = order.total;
+                thePrintView.order = order;
                 // Set the data provider of the FormPrintView component's data grid
                 // to be the data provider of the displayed data grid.
                 thePrintView.myDataGrid.dataProvider = order.orderItems;
@@ -53,6 +54,40 @@ package com.j_nid.utils {
                 }
                 // All pages are queued; remove the FormPrintView control to free memory.
                 Application.application.removeChild(thePrintView);
+            }
+            // Send the job to the printer.
+            printJob.send();
+		}
+		
+		public static function printPayment():void {
+			var printJob:FlexPrintJob = new FlexPrintJob();
+            if (printJob.start()) {
+                // Create a FormPrintView control as a child of the current view.
+                var printView:TransactionPrintView = new TransactionPrintView();
+               	Application.application.addChild(printView);
+                //Set the print view properties.
+                printView.width = printJob.pageWidth;
+                printView.height = printJob.pageHeight;
+                if (!printView.hasMultiPage()) {
+                	printJob.addObject(printView);
+                } else {
+                	printView.showPage("orderFirst");
+                	printJob.addObject(printView);
+                	while (printView.orderDG.validNextPage) {
+                		printView.orderDG.nextPage();
+                		printView.showPage("orderSecond");
+                		printJob.addObject(printView);
+                	}
+                	printView.showPage("paymentFirst");
+                	printJob.addObject(printView);
+                	while (printView.paymentDG.validNextPage) {
+                		printView.paymentDG.nextPage();
+                		printView.showPage("paymentSecond");
+                		printJob.addObject(printView);
+                	}
+                }
+                // All pages are queued; remove the FormPrintView control to free memory.
+                Application.application.removeChild(printView);
             }
             // Send the job to the printer.
             printJob.send();

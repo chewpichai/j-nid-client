@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" paddingLeft="10" paddingRight="10"
-	doubleClickEnabled="true" doubleClick="doubleClickListener(event)"
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml"
+	doubleClickEnabled="true" 
+	doubleClick="doubleClickListener(event)"
+	paddingLeft="5" paddingRight="5"
 	width="100%" height="100%">
 	
 	<mx:Script>
@@ -20,11 +22,11 @@
 				priceEditor.product = product;
 				priceEditor.x = e.stageX;
 				if (e.stageX + priceEditor.width > Application.application.width) {
-					priceEditor.x = Application.application.width - priceEditor.width;
+					priceEditor.x = Application.application.width - (priceEditor.width + 10);
 				}
 				priceEditor.y = e.stageY;
 				if (e.stageY + priceEditor.height > Application.application.height) {
-					priceEditor.y = Application.application.height - priceEditor.height;
+					priceEditor.y = Application.application.height - (priceEditor.height + 10);
 				}
 			}
 		]]>

@@ -1,8 +1,22 @@
 <?xml version="1.0"?>
 <!-- Custom control for the header area of the printed page. -->
 
-<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" width="60%"
-    horizontalAlign="right" >
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" 
+	width="60%"
+    horizontalAlign="right">
+    
+    <mx:Script>
+    	<![CDATA[
+    		[Bindable]
+    		public var personName:String;
+    		[Bindable]
+    		public var date:Date;
+    	]]>
+    </mx:Script>
+    
+    <mx:DateFormatter id="dateFormatter"
+    	formatString="EEE DD MMM YYYY JJ:NN:SS"/>
 
-    <mx:Label text="This is a placeholder for first page contents"/>
-</mx:VBox>
+    <mx:Label text="Name: {personName}"/>
+    <mx:Label text="Date: {dateFormatter.format(date)}"/>
+</mx:HBox>

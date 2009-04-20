@@ -24,5 +24,9 @@ package com.j_nid.business {
 		public function updateOrder(order:Order):void {
 			ServiceUtils.send("/orders/" + order.id + "/", "PUT", _responder, order.toXML());
 		}
+		
+		public function deleteOrder(order:Order):void {
+			ServiceUtils.send("/orders/" + order.id + "/", "DELETE", _responder);
+		}
 	}
 }

@@ -3,7 +3,7 @@ package com.j_nid.models {
 	import com.adobe.cairngorm.model.IModelLocator;
 	import com.j_nid.controls.EventNames;
 	import com.j_nid.utils.CairngormUtils;
-	import com.j_nid.utils.PrinterUtils;
+	import com.j_nid.utils.PrintUtils;
 	
 	import mx.collections.ArrayCollection;
 	import mx.collections.IViewCursor;
@@ -19,6 +19,7 @@ package com.j_nid.models {
 		private var _bankNames:XMLList;
 		private var _phoneTypes:XMLList;
 		// Array Collection for models.
+		private var _productTypesWithAll:ArrayCollection;
 		private var _productTypes:ArrayCollection;
 		private var _products:ArrayCollection;
 		private var _people:ArrayCollection;
@@ -71,6 +72,9 @@ package com.j_nid.models {
 				_productTypeIDMap[productType.id] = productType;
 			}
 			productTypes = new ArrayCollection(typeArray);
+			var typeWithAll:Array = typeArray.slice();
+			typeWithAll.unshift(ALL_TYPE);
+			productTypesWithAll = new ArrayCollection(typeWithAll);
 			_loadedProductType = true;
 			setRelateModels();
 		}
@@ -255,8 +259,9 @@ package com.j_nid.models {
 			getOrder(item.orderID).addItem(item);
 			orderItems.addItem(item);
 			if (item.order.orderItems.length == _orderToCreate.orderItems.length) {
-				PrinterUtils.printOrder(item.order);
+				PrintUtils.printOrder(item.order);
 				Application.application.setPage("paymentPage");
+				Application.application.paymentPage.setPerson(_orderToCreate.person);
 			}
 		}
 		
@@ -293,6 +298,7 @@ package com.j_nid.models {
 			var productType:ProductType = ProductType.fromXML(obj);
 			_productTypeIDMap[productType.id] = productType;
 			productTypes.addItem(productType);
+			productTypesWithAll.addItem(productType);
 		}
 		
 		public function createProduct(obj:XML):void {
@@ -328,6 +334,32 @@ package com.j_nid.models {
 		
 		public function updateProductType(xml:XML):void {
 			
+		}
+		
+		public function updateOrder(xml:XML):void {
+			
+		}
+		
+		public function deleteOrder(xml:XML):void {
+			
+		}
+		
+		public function deleteOrderItem(xml:XML):void {
+			
+		}
+		
+		public function removeOrder(order:Order):void {
+			order.person.removeOrder(order);
+			orders.removeItemAt(orders.getItemIndex(order));
+			for each (var item:OrderItem in order.orderItems) {
+				removeOrderItem(item);
+			}
+			delete _orderIDMap[order.id];
+		}
+		
+		public function removeOrderItem(item:OrderItem):void {
+			orderItems.removeItemAt(orderItems.getItemIndex(item));
+			delete _orderItemIDMap[item.id];
 		}
 		
 		public function getPersonByName(name:String):Person {
@@ -366,6 +398,14 @@ package com.j_nid.models {
 		
 		public function get productTypes():ArrayCollection {
 			return _productTypes;
+		}
+		
+		public function set productTypesWithAll(obj:ArrayCollection):void {
+			_productTypesWithAll = obj;
+		}
+		
+		public function get productTypesWithAll():ArrayCollection {
+			return _productTypesWithAll;
 		}
 		
 		public function set products(obj:ArrayCollection):void {

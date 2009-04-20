@@ -3,6 +3,8 @@
 	
 	<mx:Script>
 		<![CDATA[
+			import mx.collections.SortField;
+			import mx.collections.Sort;
 			import com.j_nid.controls.EventNames;
 			import com.j_nid.utils.CairngormUtils;
 			import mx.collections.ArrayCollection;
@@ -22,12 +24,6 @@
 					}
 				}
 				model.products.refresh();
-			}
-			
-			private function productTypeWithAll(types:ArrayCollection):ArrayCollection {
-				types = new ArrayCollection(types.toArray());
-				types.addItemAt(JNidModelLocator.ALL_TYPE, 0);
-				return types;
 			}
 			
 			private function saveProductListener(e:MouseEvent):void {
@@ -50,6 +46,7 @@
 				if (isProductTypeValid()) {
 					var type:ProductType = new ProductType();
 					type.name = productTypeName.text;
+					type.color = productTypeColor.selectedColor;
 					CairngormUtils.dispatchEvent(EventNames.CREATE_PRODUCT_TYPE, type);
 				}
 			}
@@ -72,7 +69,8 @@
 			</mx:FormItem>
 			<mx:FormItem label="Type" width="100%">
 				<mx:ComboBox id="productType" width="100%" height="30" 
-					dataProvider="{model.productTypes}"/>
+					dataProvider="{model.productTypes}"
+					itemRenderer="com.j_nid.components.mxml.ProductTypeComboRenderer"/>
 			</mx:FormItem>
 			<mx:FormItem label="Unit" width="100%">
 				<mx:NumericStepper id="productUnit" maximum="100000" 
@@ -94,19 +92,23 @@
 			<mx:FormItem label="Name">
 				<mx:TextInput id="productTypeName" width="160" height="30"/>
 			</mx:FormItem>
+			<mx:FormItem label="Color">
+				<mx:ColorPicker id="productTypeColor"/>
+			</mx:FormItem>
 			<mx:FormItem>
 				<mx:Button label="Save" click="saveProductTypeListener(event)"/>
 			</mx:FormItem>
 		</mx:Form>
 	</mx:Accordion>
 	
-	<mx:TabNavigator width="100%" height="100%">
+	<mx:TabNavigator width="100%" height="100%" paddingLeft="5" paddingRight="5">
 		<mx:VBox label="Product" width="100%" height="100%">
-			<mx:HBox width="100%" verticalAlign="middle" paddingLeft="5">
+			<mx:HBox width="100%" verticalAlign="middle">
 				<mx:Label text="Product Type"/>
 				<mx:ComboBox id="productTypeCombo" width="200" height="30" 
-					dataProvider="{productTypeWithAll(model.productTypes)}" 
-					change="filterByType(ProductType(productTypeCombo.selectedItem))"/>
+					dataProvider="{model.productTypesWithAll}" 
+					change="filterByType(ProductType(productTypeCombo.selectedItem))"
+					itemRenderer="com.j_nid.components.mxml.ProductTypeComboRenderer"/>
 			</mx:HBox>
 			<mx:VDividedBox width="100%" height="100%">
 				<mx:DataGrid id="productDg" width="100%" height="100%" 

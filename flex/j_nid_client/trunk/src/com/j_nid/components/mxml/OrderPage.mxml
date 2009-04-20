@@ -1,9 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%">
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" 
+	creationComplete="creationComplete(event)"
+	width="100%" height="100%">
 
 	<mx:Script>
 		<![CDATA[
-			import com.j_nid.utils.PrinterUtils;
+			import com.j_nid.utils.DateUtils;
+			import com.j_nid.models.Person;
+			import mx.binding.utils.ChangeWatcher;
+			import com.j_nid.controls.EventNames;
+			import com.j_nid.utils.CairngormUtils;
+			import mx.events.FlexEvent;
+			import mx.collections.ListCollectionView;
+			import mx.events.ListEvent;
+			import mx.events.CalendarLayoutChangeEvent;
+			import com.j_nid.utils.PrintUtils;
 			import com.j_nid.models.Order;
 			import com.j_nid.models.OrderItem;
 			import com.j_nid.models.JNidModelLocator;
@@ -11,36 +22,148 @@
 			[Bindable]
 			private var model:JNidModelLocator = JNidModelLocator.getInstance();
 			
+			private function creationComplete(e:FlexEvent):void {
+				ChangeWatcher.watch(personField, "selectedIndex", filterOrder);
+				ChangeWatcher.watch(dateField, "selectedRanges", filterOrder);
+				ChangeWatcher.watch(outstandingField, "selected", filterOrder);
+				ChangeWatcher.watch(paidField, "selected", filterOrder);
+				ChangeWatcher.watch(canceledField, "selected", filterOrder);
+				initData();
+			}
+			
+			private function initData():void {
+				outstandingField.selected = true;
+			}
+			
+			private function filterOrder(e:Event):void {
+				var orders:ListCollectionView = ListCollectionView(orderList.dataProvider);
+				orders.filterFunction = function(obj:Object):Boolean {
+					var order:Order = Order(obj);
+					return checkPerson(order.person) &&
+						checkStatus(order.status) &&
+						checkDate(order.created);
+				};
+				orders.refresh();
+			}
+			
+			private function checkPerson(person:Person):Boolean {
+				if (personField.selectedItem == null) {
+					return true;
+				}
+				return person == personField.selectedItem;
+			}
+			
+			private function checkDate(date:Date):Boolean {
+				if (dateField.selectedRanges.length == 0) {
+					return true;
+				}
+				for each (var obj:Object in dateField.selectedRanges) {
+					var start:Date = new Date(obj.rangeStart.time);
+					var end:Date = new Date(obj.rangeEnd.time);
+					// Move end date to the midnight of the next day.
+					end = DateUtils.moveDateByDay(date, 1);
+					if (date >= start && date < end) {
+						return true;
+					}
+				}
+				return false;
+			}
+			
+			private function checkStatus(status:int):Boolean {
+				var statusArray:Array = new Array();
+				if (outstandingField.selected) {
+					statusArray.push(0);
+				}
+				if (paidField.selected) {
+					statusArray.push(1);
+				}
+				if (canceledField.selected) {
+					statusArray.push(-1);
+				}
+				for (var i:int = 0; i < statusArray.length; i++) {
+					if (statusArray[i] == status) {
+						return true;
+					}
+				}
+				return false;
+			}
+			
+			internal function removeOrderItem(item:OrderItem):void {
+				item.order.removeItem(item);
+				model.removeOrderItem(item);
+				CairngormUtils.dispatchEvent(EventNames.DELETE_ORDER_ITEM, item);
+			}
+			
+			private function cancelOrderClick(e:MouseEvent):void {
+				var order:Order = Order(orderList.selectedItem);
+				order.status = Order.CANCELED;
+				CairngormUtils.dispatchEvent(EventNames.UPDATE_ORDER, order);
+			}
+			
 			private function printOrder(e:MouseEvent):void {
 				var order:Order = Order(orderList.selectedItem);
-				PrinterUtils.printOrder(order);
+				PrintUtils.printOrder(order);
 			}
 		]]>
 	</mx:Script>
 	
 	<mx:DateFormatter id="dateFormatter" formatString="DD-MM-YY J:NN:SS"/>
 	
-	<mx:TabNavigator width="220" height="100%">
-		<mx:Canvas label="Status" width="100%" height="100%">
-		</mx:Canvas>
-		<mx:Canvas label="Date" width="100%" height="100%">
-		</mx:Canvas>
-		<mx:Canvas label="Name" width="100%" height="100%">
-		</mx:Canvas>
-	</mx:TabNavigator>
-	
-	<mx:Panel width="250" height="100%" layout="absolute" title="Oreder List">
-		<mx:List id="orderList" dataProvider="{model.orders}" width="100%" height="100%"/>
+	<mx:Panel title="Filter"
+		verticalGap="5"
+		width="220" height="100%">
+		
+		<mx:List id="personField" 
+			dataProvider="{model.people}"
+			labelField="name"
+			borderThickness="0"
+			width="100%" height="100%"/>
+			
+		<mx:DateChooser id="dateField"
+			allowMultipleSelection="true"
+			borderThickness="0"
+			cornerRadius="0"
+			width="100%"/>
+			
+		<mx:VBox
+			paddingLeft="5" paddingRight="5"
+			paddingBottom="5"
+			width="100%">
+			
+			<mx:CheckBox id="outstandingField" label="Outstanding"/>
+			<mx:CheckBox id="paidField" label="Paid"/>
+			<mx:CheckBox id="canceledField" label="Canceled"/>
+		</mx:VBox>
 	</mx:Panel>
 	
-	<mx:Panel width="100%" height="100%" layout="vertical" title="Order">
-		<mx:HBox width="100%" height="35" paddingTop="5" paddingRight="5" horizontalAlign="right">
+	<mx:Panel title="Oreder List" 
+		layout="absolute"
+		width="250" height="100%">
+		
+		<mx:List id="orderList" 
+			dataProvider="{model.orders}" 
+			width="100%" height="100%"/>
+	</mx:Panel>
+	
+	<mx:Panel title="Order" 
+		layout="vertical"
+		paddingLeft="5" paddingRight="5" 
+		paddingTop="5"
+		width="100%" height="100%">
+		
+		<mx:HBox 
+			width="100%" height="35" 
+			paddingTop="5" paddingRight="5" 
+			horizontalAlign="right">
+			
 			<mx:Label text="{orderList.selectedItem.person.name}"/>
 			<mx:Label text="{dateFormatter.format(orderList.selectedItem.created)}"/>
 		</mx:HBox>
 		
-		<mx:DataGrid id="orderItemList" dataProvider="{orderList.selectedItem.orderItems}"
-			width="100%" height="100%" textAlign="center" selectable="false">
+		<mx:DataGrid id="orderItemList" 
+			dataProvider="{orderList.selectedItem.orderItems}"
+			width="100%" height="100%"
+			textAlign="center" selectable="false">
 			<mx:columns>
 				<mx:DataGridColumn headerText="Qty" dataField="quantity" width="50"/>
 				<mx:DataGridColumn headerText="Name" dataField="name"/>
@@ -50,14 +173,38 @@
 					textAlign="right"/>
 				<mx:DataGridColumn headerText="Total" dataField="total" width="85" 
 					textAlign="right"/>
+				<mx:DataGridColumn width="80">
+					<mx:itemRenderer>
+						<mx:Component>
+<mx:Canvas>
+	<mx:Script>
+		<![CDATA[
+			import com.j_nid.models.OrderItem;
+		]]>
+	</mx:Script>
+	
+	<mx:Button label="remove"
+		click="outerDocument.removeOrderItem(OrderItem(data))"
+		horizontalCenter="0"/>
+</mx:Canvas>
+						</mx:Component>
+					</mx:itemRenderer>
+				</mx:DataGridColumn>
 			</mx:columns>
 		</mx:DataGrid>
 		
-		<mx:HBox width="100%" height="35" paddingRight="5" horizontalAlign="right">
+		<mx:HBox paddingRight="5" horizontalAlign="right"
+			width="100%" height="35">
+			
 			<mx:Label text="{orderList.selectedItem.total}"/>
 		</mx:HBox>
 		
 		<mx:ControlBar horizontalAlign="right">
+		
+			<mx:Button label="Cancel"
+				click="cancelOrderClick(event)"
+				enabled="{!orderList.selectedItem.canceled}"/>
+			
 			<mx:Button label="Print" click="printOrder(event)"/>
 		</mx:ControlBar>
 	</mx:Panel>

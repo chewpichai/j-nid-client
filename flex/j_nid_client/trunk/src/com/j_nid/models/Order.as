@@ -1,5 +1,7 @@
 package com.j_nid.models {
 	
+	import com.j_nid.utils.DateUtils;
+	
 	import mx.collections.ArrayCollection;
 	import mx.collections.IViewCursor;
 	import mx.events.CollectionEvent;
@@ -17,6 +19,11 @@ package com.j_nid.models {
 		public static var CANCELED:int = -1;
 		public static var OUTSTANDING:int = 0;
 		public static var PAID:int = 1;
+		public static var STATUS_OPTIONS:Array = [
+			{label: "Outstanding", data: 0},
+			{label: "Paid", data: 1},
+			{label: "Canceled", data: -1}
+		];
 		
 		public static function fromXML(obj:XML):Order {
     		var order:Order = new Order();
@@ -52,8 +59,9 @@ package com.j_nid.models {
 			orderItems.addItem(item);
 		}
 		
-		public function removeItem(obj:OrderItem):void {
-			orderItems.removeItemAt(orderItems.getItemIndex(obj));
+		public function removeItem(item:OrderItem):void {
+			item.order = null;
+			orderItems.removeItemAt(orderItems.getItemIndex(item));
 		}
 		
 		public function clearItems():void {
@@ -69,12 +77,15 @@ package com.j_nid.models {
 			xml.person_id = person.id;
 			xml.notation = notation;
 			xml.status = status;
-			xml.created = created;
+			xml.created = DateUtils.format(created);
+			trace(xml);
 			return xml;
 		}
 		
 		public function toString():String {
-			return created.toLocaleDateString();
+			return person.name + " " + 
+				status + " " +
+				created.toLocaleDateString();
 		}
 		
 /* ----- get-set function. --------------------------------------------------------------------- */
@@ -133,6 +144,10 @@ package com.j_nid.models {
 		
 		public function get orderItems():ArrayCollection {
 			return _orderItems;
+		}
+		
+		public function get canceled():Boolean {
+			return status == CANCELED;
 		}
 	}
 }

@@ -52,6 +52,11 @@ package com.j_nid.models {
 /* ----- get-set function. --------------------------------------------------------------------- */
 		
 		public function set order(obj:Order):void {
+			if (obj != null) {
+				orderID = obj.id;
+			} else {
+				orderID = 0;
+			}
 			_order = obj;
 		}
 		
