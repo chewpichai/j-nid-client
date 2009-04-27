@@ -28,6 +28,8 @@ package com.j_nid.models {
 		private var _orders:ArrayCollection;
 		private var _orderItems:ArrayCollection;
 		private var _payments:ArrayCollection;
+		private var _supplies:ArrayCollection;
+		private var _supplyItems:ArrayCollection;
 		// Map for get object by key.
 		private var _productIDMap:Object;
 		private var _productTypeIDMap:Object;
@@ -37,6 +39,8 @@ package com.j_nid.models {
 		private var _orderItemIDMap:Object;
 		private var _bankAccountIDMap:Object;
 		private var _phoneNumberIDMap:Object;
+		private var _supplyIDMap:Object;
+		private var _supplyItemIDMap:Object;
 		// Flag for check loaded model.
 		private var _loadedProductType:Boolean = false;
 		private var _loadedProduct:Boolean = false;
@@ -47,10 +51,13 @@ package com.j_nid.models {
 		private var _loadedPhoneNumber:Boolean = false;
 		private var _loadedPayment:Boolean = false;
 		private var _loadedPhoneType:Boolean = false;
-		private var _loadedBankName:Boolean = false;		
+		private var _loadedBankName:Boolean = false;
+		private var _loadedSupply:Boolean = false;
+		private var _loadedSupplyItem:Boolean = false;
 		// Temporary create object.
-		private var _orderToCreate:Order;
-		private var _personToCreate:Person;
+		public var orderToCreate:Order;
+		public var supplyToCreate:Supply;
+		public var personToCreate:Person;
 		
 		public function JNidModelLocator() {
 			
@@ -166,10 +173,37 @@ package com.j_nid.models {
 			setRelateModels();
 		}
 		
+		public function setSupplies(obj:XML):void {
+			var supplyArray:Array = new Array();
+			_supplyIDMap = {};
+			for each (var xml:XML in obj.children()) {
+				var supply:Supply = Supply.fromXML(xml);
+				supplyArray.push(supply);
+				_supplyIDMap[supply.id] = supply;
+			}
+			supplies = new ArrayCollection(supplyArray);
+			_loadedSupply = true;
+			setRelateModels();
+		}
+		
+		public function setSupplyItems(obj:XML):void {
+			var itemArray:Array = new Array();
+			_supplyItemIDMap = {};
+			for each (var xml:XML in obj.children()) {
+				var item:SupplyItem = SupplyItem.fromXML(xml);
+				itemArray.push(item);
+				_supplyItemIDMap[item.id] = item;
+			}
+			supplyItems = new ArrayCollection(itemArray);
+			_loadedSupplyItem = true;
+			setRelateModels();
+		}
+		
 		private function setRelateModels():void {
 			if (_loadedBankAccount && _loadedOrder && _loadedOrderItem &&
 				_loadedPerson && _loadedPhoneNumber && _loadedProduct &&
-				_loadedProductType && _loadedPayment) {
+				_loadedProductType && _loadedPayment && _loadedSupply &&
+				_loadedSupplyItem) {
 					// Set relate for order items.
 					var cursor:IViewCursor = orderItems.createCursor();
 					while (!cursor.afterLast) {
@@ -213,6 +247,20 @@ package com.j_nid.models {
 						getPerson(phoneNumber.personID).addPhoneNumber(phoneNumber);
 						cursor.moveNext();
 					}
+					cursor = supplyItems.createCursor();
+					while (!cursor.afterLast) {
+						var supplyItem:SupplyItem = SupplyItem(cursor.current);
+						getSupply(supplyItem.supplyID).addItem(supplyItem);;
+						item.product = getProduct(supplyItem.productID);;
+						cursor.moveNext();
+					}
+					// Set relate for orders.
+					cursor = supplies.createCursor();
+					while (!cursor.afterLast) {
+						var supply:Supply = Supply(cursor.current);
+						getPerson(supply.personID).addSupply(supply);
+						cursor.moveNext();
+					}
 					sortModels();
 				}
 		}
@@ -238,6 +286,11 @@ package com.j_nid.models {
 			sort.fields = [new SortField("created", false, true)];
 			orders.sort = sort;
 			orders.refresh();
+			// Add sort for supplies.
+			sort = new Sort();
+			sort.fields = [new SortField("created", false, true)];
+			supplies.sort = sort;
+			supplies.refresh();
 		}
 		
 		public function createOrder(obj:XML):void {
@@ -245,7 +298,7 @@ package com.j_nid.models {
 			_orderIDMap[order.id] = order;
 			var person:Person = getPerson(order.personID);
 			person.addOrder(order);
-			for each (var item:OrderItem in _orderToCreate.orderItems) {
+			for each (var item:OrderItem in orderToCreate.orderItems) {
 				item.orderID = order.id;
 				CairngormUtils.dispatchEvent(EventNames.CREATE_ORDER_ITEM, item);
 			}
@@ -258,10 +311,40 @@ package com.j_nid.models {
 			item.product = getProduct(item.productID);
 			getOrder(item.orderID).addItem(item);
 			orderItems.addItem(item);
-			if (item.order.orderItems.length == _orderToCreate.orderItems.length) {
+			if (item.order.orderItems.length == orderToCreate.orderItems.length) {
 				PrintUtils.printOrder(item.order);
+				// For cash customer create payment.
+				if (item.order.personID <= 24) {
+					var payment:Payment = new Payment();
+					payment.amount = item.order.total;
+					payment.person = item.order.person;
+					CairngormUtils.dispatchEvent(EventNames.CREATE_PAYMENT, payment);
+				}
 				Application.application.setPage("paymentPage");
-				Application.application.paymentPage.setPerson(_orderToCreate.person);
+				Application.application.paymentPage.setPerson(orderToCreate.person);
+			}
+		}
+		
+		public function createSupply(obj:XML):void {
+			var supply:Supply = Supply.fromXML(obj);
+			_supplyIDMap[supply.id] = supply;
+			var person:Person = getPerson(supply.personID);
+			person.addSupply(supply);
+			for each (var item:SupplyItem in supplyToCreate.supplyItems) {
+				item.supplyID = supply.id;
+				CairngormUtils.dispatchEvent(EventNames.CREATE_SUPPLY_ITEM, item);
+			}
+			supplies.addItem(supply);
+		}
+		
+		public function createSupplyItem(obj:XML):void {
+			var item:SupplyItem = SupplyItem.fromXML(obj);
+			_supplyItemIDMap[item.id] = item;
+			item.product = getProduct(item.productID);
+			getSupply(item.supplyID).addItem(item);
+			supplyItems.addItem(item);
+			if (item.supply.supplyItems.length == supplyToCreate.supplyItems.length) {
+				Application.application.setPage("mainPage");
 			}
 		}
 		
@@ -269,11 +352,11 @@ package com.j_nid.models {
 			var person:Person = Person.fromXML(obj);
 			_personIDMap[person.id] = person;
 			_personNameMap[person.name] = person;
-			for each (var bankAccount:BankAccount in _personToCreate.bankAccounts) {
+			for each (var bankAccount:BankAccount in personToCreate.bankAccounts) {
 				bankAccount.personID = person.id;
 				CairngormUtils.dispatchEvent(EventNames.CREATE_BANK_ACCOUNT, bankAccount);
 			}
-			for each (var phoneNumber:PhoneNumber in _personToCreate.phoneNumbers) {
+			for each (var phoneNumber:PhoneNumber in personToCreate.phoneNumbers) {
 				phoneNumber.personID = person.id;
 				CairngormUtils.dispatchEvent(EventNames.CREATE_PHONE_NUMBER, phoneNumber);
 			}
@@ -328,6 +411,13 @@ package com.j_nid.models {
 			return _personIDMap[id];
 		}
 		
+		public function getSupply(id:int):Supply {
+			if (_supplyIDMap == null) {
+				return null
+			}
+			return _supplyIDMap[id];
+		}
+		
 		public function updateProduct(xml:XML):void {
 			
 		}
@@ -345,6 +435,18 @@ package com.j_nid.models {
 		}
 		
 		public function deleteOrderItem(xml:XML):void {
+			
+		}
+		
+		public function updateSupply(xml:XML):void {
+			
+		}
+		
+		public function deleteSupply(xml:XML):void {
+			
+		}
+		
+		public function deleteSupplyItem(xml:XML):void {
 			
 		}
 		
@@ -456,10 +558,6 @@ package com.j_nid.models {
 			return _orderItems;
 		}
 		
-		public function set orderToCreate(obj:Order):void {
-			_orderToCreate = obj;
-		}
-		
 		public function get payments():ArrayCollection {
 			return _payments;
 		}
@@ -486,8 +584,20 @@ package com.j_nid.models {
 			_loadedPhoneType = true;
 		}
 		
-		public function set personToCreate(obj:Person):void {
-			_personToCreate = obj;
+		public function set supplies(obj:ArrayCollection):void {
+			_supplies = obj;
+		}
+		
+		public function get supplies():ArrayCollection {
+			return _supplies;
+		}
+		
+		public function set supplyItems(obj:ArrayCollection):void {
+			_supplyItems = obj;
+		}
+		
+		public function get supplyItems():ArrayCollection {
+			return _supplyItems;
 		}
 	}
 }

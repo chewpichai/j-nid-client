@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Panel xmlns:mx="http://www.adobe.com/2006/mxml" 
+	xmlns:jn="com.j_nid.components.mxml.*"
+	xmlns:adobe="http://www.adobe.com/2006/fc"
+	layout="vertical" title="Supply" 
+	paddingLeft="5" paddingRight="5"
+	paddingTop="5"
+	creationComplete="init(event)">
+	
+	<mx:Style>
+		.cartItemList {
+   			alternatingItemColors: #ffffff, #ffff99;
+		}
+	</mx:Style>
+	
+	<mx:Script>
+		<![CDATA[
+			import com.j_nid.models.SupplyItem;
+			import com.j_nid.events.ViewChangeEvent;
+			import com.j_nid.models.JNidModelLocator;
+			import com.j_nid.models.Product;
+			import mx.controls.Alert;
+			import com.j_nid.models.Supply;
+            import mx.core.Application;
+			import mx.managers.PopUpManager;
+			import mx.events.CollectionEvent;
+			import mx.events.FlexEvent;
+			import mx.collections.ArrayCollection;
+			import mx.managers.DragManager;
+			import mx.events.DragEvent;
+			
+			[Bindable]
+			private var supply:Supply;
+			[Bindable]
+			public var model:JNidModelLocator = JNidModelLocator.getInstance();
+			
+			private function init(e:FlexEvent):void {
+				Application.application.addEventListener("viewChange", applicationViewChange);
+			}
+			
+			private function applicationViewChange(e:ViewChangeEvent):void {
+				if (e.relatedObject == this.parent) {
+					initData();
+				}
+			}
+			
+			private function initData():void {
+				supply = new Supply();
+				setDefaultPerson();
+			}
+			
+			private function dragEnterListener(e:DragEvent):void {
+				DragManager.acceptDragDrop(DataGrid(e.currentTarget));
+			}
+			
+			private function dragDropListener(e:DragEvent):void {
+				var product:Product = e.dragSource.dataForFormat("items")[0];
+				var supplyItem:SupplyItem = new SupplyItem(product);
+				addSupplyItem(supplyItem);
+			}
+			
+			private function addSupplyItem(item:SupplyItem):void {
+				for each (var obj:SupplyItem in supply.supplyItems) {
+					if (item.product.id == obj.product.id) {
+						obj.unit += item.unit;
+						return;
+					}
+				}
+				supply.addItem(item);
+			}
+			
+			private function clearListener(e:MouseEvent):void {
+				supply.clearItems();
+			}
+			
+			private function removeListener(e:MouseEvent):void {
+				var item:SupplyItem = SupplyItem(orderItemList.selectedItem);
+				supply.removeItem(item);
+			}
+			
+			private function processListener(e:MouseEvent):void {
+				if (isValid()) {
+					supply.person = model.getPersonByName(personFiled.text);
+					supply.notation = notationField.text;
+					var processForm:SupplyProcessForm = SupplyProcessForm(
+						PopUpManager.createPopUp(Application(Application.application), 
+							SupplyProcessForm, true)
+					);
+					processForm.supply = supply;
+				} else {
+					Alert.show("Your supply must contain at least 1 item.", "Error");
+				}
+			}
+			
+			private function isValid():Boolean {
+				return true;
+			}
+			
+			private function setDefaultPerson():void {
+				personFiled.typedText = model.people.source[new Date().hours].name;
+			}
+		]]>
+	</mx:Script>
+	
+	<mx:HBox width="100%" verticalAlign="middle">
+		
+		<mx:Label text="Name:"/>
+		
+		<adobe:AutoComplete id="personFiled" 
+			labelField="name" 
+			dataProvider="{model.people.source}"
+			width="100%"/>
+	</mx:HBox>
+	
+	<mx:DataGrid id="orderItemList" dataProvider="{supply.supplyItems}"
+		dragDrop="dragDropListener(event)" dragEnter="dragEnterListener(event)"
+		itemEditEnd="event.preventDefault()" editable="true" 
+		wordWrap="true" variableRowHeight="true" 
+		width="100%" height="100%"
+		styleName="cartItemList">
+		<mx:columns>
+			<mx:DataGridColumn headerText="Qty" dataField="quantity" 
+				editorDataField="value"	rendererIsEditor="true" 
+				width="70">
+				<mx:itemRenderer>
+					<mx:Component>
+<mx:NumericStepper minimum="1" maximum="1000" 
+	change="{data.quantity = value}"/>
+					</mx:Component>
+				</mx:itemRenderer>
+			</mx:DataGridColumn>
+			<mx:DataGridColumn headerText="Name" dataField="name" 
+				editable="false" width="150"/>
+			<mx:DataGridColumn headerText="Unit" dataField="unit" 
+				editorDataField="value" rendererIsEditor="true" 
+				width="70">
+				<mx:itemRenderer>
+					<mx:Component>
+<mx:NumericStepper minimum="1" maximum="100000" 
+	change="{data.unit = value}"/>
+					</mx:Component>
+				</mx:itemRenderer>
+			</mx:DataGridColumn>
+			<mx:DataGridColumn headerText="Price/Unit" dataField="pricePerUnit" 
+				editorDataField="value"	rendererIsEditor="true" width="85">
+				<mx:itemRenderer>
+					<mx:Component>
+<mx:NumericStepper minimum="1" maximum="10000" stepSize="0.25" 
+	change="{data.pricePerUnit = value}"/>
+					</mx:Component>
+				</mx:itemRenderer>
+			</mx:DataGridColumn>
+			<mx:DataGridColumn headerText="Total" dataField="total" 
+				editable="false" width="85"/>
+		</mx:columns>
+	</mx:DataGrid>
+	
+	<mx:Text id="totalTxt" 
+		text="Total: {supply.total}" 
+		textAlign="right" 
+		paddingRight="10"
+		width="100%" height="20"/>
+	
+	<mx:ControlBar>
+		<mx:TextArea id="notationField" width="100%" height="60"/>
+		<mx:Button label="clear" click="clearListener(event)"/>
+		<mx:Button label="remove" click="removeListener(event)"/>
+		<mx:Button label="process" click="processListener(event)"/>
+	</mx:ControlBar>
+</mx:Panel>

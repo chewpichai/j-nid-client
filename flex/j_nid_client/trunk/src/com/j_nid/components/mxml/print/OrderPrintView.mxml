@@ -3,9 +3,7 @@
 
 <mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
 	xmlns:ns="com.j_nid.components.mxml.print.*"
-	backgroundColor="#FFFFFF"
-    paddingTop="30" paddingBottom="30" 
-    paddingLeft="30">
+	backgroundColor="#FFFFFF">
 
     <mx:Script>
         <![CDATA[
@@ -54,7 +52,9 @@
     	width="100%"/>
     <!-- The data grid. The sizeToPage property is true by default, so the last
         page has only as many grid rows as are needed for the data. -->
-    <mx:PrintDataGrid id="myDataGrid" width="100%" height="100%" top="60">
+    <mx:PrintDataGrid id="myDataGrid"
+    	width="95%" height="100%"
+    	top="60" horizontalCenter="0">
     <!-- Specify the columns to ensure that their order is correct. -->
         <mx:columns>
 			<mx:DataGridColumn headerText="Qty" dataField="quantity" width="50"/>
@@ -66,5 +66,8 @@
     </mx:PrintDataGrid>
 
     <!-- Create a FormPrintFooter control and set its prodTotal variable. -->
-    <ns:OrderPrintFooter id="footer" total="{order.total}" bottom="0" width="100%"/>
+    <ns:OrderPrintFooter id="footer" 
+    	total="{order.total}"
+    	width="100%" 
+    	bottom="0"/>
 </mx:Canvas>

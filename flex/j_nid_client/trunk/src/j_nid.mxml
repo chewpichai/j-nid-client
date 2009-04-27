@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:WindowedApplication xmlns:mx="http://www.adobe.com/2006/mxml"
-	xmlns:jn="com.j_nid.components.mxml.*" xmlns:control="com.j_nid.controls.*"
-	layout="vertical" initialize="init(event)">
+	xmlns:jn="com.j_nid.components.mxml.*" 
+	xmlns:control="com.j_nid.controls.*"
+	layout="vertical" 
+	initialize="init(event)"
+	applicationComplete="applicationComplete(event)"
+	paddingBottom="0">
 	
-	<!--<mx:Style source="css/styles.css"/>-->
+	<mx:Style source="css/styles.css"/>
+	
 	<mx:Metadata>
 		[Event(name="viewChange", type="com.j_nid.events.ViewChangeEvent")]
 	</mx:Metadata>
@@ -23,10 +28,16 @@
 				CairngormUtils.dispatchEvent(EventNames.LIST_BANK_ACCOUNT);
 				CairngormUtils.dispatchEvent(EventNames.LIST_ORDER);
 				CairngormUtils.dispatchEvent(EventNames.LIST_ORDER_ITEM);
+				CairngormUtils.dispatchEvent(EventNames.LIST_SUPPLY);
+				CairngormUtils.dispatchEvent(EventNames.LIST_SUPPLY_ITEM);
 				CairngormUtils.dispatchEvent(EventNames.LIST_PHONE_NUMBER);
 				CairngormUtils.dispatchEvent(EventNames.LIST_PAYMENT);
 				CairngormUtils.dispatchEvent(EventNames.LIST_BANK_NAME);
 				CairngormUtils.dispatchEvent(EventNames.LIST_PHONE_TYPE);
+			}
+			
+			private function applicationComplete(e:FlexEvent):void {
+				stage.nativeWindow.maximize();
 			}
 			
 			public function setPage(page:String):void {
@@ -42,9 +53,13 @@
 	
 	<control:JNidController/>
 	
-	<mx:HBox width="100%" height="75" verticalAlign="bottom">
+	<mx:HBox verticalAlign="bottom"
+		width="100%" height="75">
+		
 		<mx:Image width="150" height="75"/>
-		<mx:TabBar dataProvider="mainView" width="500" height="30"/>
+		
+		<mx:TabBar dataProvider="mainView"
+			width="500" height="30"/>
 	</mx:HBox>
 	
 	<mx:ViewStack id="mainView" 
@@ -54,11 +69,14 @@
 		
 		<jn:MainPage id="mainPage" label="Main"/>
 		<jn:SellProductPage id="sellProduct" label="Sell"/>
+		<jn:BuyProductPage id="buyProduct" label="Buy"/>
 		<jn:ProductFormPage id="productPage" label="Product"/>
 		<jn:PersonFormPage id="personForm" label="Person"/>
 		<jn:OrderPage id="orderPage" label="Order"/>
 		<jn:PaymentPage id="paymentPage" label="Payment"/>
 	</mx:ViewStack>
 	
-	<mx:Label text="Copyright (c) 2009 ChewLab. All rights reserved." styleName="copyright"/>
+	<mx:Label
+		text="Copyright (c) 2009 ChewLab. All rights reserved."
+		styleName="copyright"/>
 </mx:WindowedApplication>

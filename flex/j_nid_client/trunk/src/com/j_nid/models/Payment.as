@@ -34,6 +34,7 @@ package com.j_nid.models {
 
 		public function set person(obj:Person):void {
 			_person = obj;
+			_personID = obj.id;
 		}
 		
 		public function get person():Person {

@@ -1,8 +1,23 @@
-global {
-	fontFamily: Tahoma;
-   	fontSize: 14;
+@font-face {
+	src: url("../assets/TAHOMA.TTF");
+	font-family: Tahoma;
 }
 
+@font-face {
+	src: url("../assets/tahomabd.TTF");
+	font-family: Tahoma;
+	font-weight: bold;
+}
+
+global {
+	fontFamily: Tahoma;
+   	fontSize: 12;
+   	font-anti-alias-type: advanced;
+   	font-grid-fit-type: none;
+   	font-sharpness: -300;
+}
+
+/*
 WindowedApplication {
 	padding-top: 0;
 	padding-bottom: 0;
@@ -48,4 +63,4 @@ TextInput {
 	font-size: 13;
 	color: #FFFFFF;
 	padding-left: 0;
-}
+}*/

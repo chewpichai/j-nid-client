@@ -26,6 +26,7 @@ package com.j_nid.models {
     	private var _bankAccounts:ArrayCollection;
     	private var _orders:ArrayCollection;
     	private var _payments:ArrayCollection;
+    	private var _supplies:ArrayCollection;
     	    	
     	public static function fromXML(obj:XML):Person {
     		var person:Person = new Person();
@@ -54,6 +55,7 @@ package com.j_nid.models {
 			bankAccounts = new ArrayCollection();
 			orders = new ArrayCollection();
 			payments = new ArrayCollection();
+			supplies = new ArrayCollection();
 			orders.addEventListener(CollectionEvent.COLLECTION_CHANGE, orderChangeListener);
 		}
 		
@@ -94,6 +96,16 @@ package com.j_nid.models {
 		public function removeOrder(order:Order):void {
 			order.person = null;
 			orders.removeItemAt(orders.getItemIndex(order));
+		}
+		
+		public function addSupply(supply:Supply):void {
+			supply.person = this;
+			supplies.addItem(supply);
+		}
+		
+		public function removeSupply(supply:Supply):void {
+			supply.person = null;
+			supplies.removeItemAt(supplies.getItemIndex(supply));
 		}
 		
 		private function calcOrder(order:Order):void {
@@ -243,6 +255,14 @@ package com.j_nid.models {
 		
 		public function get orders():ArrayCollection {
 			return _orders;
+		}
+		
+		public function set supplies(obj:ArrayCollection):void {
+			_supplies = obj;
+		}
+		
+		public function get supplies():ArrayCollection {
+			return _supplies;
 		}
 		
 		public function set payments(obj:ArrayCollection):void {

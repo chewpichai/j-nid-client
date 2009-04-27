@@ -203,7 +203,7 @@
 		
 			<mx:Button label="Cancel"
 				click="cancelOrderClick(event)"
-				enabled="{!orderList.selectedItem.canceled}"/>
+				enabled="{!orderList.selectedItem.isCanceled()}"/>
 			
 			<mx:Button label="Print" click="printOrder(event)"/>
 		</mx:ControlBar>

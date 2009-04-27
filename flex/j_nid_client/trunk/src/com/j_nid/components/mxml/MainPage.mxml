@@ -40,7 +40,8 @@
 		]]>
 	</mx:Script>
 	
-	<mx:TileList dataProvider="{filterIsSale(model.products.source)}"
+	<mx:TileList id="productList"
+		dataProvider="{filterIsSale(model.products.source)}"
 		columnWidth="245" rowHeight="40" selectable="false" direction="vertical" 
 		itemRenderer="com.j_nid.components.mxml.MainProductRenderer"
 		width="100%" height="100%"/>

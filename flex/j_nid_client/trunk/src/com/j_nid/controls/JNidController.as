@@ -44,6 +44,15 @@ package com.j_nid.controls {
 			// Payment commands.
 			addCommand(EventNames.LIST_PAYMENT, ListPaymentCommand);
 			addCommand(EventNames.CREATE_PAYMENT, CreatePaymentCommand);
+			// Supply commands.
+			addCommand(EventNames.LIST_SUPPLY, ListSupplyCommand);
+			addCommand(EventNames.CREATE_SUPPLY, CreateSupplyCommand);
+			addCommand(EventNames.UPDATE_SUPPLY, UpdateSupplyCommand);
+			addCommand(EventNames.DELETE_SUPPLY, DeleteSupplyCommand);
+			// SupplyItem commands.
+			addCommand(EventNames.LIST_SUPPLY_ITEM, ListSupplyItemCommand);
+			addCommand(EventNames.CREATE_SUPPLY_ITEM, CreateSupplyItemCommand);
+			addCommand(EventNames.DELETE_SUPPLY_ITEM, DeleteSupplyItemCommand);
 		}
 	}
 }

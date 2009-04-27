@@ -11,6 +11,7 @@ package com.j_nid.utils {
 		
 		public static function printOrder(order:Order):void {
 			var printJob:FlexPrintJob = new FlexPrintJob();
+			printJob.printAsBitmap = false;
             if (printJob.start()) {
                 // Create a FormPrintView control as a child of the current view.
                 var thePrintView:OrderPrintView = new OrderPrintView();
@@ -61,6 +62,7 @@ package com.j_nid.utils {
 		
 		public static function printPayment():void {
 			var printJob:FlexPrintJob = new FlexPrintJob();
+			printJob.printAsBitmap = false;
             if (printJob.start()) {
                 // Create a FormPrintView control as a child of the current view.
                 var printView:TransactionPrintView = new TransactionPrintView();

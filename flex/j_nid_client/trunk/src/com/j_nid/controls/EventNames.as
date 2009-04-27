@@ -44,5 +44,15 @@ package com.j_nid.controls {
 		public static const CREATE_PAYMENT:String = "createPayment";
 		public static const UPDATE_PAYMENT:String = "updatePayment";
 		public static const DELETE_PAYMENT:String = "deletePayment";
+		// Supply events.
+		public static const LIST_SUPPLY:String = "listSupply";
+		public static const CREATE_SUPPLY:String = "createSupply";
+		public static const UPDATE_SUPPLY:String = "updateSupply";
+		public static const DELETE_SUPPLY:String = "deleteSupply";
+		// SupplyItem events.
+		public static const LIST_SUPPLY_ITEM:String = "listSupplyItem";
+		public static const CREATE_SUPPLY_ITEM:String = "createSupplyItem";
+		public static const UPDATE_SUPPLY_ITEM:String = "updateSupplyItem";
+		public static const DELETE_SUPPLY_ITEM:String = "deleteSupplyItem";
 	}
 }
