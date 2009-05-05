@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow 
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	title="Person Form"
+	layout="absolute"
+	creationComplete="init(event)"
+	width="400" height="500">
+	
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.LinkButton;
+			import mx.managers.PopUpManager;
+			import mx.events.FlexEvent;
+			import com.j_nid.models.JNidModelLocator;
+			import com.j_nid.models.Person;
+			import com.j_nid.controls.EventNames;
+			import com.j_nid.utils.CairngormUtils;
+			import mx.controls.Alert;
+			import mx.events.ValidationResultEvent;
+			
+			[Bindable]
+			public var model:JNidModelLocator = JNidModelLocator.getInstance();
+			[Bindable]
+			public var person:Person;
+			private var errorMessage:String;
+			private var closeBtn:LinkButton;
+			
+			private function init(e:FlexEvent):void {
+				PopUpManager.centerPopUp(this);
+			}
+			
+			override protected function createChildren():void {
+				super.createChildren();
+				closeBtn = new LinkButton();
+				closeBtn.label = "x";
+				closeBtn.addEventListener(MouseEvent.CLICK, closeBtnClick);
+				rawChildren.addChild(closeBtn);
+			}
+			
+			override protected function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void	{
+				super.updateDisplayList(unscaledWidth, unscaledHeight);	
+				var margin:int = 4;	
+				var pixelsFromTop:int = 5;
+				var pixelsFromRight:int = 10;
+				closeBtn.setActualSize(30 + margin, 20 + margin);
+				var buttonWidth:int = closeBtn.width;
+				var xPos:int = unscaledWidth - buttonWidth - pixelsFromRight;
+				var yPos:int = pixelsFromTop;
+				closeBtn.move(xPos, yPos);
+			}
+			
+			private function closeBtnClick(e:MouseEvent):void {
+				PopUpManager.removePopUp(this);
+			}
+			
+			private function saveClickListener(e:MouseEvent):void {
+				if (isValid()) {
+					person = new Person();
+					person.name = nameField.text;
+					person.firstName = firstNameField.text;
+					person.lastName = lastNameField.text;
+					person.idCardNumber = idCardNumberFiled.text;
+					person.address = addressField.text;
+					person.detail1 = detail1Field.text;
+					person.detail2 = detail2Field.text;
+					model.personToCreate = person;
+					CairngormUtils.dispatchEvent(EventNames.CREATE_PERSON, person);
+				} else {
+					Alert.show(errorMessage, "Error");
+				}
+			}
+			
+			private function isValid():Boolean {
+				errorMessage = "";
+				var validationResult:ValidationResultEvent = nameValidator.validate();
+				if (validationResult.type == ValidationResultEvent.INVALID) {
+					errorMessage += "Check name.\n";
+				}
+				return errorMessage.length == 0;
+			}
+			
+			public function getPhoneTypeIndex(type:String):int {
+				for (var i:int = 0; i < model.phoneTypes.length(); i++) {
+					if (model.phoneTypes[i].data == type) {
+						return i;
+					}
+				}
+				return -1;
+			}
+			
+			public function getBankNameIndex(bank:String):int {
+				for (var i:int = 0; i < model.bankNames.length(); i++) {
+					if (model.bankNames[i].data == bank) {
+						return i;
+					}
+				}
+				return -1;
+			}
+		]]>
+	</mx:Script>
+	
+	<mx:Accordion creationPolicy="all"
+		width="100%" height="100%">
+		
+		<mx:Form 
+			label="Name"
+			paddingLeft="10" paddingRight="10"
+			paddingTop="10" paddingBottom="10"
+			width="100%" height="100%">
+			
+			<mx:FormItem label="Name:"
+				required="true"
+				width="100%">
+				
+				<mx:TextInput id="nameField" 
+					text="{person.name}"
+					width="100%"/>
+			</mx:FormItem>
+			
+			<mx:FormItem label="First Name:"
+				width="100%">
+				
+				<mx:TextInput id="firstNameField" 
+					text="{person.firstName}"
+					width="100%"/>
+			</mx:FormItem>
+			
+			<mx:FormItem label="Last Name:"
+				width="100%">
+				
+				<mx:TextInput id="lastNameField" 
+					text="{person.lastName}"
+					width="100%"/>
+			</mx:FormItem>
+			
+			<mx:FormItem label="ID Card No:"
+				width="100%">
+				
+				<mx:TextInput id="idCardNumberFiled" 
+					text="{person.idCardNumber}"
+					width="100%"/>
+			</mx:FormItem>
+		</mx:Form>
+		
+		<mx:Form label="Address"
+			paddingTop="10" paddingBottom="10" 
+			paddingLeft="10" paddingRight="10"
+			width="100%" height="100%">
+			
+			<mx:FormItem label="Address"
+				width="100%">
+				
+				<mx:TextArea id="addressField" 
+					text="{person.address}" width="100%"/>
+			</mx:FormItem>
+			
+			<mx:FormItem label="Detail1"
+				width="100%">
+				
+				<mx:TextArea id="detail1Field" 
+					text="{person.detail1}"
+					width="100%"/>
+			</mx:FormItem>
+			
+			<mx:FormItem label="Detail2"
+				width="100%">
+				
+				<mx:TextArea id="detail2Field" 
+					text="{person.detail2}"
+					width="100%"/>
+			</mx:FormItem>
+		</mx:Form>
+		
+		<mx:VBox label="Phone Number List"
+			width="100%" height="100%">
+			
+			<mx:DataGrid id="phoneNumberList" 
+				dataProvider="{person.phoneNumbers}" 
+				width="100%">
+				<mx:columns>
+					<mx:DataGridColumn dataField="number" headerText="Number"/>
+					<mx:DataGridColumn dataField="type" headerText="Type">
+						<mx:itemRenderer>
+							<mx:Component>
+<mx:ComboBox dataProvider="{outerDocument.model.phoneTypes}" cornerRadius="0"
+selectedIndex="{outerDocument.getPhoneTypeIndex(data.type)}"/>
+							</mx:Component>
+						</mx:itemRenderer>
+					</mx:DataGridColumn>
+				</mx:columns>
+			</mx:DataGrid>
+			
+			<mx:Spacer height="100%"/>
+			
+			<mx:Form width="100%" 
+				paddingTop="10" paddingBottom="10" 
+				paddingLeft="10" paddingRight="10">
+				
+				<mx:FormItem label="Number:"
+					width="100%">
+					
+					<mx:TextInput width="100%"/>
+				</mx:FormItem>
+				
+				<mx:FormItem label="Phone:"
+					width="100%">
+					
+					<mx:ComboBox dataProvider="{model.phoneTypes}"
+						width="100%"/>
+				</mx:FormItem>
+				
+				<mx:FormItem>
+					<mx:Button label="Add"/>
+				</mx:FormItem>
+			</mx:Form>
+		</mx:VBox>
+		
+		<mx:VBox label="Bank Account List"
+			width="100%" height="100%">
+			
+			<mx:DataGrid id="bankAccountList" 
+				dataProvider="{person.bankAccounts}" 
+				width="100%">
+				<mx:columns>
+					<mx:DataGridColumn dataField="number" headerText="Number"/>
+					<mx:DataGridColumn dataField="bank" headerText="Bank">
+						<mx:itemRenderer>
+							<mx:Component>
+<mx:ComboBox dataProvider="{outerDocument.model.bankNames}" 
+selectedIndex="{outerDocument.getBankNameIndex(data.bank)}"/>
+							</mx:Component>
+						</mx:itemRenderer>
+					</mx:DataGridColumn>
+				</mx:columns>
+			</mx:DataGrid>
+			
+			<mx:Spacer height="100%"/>
+			
+			<mx:Form width="100%" 
+				paddingTop="10" paddingBottom="10" 
+				paddingLeft="10" paddingRight="10">
+				
+				<mx:FormItem label="Number:" width="100%">
+					<mx:TextInput width="100%"/>
+				</mx:FormItem>
+				
+				<mx:FormItem label="Bank:" width="100%">
+					<mx:ComboBox dataProvider="{model.bankNames}"
+						width="100%"/>
+				</mx:FormItem>
+				
+				<mx:FormItem>
+					<mx:Button label="Add"/>
+				</mx:FormItem>
+			</mx:Form>
+		</mx:VBox>
+	</mx:Accordion>
+	
+	<mx:ControlBar horizontalAlign="right">
+		<mx:Button id="clearBtn"
+			label="Clear"/>
+		
+		<mx:Button id="saveBtn"
+			label="Save" 
+			click="saveClickListener(event)"/>
+	</mx:ControlBar>
+	
+	<mx:StringValidator id="nameValidator" 
+		source="{nameField}" property="text"
+		trigger="{saveBtn}" triggerEvent="click"/>
+</mx:TitleWindow>

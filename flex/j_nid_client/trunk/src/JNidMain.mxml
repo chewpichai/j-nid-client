@@ -5,7 +5,9 @@
 	layout="vertical" 
 	initialize="init(event)"
 	applicationComplete="applicationComplete(event)"
-	paddingBottom="0">
+	paddingBottom="0"
+	verticalScrollPolicy="off"
+	horizontalScrollPolicy="off">
 	
 	<mx:Style source="css/styles.css"/>
 	
@@ -37,6 +39,7 @@
 			}
 			
 			private function applicationComplete(e:FlexEvent):void {
+				currentState = "loading";
 				stage.nativeWindow.maximize();
 			}
 			
@@ -51,9 +54,17 @@
 		]]>
 	</mx:Script>
 	
+	<mx:states>
+		<mx:State name="loading">
+			<mx:RemoveChild target="{header}"/>
+			<mx:RemoveChild target="{mainView}"/>
+		</mx:State>
+	</mx:states>
+	
 	<control:JNidController/>
 	
-	<mx:HBox verticalAlign="bottom"
+	<mx:HBox id="header"
+		verticalAlign="bottom"
 		width="100%" height="75">
 		
 		<mx:Image width="150" height="75"/>
@@ -64,19 +75,18 @@
 	
 	<mx:ViewStack id="mainView" 
 		change="viewChange(event)"
-		creationPolicy="all"
 		width="100%" height="100%">
 		
 		<jn:MainPage id="mainPage" label="Main"/>
 		<jn:SellProductPage id="sellProduct" label="Sell"/>
 		<jn:BuyProductPage id="buyProduct" label="Buy"/>
-		<jn:ProductFormPage id="productPage" label="Product"/>
-		<jn:PersonFormPage id="personForm" label="Person"/>
+		<jn:ProductPage id="productPage" label="Product"/>
+		<jn:PersonPage id="personForm" label="Person"/>
 		<jn:OrderPage id="orderPage" label="Order"/>
 		<jn:PaymentPage id="paymentPage" label="Payment"/>
 	</mx:ViewStack>
 	
-	<mx:Label
+	<mx:Label id="footer"
 		text="Copyright (c) 2009 ChewLab. All rights reserved."
 		styleName="copyright"/>
 </mx:WindowedApplication>

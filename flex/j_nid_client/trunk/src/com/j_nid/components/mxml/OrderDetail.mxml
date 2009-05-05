@@ -15,6 +15,7 @@
 	
 	<mx:Script>
 		<![CDATA[
+			import com.j_nid.components.mxml.forms.OrderProcessForm;
 			import com.j_nid.events.ViewChangeEvent;
 			import com.j_nid.models.JNidModelLocator;
 			import com.j_nid.models.Product;
@@ -35,6 +36,7 @@
 			public var model:JNidModelLocator = JNidModelLocator.getInstance();
 			
 			private function init(e:FlexEvent):void {
+				initData();
 				Application.application.addEventListener("viewChange", applicationViewChange);
 			}
 			
@@ -57,6 +59,7 @@
 				var product:Product = e.dragSource.dataForFormat("items")[0];
 				var orderItem:OrderItem = new OrderItem(product);
 				addOrderItem(orderItem);
+				orderItemList.verticalScrollPosition = orderItemList.maxVerticalScrollPosition;
 			}
 			
 			private function addOrderItem(item:OrderItem):void {
@@ -112,7 +115,8 @@
 			width="100%"/>
 	</mx:HBox>
 	
-	<mx:DataGrid id="orderItemList" dataProvider="{order.orderItems}"
+	<mx:DataGrid id="orderItemList"
+		dataProvider="{order.orderItems}"
 		dragDrop="dragDropListener(event)" dragEnter="dragEnterListener(event)"
 		itemEditEnd="event.preventDefault()" editable="true" 
 		wordWrap="true" variableRowHeight="true" 

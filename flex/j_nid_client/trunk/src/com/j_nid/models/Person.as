@@ -2,6 +2,8 @@ package com.j_nid.models {
     
     import mx.collections.ArrayCollection;
     import mx.collections.IViewCursor;
+    import mx.collections.Sort;
+    import mx.collections.SortField;
     import mx.events.CollectionEvent;
 	
 	[Bindable]
@@ -17,7 +19,7 @@ package com.j_nid.models {
         private var _address:String;
         private var _detail1:String;
         private var _detail2:String;
-    	private var _outstandingOrderTotal:Number;
+    	private var _outstandingTotal:Number;
     	private var _numOutstandingOrders:int;
     	private var _paidTotal:Number;
     	private var _orderTotal:Number;
@@ -27,6 +29,7 @@ package com.j_nid.models {
     	private var _orders:ArrayCollection;
     	private var _payments:ArrayCollection;
     	private var _supplies:ArrayCollection;
+    	private var _transactions:ArrayCollection;
     	    	
     	public static function fromXML(obj:XML):Person {
     		var person:Person = new Person();
@@ -48,7 +51,7 @@ package com.j_nid.models {
 			detail1 = "";
 			detail2 = "";
 			numOutstandingOrders = 0;
-			outstandingOrderTotal = 0;
+			outstandingTotal = 0;
 			paidTotal = 0;
 			orderTotal = 0;
 			phoneNumbers = new ArrayCollection();
@@ -56,12 +59,13 @@ package com.j_nid.models {
 			orders = new ArrayCollection();
 			payments = new ArrayCollection();
 			supplies = new ArrayCollection();
+			transactions = new ArrayCollection();
 			orders.addEventListener(CollectionEvent.COLLECTION_CHANGE, orderChangeListener);
 		}
 		
 		private function orderChangeListener(evt:CollectionEvent):void {
 			numOutstandingOrders = 0;
-			outstandingOrderTotal = 0;
+			outstandingTotal = 0;
 			orderTotal = 0;
 			var cursor:IViewCursor = orders.createCursor();
 			while (!cursor.afterLast) {
@@ -91,6 +95,7 @@ package com.j_nid.models {
 		public function addOrder(order:Order):void {
 			order.person = this;
 			orders.addItem(order);
+			transactions.addItem(order);
 		}
 		
 		public function removeOrder(order:Order):void {
@@ -109,21 +114,24 @@ package com.j_nid.models {
 		}
 		
 		private function calcOrder(order:Order):void {
-			if (order.status == Order.OUTSTANDING) {
+			var total:Number;
+			if (order.isOutstanding) {
 				numOutstandingOrders += 1;
-				outstandingOrderTotal += order.total;
 			}
 			orderTotal += order.total;
+			outstandingTotal = paidTotal - orderTotal;
 		}
 		
 		public function addPayment(payment:Payment):void {
 			payment.person = this;
 			payments.addItem(payment);
+			transactions.addItem(payment);
 			calcPayment(payment);
 		}
 		
 		private function calcPayment(payment:Payment):void {
 			paidTotal += payment.amount;
+			outstandingTotal = paidTotal - orderTotal;
 		}
 		
 		public function toXML():XML {
@@ -217,12 +225,12 @@ package com.j_nid.models {
 			return _bankAccounts;
 		}
 		
-		public function set outstandingOrderTotal(obj:Number):void {
-			_outstandingOrderTotal = obj;
+		public function set outstandingTotal(obj:Number):void {
+			_outstandingTotal = obj;
 		}
 		
-		public function get outstandingOrderTotal():Number {
-			return _outstandingOrderTotal;
+		public function get outstandingTotal():Number {
+			return _outstandingTotal;
 		}
 		
 		public function set numOutstandingOrders(obj:int):void {
@@ -271,6 +279,18 @@ package com.j_nid.models {
 		
 		public function get payments():ArrayCollection {
 			return _payments;
+		}
+		
+		public function set transactions(obj:ArrayCollection):void {
+			_transactions = obj;
+			var sort:Sort = new Sort();
+			sort.fields = [new SortField("created", false, true)];
+			_transactions.sort = sort;
+			_transactions.refresh();
+		}
+		
+		public function get transactions():ArrayCollection {
+			return _transactions;
 		}
 		
 		public function set isGeneral(obj:Boolean):void {

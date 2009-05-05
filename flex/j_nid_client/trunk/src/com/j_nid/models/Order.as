@@ -12,25 +12,17 @@ package com.j_nid.models {
 		private var _person:Person;
 		private var _personID:int;
 		private var _notation:String;
-		private var _status:int;
+		private var _paidTotal:Number;
 		private var _created:Date;
 		private var _total:Number;
 		private var _orderItems:ArrayCollection;
-		public static var CANCELED:int = -1;
-		public static var OUTSTANDING:int = 0;
-		public static var PAID:int = 1;
-		public static var STATUS_OPTIONS:Array = [
-			{label: "Outstanding", data: 0},
-			{label: "Paid", data: 1},
-			{label: "Canceled", data: -1}
-		];
 		
 		public static function fromXML(obj:XML):Order {
     		var order:Order = new Order();
     		order.id = obj.id;
     		order.personID = obj.person_id;
     		order.notation = obj.notation;
-    		order.status = obj.status;
+    		order.paidTotal = obj.paid_total;
     		order.created = new Date(Date.parse(obj.created));
 			return order;
     	}
@@ -38,9 +30,9 @@ package com.j_nid.models {
 		public function Order()	{
 			super();
 			notation = "";
-			status = 0;
-			created = new Date();
 			total = 0;
+			paidTotal = 0;
+			created = new Date();
 			orderItems = new ArrayCollection();
 			orderItems.addEventListener(CollectionEvent.COLLECTION_CHANGE, itemChangeListener);
 		}
@@ -72,26 +64,20 @@ package com.j_nid.models {
 			return OrderItem(orderItems.getItemAt(obj));
 		}
 		
-		public function isCanceled():Boolean {
-			return status == CANCELED;
-		}
-		
 		public function toXML():XML {
 			var xml:XML = <order/>
 			xml.person_id = person.id;
 			xml.notation = notation;
-			xml.status = status;
+			xml.paid_total = paidTotal;
 			xml.created = DateUtils.format(created);
 			return xml;
 		}
 		
 		public function toString():String {
-			return person.name + " " + 
-				status + " " +
-				created.toLocaleDateString();
+			return person.name + " " + created.toLocaleDateString();
 		}
 		
-/* ----- get-set function. --------------------------------------------------------------------- */
+/* ----- get-set function. ------------------------------------------------- */
 		
 		public function set person(obj:Person):void {
 			_person = obj;
@@ -117,14 +103,14 @@ package com.j_nid.models {
 			_notation = obj;
 		}
 		
-		public function get status():int {
-			return _status;
-		}
-
-		public function set status(obj:int):void {
-			_status = obj;
+		public function get paidTotal():Number {
+			return _paidTotal;
 		}
 		
+		public function set paidTotal(obj:Number):void {
+			_paidTotal = obj;
+		}
+				
 		public function get created():Date {
 			return _created;
 		}
@@ -147,6 +133,18 @@ package com.j_nid.models {
 		
 		public function get orderItems():ArrayCollection {
 			return _orderItems;
+		}
+		
+		public function get isPaid():Boolean {
+			return total <= paidTotal;
+		}
+		
+		public function get isOutstanding():Boolean {
+			return total > paidTotal;
+		}
+		
+		public function get totalToPaid():Number {
+			return total - paidTotal;
 		}
 	}
 }

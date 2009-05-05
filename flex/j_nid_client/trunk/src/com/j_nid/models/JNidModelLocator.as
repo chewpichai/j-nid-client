@@ -204,8 +204,15 @@ package com.j_nid.models {
 				_loadedPerson && _loadedPhoneNumber && _loadedProduct &&
 				_loadedProductType && _loadedPayment && _loadedSupply &&
 				_loadedSupplyItem) {
+					// Set relate for payments.
+					var cursor:IViewCursor = payments.createCursor();
+					while (!cursor.afterLast) {
+						var payment:Payment = Payment(cursor.current);
+						getPerson(payment.personID).addPayment(payment);
+						cursor.moveNext();
+					}
 					// Set relate for order items.
-					var cursor:IViewCursor = orderItems.createCursor();
+					cursor = orderItems.createCursor();
 					while (!cursor.afterLast) {
 						var item:OrderItem = OrderItem(cursor.current);
 						getOrder(item.orderID).addItem(item);;
@@ -217,13 +224,6 @@ package com.j_nid.models {
 					while (!cursor.afterLast) {
 						var order:Order = Order(cursor.current);
 						getPerson(order.personID).addOrder(order);
-						cursor.moveNext();
-					}
-					// Set relate for payments.
-					cursor = payments.createCursor();
-					while (!cursor.afterLast) {
-						var payment:Payment = Payment(cursor.current);
-						getPerson(payment.personID).addPayment(payment);
 						cursor.moveNext();
 					}
 					// Set relate for products.
@@ -262,6 +262,7 @@ package com.j_nid.models {
 						cursor.moveNext();
 					}
 					sortModels();
+					Application.application.currentState = null;
 				}
 		}
 		
@@ -395,6 +396,24 @@ package com.j_nid.models {
 			var payment:Payment = Payment.fromXML(obj);
 			getPerson(payment.personID).addPayment(payment);
 			payments.addItem(payment);
+			var outStandingOrders:Array = payment.person.orders.source.filter(
+				function (order:*, index:int, array:Array):Boolean {
+					return order.isOutstanding;
+				}
+			);
+			var amount:Number = payment.amount;
+			for each (var order:Order in outStandingOrders) {
+				if (order.totalToPaid > amount) {
+					order.paidTotal += amount;
+				} else {
+					order.paidTotal += order.totalToPaid;
+				}
+				amount -= order.totalToPaid;
+				CairngormUtils.dispatchEvent(EventNames.UPDATE_ORDER, order);
+				if (amount <= 0) {
+					break;
+				}
+			}
 		}
 		
 		public function getProductType(id:int):ProductType {

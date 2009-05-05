@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:jn="com.j_nid.validators.*"
+	creationComplete="init(event)"
+	width="100%" height="100%">
+	
+	<mx:Script>
+		<![CDATA[
+			import com.j_nid.models.Person;
+		]]>
+	</mx:Script>
+	
+	<mx:Script>
+		<![CDATA[
+			import com.j_nid.components.mxml.forms.PersonForm;
+			import mx.core.Application;
+			import mx.managers.PopUpManager;
+			import mx.events.DataGridEvent;
+			import com.j_nid.controls.EventNames;
+			import com.j_nid.utils.CairngormUtils;
+			import com.adobe.cairngorm.control.CairngormEventDispatcher;
+			import com.j_nid.models.JNidModelLocator;
+			import mx.rpc.events.ResultEvent;
+			import mx.collections.SortField;
+			import mx.collections.Sort;
+			import mx.events.ValidationResultEvent;
+			import mx.events.IndexChangedEvent;
+			import mx.containers.ViewStack;
+			import mx.controls.Alert;
+			import com.j_nid.models.BankAccount;
+			import com.j_nid.models.PhoneNumber;
+			import com.j_nid.models.Person;
+			import mx.collections.ArrayCollection;
+			import mx.events.ListEvent;
+			import mx.events.FlexEvent;
+			import mx.utils.StringUtil;
+			
+			[Bindable]
+			public var person:Person;
+			private var isEdit:Boolean = false;
+			private var personSelectedIndex:int = -1;
+			private var errorMessage:String;
+			[Bindable]
+			public var model:JNidModelLocator = JNidModelLocator.getInstance();
+			
+			private function init(e:FlexEvent):void {
+				person = new Person();
+			}
+			
+			private function searchFieldChangeListener(e:Event):void {
+				personList.dataProvider.filterFunction = function(item:Object):Boolean {
+					var person:Person = Person(item);
+					person.sortIndex = person.name.indexOf(searchField.text);
+					return person.sortIndex != -1;
+				};
+				var sort:Sort = new Sort();
+				sort.fields = [new SortField("sortIndex")];
+				personList.dataProvider.sort = sort;
+				personList.dataProvider.refresh();
+			}
+			
+			private function personListChangeListener(e:ListEvent):void {
+				person = Person(personList.selectedItem);
+				isEdit = true;
+			}
+			
+			internal function updatePerson(person:Person):void {
+				CairngormUtils.dispatchEvent(EventNames.UPDATE_PERSON, person);
+			}
+			
+			private function newClickListener(e:MouseEvent):void {
+				PopUpManager.createPopUp(Application(Application.application),
+					PersonForm, true);
+			}
+			
+			private function clearClickListener(e:MouseEvent):void {
+				
+			}
+		]]>
+	</mx:Script>
+	
+	<mx:Panel title="Person List"
+		layout="vertical" 
+		paddingTop="10" paddingBottom="10"
+		paddingLeft="5" paddingRight="5"
+		width="100%" height="100%">
+		
+		<mx:FormItem label="Search" width="100%">
+			<mx:TextInput id="searchField" width="100%" 
+				change="searchFieldChangeListener(event)"/>
+		</mx:FormItem>
+		
+		<mx:DataGrid id="personList" 
+			dataProvider="{model.people.source}" 
+			width="100%" height="100%"
+			change="personListChangeListener(event)">
+			
+			<mx:columns>
+				<mx:DataGridColumn headerText="Name" dataField="name"/>
+				<mx:DataGridColumn headerText="Customer" 
+					textAlign="center" width="75">
+					<mx:itemRenderer>
+						<mx:Component>
+<mx:CheckBox selected="{data.isCustomer}" change="changeListener(event)">
+	<mx:Script>
+		<![CDATA[
+			import com.j_nid.models.Person;
+			
+			private function changeListener(e:Event):void {
+				var person:Person = Person(data);
+				person.isCustomer = e.currentTarget.selected;
+				outerDocument.updatePerson(person);
+			}
+		]]>
+	</mx:Script>
+</mx:CheckBox>
+						</mx:Component>
+					</mx:itemRenderer>
+				</mx:DataGridColumn>
+				<mx:DataGridColumn headerText="Supplier"
+					textAlign="center" width="75">
+					<mx:itemRenderer>
+						<mx:Component>
+<mx:CheckBox selected="{data.isSupplier}" change="changeListener(event)">
+	<mx:Script>
+		<![CDATA[
+			import com.j_nid.models.Person;
+			
+			private function changeListener(e:Event):void {
+				var person:Person = Person(data);
+				person.isSupplier = e.currentTarget.selected;
+				outerDocument.updatePerson(person);
+			}
+		]]>
+	</mx:Script>
+</mx:CheckBox>
+						</mx:Component>
+					</mx:itemRenderer>
+				</mx:DataGridColumn>
+				<mx:DataGridColumn headerText="General"
+					textAlign="center" width="75">
+					<mx:itemRenderer>
+						<mx:Component>
+<mx:CheckBox selected="{data.isGeneral}" change="changeListener(event)">
+	<mx:Script>
+		<![CDATA[
+			import com.j_nid.models.Person;
+			
+			private function changeListener(e:Event):void {
+				var person:Person = Person(data);
+				person.isGeneral = e.currentTarget.selected;
+				outerDocument.updatePerson(person);
+			}
+		]]>
+	</mx:Script>
+</mx:CheckBox>
+						</mx:Component>
+					</mx:itemRenderer>
+				</mx:DataGridColumn>
+			</mx:columns>
+		</mx:DataGrid>
+		
+		<mx:ControlBar horizontalAlign="right">
+			<mx:Button id="newBtn"
+				label="New" click="newClickListener(event)"/>
+		</mx:ControlBar>
+	</mx:Panel>
+</mx:HBox>

@@ -27,7 +27,6 @@
 				ChangeWatcher.watch(dateField, "selectedRanges", filterOrder);
 				ChangeWatcher.watch(outstandingField, "selected", filterOrder);
 				ChangeWatcher.watch(paidField, "selected", filterOrder);
-				ChangeWatcher.watch(canceledField, "selected", filterOrder);
 				initData();
 			}
 			
@@ -40,7 +39,7 @@
 				orders.filterFunction = function(obj:Object):Boolean {
 					var order:Order = Order(obj);
 					return checkPerson(order.person) &&
-						checkStatus(order.status) &&
+						checkStatus(order) &&
 						checkDate(order.created);
 				};
 				orders.refresh();
@@ -61,7 +60,7 @@
 					var start:Date = new Date(obj.rangeStart.time);
 					var end:Date = new Date(obj.rangeEnd.time);
 					// Move end date to the midnight of the next day.
-					end = DateUtils.moveDateByDay(date, 1);
+					end = DateUtils.moveDateByDay(end, 1);
 					if (date >= start && date < end) {
 						return true;
 					}
@@ -69,21 +68,13 @@
 				return false;
 			}
 			
-			private function checkStatus(status:int):Boolean {
+			private function checkStatus(order:Order):Boolean {
 				var statusArray:Array = new Array();
-				if (outstandingField.selected) {
-					statusArray.push(0);
+				if (outstandingField.selected && order.isOutstanding) {
+					return true;
 				}
-				if (paidField.selected) {
-					statusArray.push(1);
-				}
-				if (canceledField.selected) {
-					statusArray.push(-1);
-				}
-				for (var i:int = 0; i < statusArray.length; i++) {
-					if (statusArray[i] == status) {
-						return true;
-					}
+				if (paidField.selected && order.isPaid) {
+					return true;
 				}
 				return false;
 			}
@@ -94,15 +85,13 @@
 				CairngormUtils.dispatchEvent(EventNames.DELETE_ORDER_ITEM, item);
 			}
 			
-			private function cancelOrderClick(e:MouseEvent):void {
-				var order:Order = Order(orderList.selectedItem);
-				order.status = Order.CANCELED;
-				CairngormUtils.dispatchEvent(EventNames.UPDATE_ORDER, order);
-			}
-			
 			private function printOrder(e:MouseEvent):void {
 				var order:Order = Order(orderList.selectedItem);
 				PrintUtils.printOrder(order);
+			}
+			
+			private function deleteOrderClick(e:MouseEvent):void {
+				
 			}
 		]]>
 	</mx:Script>
@@ -132,7 +121,6 @@
 			
 			<mx:CheckBox id="outstandingField" label="Outstanding"/>
 			<mx:CheckBox id="paidField" label="Paid"/>
-			<mx:CheckBox id="canceledField" label="Canceled"/>
 		</mx:VBox>
 	</mx:Panel>
 	
@@ -201,8 +189,8 @@
 		
 		<mx:ControlBar horizontalAlign="right">
 		
-			<mx:Button label="Cancel"
-				click="cancelOrderClick(event)"
+			<mx:Button label="Delete"
+				click="deleteOrderClick(event)"
 				enabled="{!orderList.selectedItem.isCanceled()}"/>
 			
 			<mx:Button label="Print" click="printOrder(event)"/>

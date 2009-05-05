@@ -1,7 +1,7 @@
 package com.j_nid.utils {
 	
-	import com.j_nid.components.mxml.print.OrderPrintView;
-	import com.j_nid.components.mxml.print.TransactionPrintView;
+	import com.j_nid.components.mxml.prints.OrderPrintView;
+	import com.j_nid.components.mxml.prints.TransactionPrintView;
 	import com.j_nid.models.Order;
 	
 	import mx.core.Application;

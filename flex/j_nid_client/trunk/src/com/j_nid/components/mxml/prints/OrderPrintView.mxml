@@ -2,7 +2,7 @@
 <!-- Custom control to print the DataGrid control on multiple pages. -->
 
 <mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
-	xmlns:ns="com.j_nid.components.mxml.print.*"
+	xmlns:ns="com.j_nid.components.mxml.prints.*"
 	backgroundColor="#FFFFFF">
 
     <mx:Script>

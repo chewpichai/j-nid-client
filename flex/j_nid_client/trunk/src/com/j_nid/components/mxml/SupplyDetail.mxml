@@ -15,6 +15,7 @@
 	
 	<mx:Script>
 		<![CDATA[
+			import com.j_nid.components.mxml.forms.SupplyProcessForm;
 			import com.j_nid.models.SupplyItem;
 			import com.j_nid.events.ViewChangeEvent;
 			import com.j_nid.models.JNidModelLocator;
@@ -33,9 +34,13 @@
 			private var supply:Supply;
 			[Bindable]
 			public var model:JNidModelLocator = JNidModelLocator.getInstance();
+			[Bindable]
+			private var mainApp:JNidMain;
 			
 			private function init(e:FlexEvent):void {
-				Application.application.addEventListener("viewChange", applicationViewChange);
+				initData();
+				mainApp = JNidMain(Application.application);
+				mainApp.addEventListener("viewChange", applicationViewChange);
 			}
 			
 			private function applicationViewChange(e:ViewChangeEvent):void {
@@ -46,7 +51,6 @@
 			
 			private function initData():void {
 				supply = new Supply();
-				setDefaultPerson();
 			}
 			
 			private function dragEnterListener(e:DragEvent):void {
@@ -95,10 +99,6 @@
 			private function isValid():Boolean {
 				return true;
 			}
-			
-			private function setDefaultPerson():void {
-				personFiled.typedText = model.people.source[new Date().hours].name;
-			}
 		]]>
 	</mx:Script>
 	
@@ -112,9 +112,12 @@
 			width="100%"/>
 	</mx:HBox>
 	
-	<mx:DataGrid id="orderItemList" dataProvider="{supply.supplyItems}"
-		dragDrop="dragDropListener(event)" dragEnter="dragEnterListener(event)"
-		itemEditEnd="event.preventDefault()" editable="true" 
+	<mx:DataGrid id="orderItemList" 
+		dataProvider="{supply.supplyItems}"
+		dragDrop="dragDropListener(event)" 
+		dragEnter="dragEnterListener(event)"
+		itemEditEnd="event.preventDefault()" 
+		editable="true" 
 		wordWrap="true" variableRowHeight="true" 
 		width="100%" height="100%"
 		styleName="cartItemList">

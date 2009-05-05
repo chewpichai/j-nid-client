@@ -7,7 +7,7 @@ package com.j_nid.utils {
 		public static var dateFormat:DateFormatter = new DateFormatter();
 		
 		public static function format(date:Date, 
-			formatString:String="YYYY-MM-DD HH:NN:SS"):String {
+			formatString:String="YYYY-MM-DD JJ:NN:SS"):String {
 			
 			dateFormat.formatString = formatString;
 			return dateFormat.format(date);
