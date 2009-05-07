@@ -53,7 +53,13 @@ package com.j_nid.models {
 		}
 		
 		public function set type(obj:ProductType):void {
-			_type = obj;
+			if (_type != obj) {
+				if (_type != null) {
+					_type.removeProduct(this);
+				}
+				_type = obj;
+				_typeID = obj.id;
+			}
 		}
 		
 		public function get type():ProductType {

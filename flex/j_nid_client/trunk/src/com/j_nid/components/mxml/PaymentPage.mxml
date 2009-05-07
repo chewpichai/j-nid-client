@@ -82,6 +82,15 @@
 			private function printBtnClick(e:MouseEvent):void {
 				PrintUtils.printPayment();
 			}
+			
+			private function filterPeople(peopleArray:Array):ArrayCollection {
+				var people:ArrayCollection = new ArrayCollection(peopleArray);
+				people.filterFunction = function(item:Object):Boolean {
+					return Person(item).outstandingTotal != 0;
+				};
+				people.refresh();
+				return people;
+			}
 		]]>
 	</mx:Script>
 	
@@ -92,7 +101,7 @@
 		width="380" height="100%" >
 		
 		<mx:DataGrid id="personList" 
-			dataProvider="{model.people.source}"
+			dataProvider="{filterPeople(model.people.source)}"
 			width="100%" height="100%">
 			<mx:columns>
 				<mx:DataGridColumn dataField="name" headerText="Name"/>
@@ -108,7 +117,8 @@
 		paddingTop="10" paddingBottom="10"
 		width="100%" height="100%">
 		
-		<mx:HBox width="100%" verticalAlign="middle">
+		<mx:HBox verticalAlign="middle"
+			width="100%">
 			
 			<mx:Label text="Payment:"/>
 			

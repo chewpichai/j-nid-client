@@ -50,10 +50,16 @@
 			
 			private function saveProductTypeListener(e:MouseEvent):void {
 				if (isProductTypeValid()) {
-					var type:ProductType = new ProductType();
-					type.name = nameField.text;
-					type.color = colorField.selectedColor;
-					CairngormUtils.dispatchEvent(EventNames.CREATE_PRODUCT_TYPE, type);
+					productType.name = nameField.text;
+					productType.color = colorField.selectedColor;
+					if (productType.id) {
+						CairngormUtils.dispatchEvent(
+							EventNames.UPDATE_PRODUCT_TYPE, productType);
+					} else {
+						CairngormUtils.dispatchEvent(
+							EventNames.CREATE_PRODUCT_TYPE, productType);
+					}
+					close();
 				}
 			}
 			
@@ -63,6 +69,10 @@
 			}
 			
 			private function closeBtnClick(e:MouseEvent):void {
+				close();
+			}
+			
+			private function close():void {
 				PopUpManager.removePopUp(this);
 			}
 		]]>
@@ -71,13 +81,17 @@
 	<mx:Form
 		width="100%" height="100%">
 		
-		<mx:FormItem label="Name" required="true">
+		<mx:FormItem label="Name:"
+			required="true">
+			
 			<mx:TextInput id="nameField"
-				width="160" height="30"/>
+				text="{productType.name}"
+				width="100%" height="30"/>
 		</mx:FormItem>
 		
-		<mx:FormItem label="Color">
-			<mx:ColorPicker id="colorField"/>
+		<mx:FormItem label="Color:">
+			<mx:ColorPicker id="colorField"
+				selectedColor="{productType.color}"/>
 		</mx:FormItem>
 		
 		<mx:FormItem>

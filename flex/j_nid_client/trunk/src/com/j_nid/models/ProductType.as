@@ -30,6 +30,10 @@ package com.j_nid.models {
 			products.addItem(product);
 		}
 		
+		public function removeProduct(product:Product):void {
+			products.removeItemAt(products.getItemIndex(product));
+		}
+		
 		public function get onSaleProducts():ArrayCollection {
 			products.filterFunction = function(item:Object):Boolean {
 				return item.isSale;
