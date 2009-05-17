@@ -17,6 +17,19 @@ global {
    	font-sharpness: -300;
 }
 
+.dgHeader {
+	text-align: center;
+}
+
+.cartItemList {
+   	alternatingItemColors: #ffffff, #ffff99;
+}
+
+.copyright {
+	font-weight: normal;
+	font-size: 11;
+}
+
 /*
 WindowedApplication {
 	padding-top: 0;
@@ -42,13 +55,6 @@ TextInput {
 	border-style: solid;
 }
 
-.header {
-	text-align: center;
-	font-weight: bold;
-	font-size: 20;
-	padding-top: 10;
-}
-
 .list {
 	borderStyle: none;
 }
@@ -56,11 +62,4 @@ TextInput {
 .panel {
    borderStyle: solid;
    roundedBottomCorners: true;
-}
-
-.copyright {
-	font-weight: normal;
-	font-size: 13;
-	color: #FFFFFF;
-	padding-left: 0;
 }*/

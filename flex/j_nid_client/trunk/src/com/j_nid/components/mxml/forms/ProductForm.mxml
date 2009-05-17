@@ -1,15 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:TitleWindow
-	title="Product Form"
+	title="{resourceManager.getString('ProductPage', 'ProductForm')}"
 	xmlns:mx="http://www.adobe.com/2006/mxml"
 	creationComplete="init(event)"
 	layout="absolute">
 	
+	<mx:Metadata>
+		[ResourceBundle("ProductPage")]
+	</mx:Metadata>
+	
 	<mx:Script>
 		<![CDATA[
+			import mx.resources.ResourceBundle;
 			import mx.events.ValidationResultEvent;
 			import mx.controls.LinkButton;
-			import mx.controls.Button;
 			import com.j_nid.models.JNidModelLocator;
 			import com.j_nid.controls.EventNames;
 			import com.j_nid.utils.CairngormUtils;
@@ -85,7 +89,7 @@
 	<mx:Form
 		width="100%" height="100%">
 		
-		<mx:FormItem label="Name:"
+		<mx:FormItem label="{resourceManager.getString('ProductPage', 'Name')}:"
 			required="true"
 			width="100%">
 			
@@ -94,17 +98,17 @@
 				width="100%" height="30"/>
 		</mx:FormItem>
 		
-		<mx:FormItem label="Type:"
+		<mx:FormItem label="{resourceManager.getString('ProductPage', 'ProductType')}:"
 			width="100%">
 			
 			<mx:ComboBox id="typeField" 
 				selectedIndex="{model.productTypes.getItemIndex(product.type)}"
-				dataProvider="{model.productTypes}"
+				dataProvider="{model.productTypes.source}"
 				itemRenderer="com.j_nid.components.mxml.ProductTypeComboRenderer"
 				width="100%" height="30"/>
 		</mx:FormItem>
 		
-		<mx:FormItem label="Unit:"
+		<mx:FormItem label="{resourceManager.getString('ProductPage', 'Unit')}:"
 			width="100%">
 			
 			<mx:NumericStepper id="unitField"
@@ -113,7 +117,7 @@
 				width="100%" height="30"/>
 		</mx:FormItem>
 		
-		<mx:FormItem label="Price Per Unit:"
+		<mx:FormItem label="{resourceManager.getString('ProductPage', 'PricePerUnit')}:"
 			width="100%">
 			
 			<mx:NumericStepper id="pricePerUnitField"
@@ -123,14 +127,15 @@
 				width="100%" height="30"/>
 		</mx:FormItem>
 		
-		<mx:FormItem label="Is Sale:">
+		<mx:FormItem label="{resourceManager.getString('ProductPage', 'IsSale')}:">
 			<mx:CheckBox id="isSaleField"
 				selected="{product.isSale}"/>
 		</mx:FormItem>
 		
 		<mx:FormItem>
 			<mx:Button id="saveBtn"
-				label="Save" click="saveProductListener(event)"/>
+				label="{resourceManager.getString('ProductPage', 'Save')}"
+				click="saveProductListener(event)"/>
 		</mx:FormItem>
 	</mx:Form>
 	

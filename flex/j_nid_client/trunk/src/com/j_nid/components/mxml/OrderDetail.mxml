@@ -1,33 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:Panel xmlns:mx="http://www.adobe.com/2006/mxml" 
+<mx:Panel title="{resourceManager.getString('MakeOrder', 'Order')}"
+	xmlns:mx="http://www.adobe.com/2006/mxml" 
 	xmlns:jn="com.j_nid.components.mxml.*"
 	xmlns:adobe="http://www.adobe.com/2006/fc"
-	layout="vertical" title="Order" 
+	layout="vertical" 
 	paddingLeft="5" paddingRight="5"
 	paddingTop="5"
 	creationComplete="init(event)">
 	
-	<mx:Style>
-		.cartItemList {
-   			alternatingItemColors: #ffffff, #ffff99;
-		}
-	</mx:Style>
+	<mx:Metadata>
+		[ResourceBundle("MakeOrder")]
+	</mx:Metadata>
 	
 	<mx:Script>
 		<![CDATA[
-			import com.j_nid.components.mxml.forms.OrderProcessForm;
-			import com.j_nid.events.ViewChangeEvent;
-			import com.j_nid.models.JNidModelLocator;
-			import com.j_nid.models.Product;
-			import mx.controls.Alert;
-			import com.j_nid.models.Order;
-            import mx.core.Application;
+			import mx.resources.ResourceBundle;
 			import mx.managers.PopUpManager;
-			import mx.events.CollectionEvent;
-			import mx.events.FlexEvent;
-			import com.j_nid.models.OrderItem;
-			import mx.collections.ArrayCollection;
 			import mx.managers.DragManager;
+			import mx.core.Application;
+			import mx.controls.Alert;
+			import com.j_nid.components.mxml.forms.OrderProcessForm;
+			import com.j_nid.models.Product;
+			import com.j_nid.models.Order;
+			import com.j_nid.models.JNidModelLocator;
+			import com.j_nid.models.OrderItem;
+			import mx.events.FlexEvent;
 			import mx.events.DragEvent;
 			
 			[Bindable]
@@ -37,13 +34,6 @@
 			
 			private function init(e:FlexEvent):void {
 				initData();
-				Application.application.addEventListener("viewChange", applicationViewChange);
-			}
-			
-			private function applicationViewChange(e:ViewChangeEvent):void {
-				if (e.relatedObject == this.parent) {
-					initData();
-				}
 			}
 			
 			private function initData():void {
@@ -96,7 +86,7 @@
 			}
 			
 			private function isValid():Boolean {
-				return true;
+				return order.orderItems.length > 0;
 			}
 			
 			private function setDefaultPerson():void {
@@ -107,7 +97,7 @@
 	
 	<mx:HBox width="100%" verticalAlign="middle">
 		
-		<mx:Label text="Name:"/>
+		<mx:Label text="{resourceManager.getString('MakeOrder', 'CustomerName')}:"/>
 		
 		<adobe:AutoComplete id="personFiled" 
 			labelField="name" 
@@ -123,8 +113,12 @@
 		width="100%" height="100%"
 		styleName="cartItemList">
 		<mx:columns>
-			<mx:DataGridColumn headerText="Qty" dataField="quantity" 
-				editorDataField="value"	rendererIsEditor="true" 
+			<mx:DataGridColumn 
+				headerText="{resourceManager.getString('MakeOrder', 'Quantity')}" 
+				dataField="quantity" 
+				editorDataField="value"
+				rendererIsEditor="true" 
+				headerStyleName="dgHeader"
 				width="70">
 				<mx:itemRenderer>
 					<mx:Component>
@@ -133,10 +127,20 @@
 					</mx:Component>
 				</mx:itemRenderer>
 			</mx:DataGridColumn>
-			<mx:DataGridColumn headerText="Name" dataField="name" 
-				editable="false" width="150"/>
-			<mx:DataGridColumn headerText="Unit" dataField="unit" 
-				editorDataField="value" rendererIsEditor="true" 
+			
+			<mx:DataGridColumn
+				headerText="{resourceManager.getString('MakeOrder', 'Name')}"
+				dataField="name" 
+				editable="false"
+				headerStyleName="dgHeader"
+				width="150"/>
+				
+			<mx:DataGridColumn
+				headerText="{resourceManager.getString('MakeOrder', 'Unit')}"
+				dataField="unit" 
+				editorDataField="value"
+				rendererIsEditor="true" 
+				headerStyleName="dgHeader"
 				width="70">
 				<mx:itemRenderer>
 					<mx:Component>
@@ -145,8 +149,13 @@
 					</mx:Component>
 				</mx:itemRenderer>
 			</mx:DataGridColumn>
-			<mx:DataGridColumn headerText="Price/Unit" dataField="pricePerUnit" 
-				editorDataField="value"	rendererIsEditor="true" width="85">
+			<mx:DataGridColumn
+				headerText="{resourceManager.getString('MakeOrder', 'PricePerUnit')}"
+				dataField="pricePerUnit" 
+				editorDataField="value"
+				rendererIsEditor="true"
+				headerStyleName="dgHeader"
+				width="85">
 				<mx:itemRenderer>
 					<mx:Component>
 <mx:NumericStepper minimum="1" maximum="10000" stepSize="0.25" 
@@ -154,21 +163,30 @@
 					</mx:Component>
 				</mx:itemRenderer>
 			</mx:DataGridColumn>
-			<mx:DataGridColumn headerText="Total" dataField="total" 
-				editable="false" width="85"/>
+			<mx:DataGridColumn
+				headerText="{resourceManager.getString('MakeOrder', 'Total')}"
+				dataField="total"
+				textAlign="right"
+				editable="false"
+				headerStyleName="dgHeader"
+				width="85"/>
 		</mx:columns>
 	</mx:DataGrid>
 	
 	<mx:Text id="totalTxt" 
-		text="Total: {order.total}" 
+		text="{resourceManager.getString('MakeOrder', 'Total')} {order.total}" 
 		textAlign="right" 
 		paddingRight="10"
-		width="100%" height="20"/>
+		width="100%" height="30"/>
 	
 	<mx:ControlBar>
-		<mx:TextArea id="notationField" width="100%" height="60"/>
-		<mx:Button label="clear" click="clearListener(event)"/>
-		<mx:Button label="remove" click="removeListener(event)"/>
-		<mx:Button label="process" click="processListener(event)"/>
+		<mx:TextArea id="notationField"
+			width="100%" height="60"/>
+		<mx:Button label="{resourceManager.getString('MakeOrder', 'Clear')}"
+			click="clearListener(event)"/>
+		<mx:Button label="{resourceManager.getString('MakeOrder', 'Remove')}"
+			click="removeListener(event)"/>
+		<mx:Button label="{resourceManager.getString('MakeOrder', 'Process')}"
+			click="processListener(event)"/>
 	</mx:ControlBar>
 </mx:Panel>

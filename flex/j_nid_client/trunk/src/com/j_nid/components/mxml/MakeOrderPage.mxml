@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" 
+	xmlns:jn="com.j_nid.components.mxml.*"
+	creationComplete="init(event)"
+	width="100%" height="100%">
+	
+	<mx:Metadata>
+		[ResourceBundle("MakeOrder")]
+	</mx:Metadata>
+	
+	 <mx:Script>
+		<![CDATA[
+			import mx.resources.ResourceBundle;
+			import com.j_nid.models.JNidModelLocator;
+			import mx.events.FlexEvent;
+			
+			[Bindable]
+			private var model:JNidModelLocator = JNidModelLocator.getInstance();
+			
+			private function init(e:FlexEvent):void {
+
+			}
+		]]>
+	</mx:Script>
+	
+	<mx:HBox height="100%">
+		
+		<mx:Panel 
+			title="{resourceManager.getString('MakeOrder', 'ProductType')}"
+			width="220" height="100%">
+			
+			<mx:List id="productTypeList"
+				dataProvider="{model.productTypes.source}"
+				labelField="name" borderStyle="none"
+				height="100%" width="100%"/>
+		</mx:Panel>
+		
+		<mx:Panel
+			title="{resourceManager.getString('MakeOrder', 'Product')}"
+			width="350" height="100%">
+			
+			<mx:DataGrid id="productList" 
+				variableRowHeight="true" dragEnabled="true" 
+				dataProvider="{productTypeList.selectedItem.products}"
+				width="100%" height="100%">
+				<mx:columns>
+					<mx:DataGridColumn 
+						headerText="{resourceManager.getString('MakeOrder', 'Name')}" 
+						dataField="name"
+						wordWrap="true"
+						headerStyleName="dgHeader"/>
+					<mx:DataGridColumn
+						headerText="{resourceManager.getString('MakeOrder', 'Unit')}" 
+						dataField="unit"
+						headerStyleName="dgHeader"
+						width="50"/>
+					<mx:DataGridColumn
+						headerText="{resourceManager.getString('MakeOrder', 'PricePerUnit')}" 
+						dataField="pricePerUnit"
+						headerStyleName="dgHeader"
+						width="90"/>
+				</mx:columns>
+			</mx:DataGrid>
+		</mx:Panel>
+	</mx:HBox>
+	
+	<jn:OrderDetail width="100%" height="100%"/>
+</mx:HBox>

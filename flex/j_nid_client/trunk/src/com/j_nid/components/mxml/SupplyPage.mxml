@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml"
+	creationComplete="createtionComplete(event)"
+	width="100%" height="100%">
+	
+	<mx:Metadata>
+		[ResourceBundle("SupplyPage")]
+	</mx:Metadata>
+	
+	<mx:Script>
+		<![CDATA[
+			import mx.resources.ResourceBundle;
+			import com.j_nid.utils.DateUtils;
+			import mx.collections.ListCollectionView;
+			import mx.binding.utils.ChangeWatcher;
+			import mx.events.FlexEvent;
+			import com.j_nid.models.Supply;
+			import com.j_nid.models.Person;
+			import mx.collections.SortField;
+			import mx.collections.Sort;
+			import mx.collections.ArrayCollection;
+			import com.j_nid.utils.CairngormUtils;
+			import com.j_nid.controls.EventNames;
+			import com.j_nid.models.SupplyItem;
+			import com.j_nid.models.JNidModelLocator;
+			
+			[Bindable]
+			private var model:JNidModelLocator = JNidModelLocator.getInstance();
+			
+			private function createtionComplete(e:FlexEvent):void {
+				ChangeWatcher.watch(supplierList, "selectedIndex", filterSupply);
+				ChangeWatcher.watch(dateField, "selectedRanges", filterSupply);
+				initData();
+			}
+			
+			private function initData():void {
+				var today:Date = new Date();
+				var rangeEnd:Date = new Date(today.fullYear, today.month, today.date);
+				var rangeStart:Date = DateUtils.moveDateByDay(rangeEnd, -7);
+				dateField.selectedRanges = [{rangeStart: rangeStart, rangeEnd: rangeEnd}];
+			}
+			
+			private function filterSupply(e:Event):void {
+				var supplies:ListCollectionView = ListCollectionView(supplyList.dataProvider);
+				supplies.filterFunction = function(obj:Object):Boolean {
+					var supply:Supply = Supply(obj);
+					return checkSupplier(supply.person) &&
+						checkDate(supply.created);
+				};
+				supplies.refresh();
+			}
+			
+			private function checkSupplier(person:Person):Boolean {
+				if (supplierList.selectedItem == null) {
+					return true;
+				}
+				return person == supplierList.selectedItem;
+			}
+			
+			private function checkDate(date:Date):Boolean {
+				if (dateField.selectedRanges.length == 0) {
+					return true;
+				}
+				for each (var obj:Object in dateField.selectedRanges) {
+					var start:Date = new Date(obj.rangeStart.time);
+					var end:Date = new Date(obj.rangeEnd.time);
+					// Move end date to the midnight of the next day.
+					end = DateUtils.moveDateByDay(end, 1);
+					if (date >= start && date < end) {
+						return true;
+					}
+				}
+				return false;
+			}
+			
+			private function getSupplier(peopleArray:Array):ArrayCollection {
+				var suppliers:ArrayCollection = new ArrayCollection(peopleArray);
+				var sort:Sort = new Sort();
+				sort.fields = [new SortField("name")];
+				suppliers.sort = sort;
+				suppliers.filterFunction = function(obj:Object):Boolean {
+					return Person(obj).isSupplier;
+				};
+				suppliers.refresh();
+				return suppliers;
+			}
+			
+			internal function removeSupplyItem(item:SupplyItem):void {
+				item.supply.removeItem(item);
+				model.removeSupplyItem(item);
+				CairngormUtils.dispatchEvent(EventNames.DELETE_SUPPLY_ITEM, item);
+			}
+			
+			private function deleteSupplyClick(e:MouseEvent):void {
+				var supply:Supply = Supply(supplierList.selectedItem);
+				model.removeSupply(supply);
+				CairngormUtils.dispatchEvent(EventNames.DELETE_SUPPLY, supply);
+			}
+			
+			private function itemListKeyDown(e:KeyboardEvent):void {
+				var item:SupplyItem = SupplyItem(supplyItemList.selectedItem);
+				if (e.keyCode == Keyboard.DELETE && item != null) {
+					removeSupplyItem(item);
+				}
+			}
+		]]>
+	</mx:Script>
+	
+	<mx:DateFormatter id="dateFormatter" formatString="DD/MM/YY J:NN:SS"/>
+	
+	<mx:Panel title="{resourceManager.getString('SupplyPage', 'Filter')}"
+		paddingTop="5"
+		width="220" height="100%">
+		
+		<mx:FormItem label="{resourceManager.getString('SupplyPage', 'SearchSupplier')}:"
+			paddingRight="5" paddingLeft="5"
+			width="100%">
+			
+			<mx:TextInput id="searchSupplierField"
+				width="100%"/>
+		</mx:FormItem>
+		
+		<mx:List id="supplierList"
+			dataProvider="{getSupplier(model.people.source)}"
+			labelField="name"
+			borderThickness="0"
+			width="100%" height="100%"/>
+		
+		<mx:DateChooser id="dateField"
+			cornerRadius="0"
+			width="100%"/>
+	</mx:Panel>
+	
+	<mx:Panel title="{resourceManager.getString('SupplyPage', 'Supply')}"
+		width="250" height="100%">
+		
+		<mx:List id="supplyList" 
+			dataProvider="{model.supplies.source}" 
+			width="100%" height="100%"/>
+	</mx:Panel>
+	
+	<mx:Panel title="{resourceManager.getString('SupplyPage', 'Detail')}" 
+		layout="vertical"
+		paddingLeft="5" paddingRight="5" 
+		paddingTop="5"
+		width="100%" height="100%">
+		
+		<mx:HBox 
+			width="100%" height="35" 
+			paddingTop="5" paddingRight="5" 
+			horizontalAlign="right">
+			
+			<mx:Label text="{supplyList.selectedItem.person.name}"/>
+			<mx:Label text="{dateFormatter.format(supplyList.selectedItem.created)}"/>
+		</mx:HBox>
+		
+		<mx:DataGrid id="supplyItemList" 
+			dataProvider="{supplyList.selectedItem.supplyItems}"
+			textAlign="center"
+			keyDown="itemListKeyDown(event)"
+			width="100%" height="100%">
+			<mx:columns>
+				<mx:DataGridColumn
+					headerText="{resourceManager.getString('SupplyPage', 'Quantity')}"
+					dataField="quantity"
+					headerStyleName="dgHeader"
+					width="50"/>
+				<mx:DataGridColumn
+					headerText="{resourceManager.getString('SupplyPage', 'Name')}"
+					dataField="name"
+					headerStyleName="dgHeader"/>
+				<mx:DataGridColumn
+					headerText="{resourceManager.getString('SupplyPage', 'Unit')}"
+					dataField="unit"
+					textAlign="right"
+					headerStyleName="dgHeader"
+					width="50"/>
+				<mx:DataGridColumn
+					headerText="{resourceManager.getString('SupplyPage', 'PricePerUnit')}"
+					dataField="pricePerUnit"
+					textAlign="right"
+					headerStyleName="dgHeader"
+					width="85"/>
+				<mx:DataGridColumn
+					headerText="{resourceManager.getString('SupplyPage', 'Total')}"
+					dataField="total" 
+					textAlign="right"
+					headerStyleName="dgHeader"
+					width="85"/>
+			</mx:columns>
+		</mx:DataGrid>
+		
+		<mx:HBox paddingRight="5" horizontalAlign="right"
+			width="100%" height="35">
+			
+			<mx:Label text="{supplyList.selectedItem.total}"/>
+		</mx:HBox>
+		
+		<mx:ControlBar horizontalAlign="right">
+		
+			<mx:Button label="{resourceManager.getString('SupplyPage', 'Delete')}"
+				click="deleteSupplyClick(event)"
+				enabled="{!supplyList.selectedItem.isCanceled()}"/>
+		</mx:ControlBar>
+	</mx:Panel>
+</mx:HBox>

@@ -5,6 +5,7 @@ package com.j_nid.models {
 		private var _person:Person;
 		private var _personID:int;
 		private var _amount:Number;
+		private var _notation:String;
 		private var _created:Date;
 		
 		public static function fromXML(obj:XML):Payment {
@@ -12,6 +13,7 @@ package com.j_nid.models {
     		payment.id = obj.id;
     		payment.personID = obj.person_id;
     		payment.amount = obj.amount;
+    		payment.notation = obj.notation;
     		payment.created = new Date(Date.parse(obj.created));
 			return payment;
     	}
@@ -26,6 +28,7 @@ package com.j_nid.models {
 			var xml:XML = <payment/>;
 			xml.person_id = personID;
 			xml.amount = amount;
+			xml.notation = notation;
 			xml.created = created;
 			return xml;
 		}
@@ -55,6 +58,14 @@ package com.j_nid.models {
 		
 		public function get amount():Number {
 			return _amount;
+		}
+		
+		public function set notation(obj:String):void {
+			_notation = obj;
+		}
+		
+		public function get notation():String {
+			return _notation;
 		}
 		
 		public function set created(obj:Date):void {

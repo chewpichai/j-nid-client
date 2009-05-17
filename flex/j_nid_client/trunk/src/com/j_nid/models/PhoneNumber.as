@@ -27,12 +27,18 @@ package com.j_nid.models {
 			var xml:XML = <phone_number/>
 			xml.number = number;
 			xml.type = type;
+			xml.person_id = personID;
 			return xml;
 		}
 		
 /* ----- get-set function. --------------------------------------------------------------------- */
 		
 		public function set person(obj:Person):void {
+			if (obj != null) {
+				personID = obj.id;
+			} else {
+				personID = 0;
+			}
 			_person = obj;
 		}
 		

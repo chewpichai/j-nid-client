@@ -32,6 +32,11 @@ package com.j_nid.models {
 /* ----- get-set function. --------------------------------------------------------------------- */
 		
 		public function set person(obj:Person):void {
+			if (obj != null) {
+				personID = obj.id;
+			} else {
+				personID = 0;
+			}
 			_person = obj;
 		}
 		

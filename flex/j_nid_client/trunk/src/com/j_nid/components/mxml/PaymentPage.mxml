@@ -2,10 +2,14 @@
 <mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" 
 	creationComplete="creationComplete(event)"
 	width="100%" height="100%">
+	
+	<mx:Metadata>
+		[ResourceBundle("PaymentPage")]
+	</mx:Metadata>
 
 	<mx:Script>
 		<![CDATA[
-			import mx.events.CollectionEvent;
+			import mx.resources.ResourceBundle;
 			import com.j_nid.utils.PrintUtils;
 			import mx.binding.utils.ChangeWatcher;
 			import com.j_nid.utils.DateUtils;
@@ -69,6 +73,7 @@
 			private function payBtnClickListener(evt:MouseEvent):void {
 				var payment:Payment = new Payment();
 				payment.amount = amountField.value;
+				payment.notation = notationField.text;
 				payment.person = Person(personList.selectedItem);
 				CairngormUtils.dispatchEvent(EventNames.CREATE_PAYMENT, payment);
 			}
@@ -96,7 +101,7 @@
 	
 	<mx:DateFormatter id="dateFormatter" formatString="DD-MM-YY J:NN:SS"/>
 
-	<mx:Panel title="Person List"
+	<mx:Panel title="{resourceManager.getString('PaymentPage', 'Customer')}"
 		layout="absolute"
 		width="380" height="100%" >
 		
@@ -104,14 +109,17 @@
 			dataProvider="{filterPeople(model.people.source)}"
 			width="100%" height="100%">
 			<mx:columns>
-				<mx:DataGridColumn dataField="name" headerText="Name"/>
+				<mx:DataGridColumn dataField="name"
+					headerText="{resourceManager.getString('PaymentPage', 'Name')}"
+					headerStyleName="dgHeader"/>
 				<mx:DataGridColumn dataField="outstandingTotal" 
-					headerText="Outstanding Total"/>
+					headerText="{resourceManager.getString('PaymentPage', 'OutstandingTotal')}"
+					headerStyleName="dgHeader"/>
 			</mx:columns>
 		</mx:DataGrid>
 	</mx:Panel>
 	
-	<mx:Panel title="Detail"
+	<mx:Panel title="{resourceManager.getString('PaymentPage', 'Detail')}"
 		layout="vertical"
 		paddingLeft="5" paddingRight="5"
 		paddingTop="10" paddingBottom="10"
@@ -120,13 +128,19 @@
 		<mx:HBox verticalAlign="middle"
 			width="100%">
 			
-			<mx:Label text="Payment:"/>
+			<mx:Label text="{resourceManager.getString('PaymentPage', 'PayAmount')}:"/>
 			
 			<mx:NumericStepper id="amountField" 
 				maximum="1000000" 
+				width="250"/>
+				
+			<mx:Label text="{resourceManager.getString('PaymentPage', 'Note')}:"/>
+			
+			<mx:TextArea id="notationField"
 				width="100%"/>
 			
-			<mx:Button id="payBtn" label="pay" 
+			<mx:Button id="payBtn"
+				label="{resourceManager.getString('PaymentPage', 'Pay')}" 
 				click="payBtnClickListener(event)" 
 				width="100"/>
 		</mx:HBox>
@@ -135,26 +149,35 @@
 			dataProvider="{personList.selectedItem.transactions}"
 			width="100%" height="100%">
 			<mx:columns>
-				<mx:DataGridColumn headerText="Created">
+				<mx:DataGridColumn 
+					headerText="{resourceManager.getString('PaymentPage', 'Date')}"
+					headerStyleName="dgHeader">
 					<mx:itemRenderer>
 						<mx:Component>
 <mx:Label text="{outerDocument.dateFormatter.format(data.created)}"/>
 						</mx:Component>
 					</mx:itemRenderer>
 				</mx:DataGridColumn>
-				<mx:DataGridColumn dataField="amount" headerText="Paid"/>
-				<mx:DataGridColumn dataField="total" headerText="Ordered"/>
+				<mx:DataGridColumn dataField="amount"
+					headerText="{resourceManager.getString('PaymentPage', 'Paid')}"
+					headerStyleName="dgHeader"/>
+				<mx:DataGridColumn dataField="total"
+					headerText="{resourceManager.getString('PaymentPage', 'Outstanding')}"
+					headerStyleName="dgHeader"/>
+				<mx:DataGridColumn dataField="notation"
+					headerText="{resourceManager.getString('PaymentPage', 'Note')}"
+					headerStyleName="dgHeader"/>
 			</mx:columns>
 		</mx:DataGrid>
 		
 		<mx:ControlBar>
-			<mx:Label text="Start Date"/>
+			<mx:Label text="{resourceManager.getString('PaymentPage', 'StartDate')}:"/>
 			
 			<mx:DateField id="startDateField"
 				formatString="DD-MM-YYYY"
 				change="dateChange(event)"/>
 				
-			<mx:Label text="End Date"/>
+			<mx:Label text="{resourceManager.getString('PaymentPage', 'ToDate')}:"/>
 			
 			<mx:DateField id="endDateField"
 				selectedDate="{new Date()}"
@@ -162,7 +185,7 @@
 				change="dateChange(event)"/>
 				
 			<mx:Spacer width="100%"/>
-			<mx:Button label="Print"
+			<mx:Button label="{resourceManager.getString('PaymentPage', 'Print')}"
 				click="printBtnClick(event)"/>
 		</mx:ControlBar>
 	</mx:Panel>

@@ -4,8 +4,13 @@
 	creationComplete="init(event)"
 	width="100%" height="100%">
 	
+	<mx:Metadata>
+		[ResourceBundle("MakeSupply")]
+	</mx:Metadata>
+	
 	 <mx:Script>
 		<![CDATA[
+			import mx.resources.ResourceBundle;
 			import com.j_nid.models.JNidModelLocator;
 			import mx.rpc.events.ResultEvent;
 			import mx.events.ListEvent;
@@ -27,18 +32,17 @@
 	
 	<mx:HBox height="100%">
 		
-		<mx:Panel title="Product Type List" 
+		<mx:Panel title="{resourceManager.getString('MakeSupply', 'ProductType')}" 
 			width="220" height="100%">
 			
 			<mx:List id="productTypeList" 
-				dataProvider="{model.productTypes}" 
+				dataProvider="{model.productTypes.source}" 
 				labelField="name" 
 				width="100%" height="100%" 
 				borderStyle="none"/>
 		</mx:Panel>
 		
-		<mx:Panel title="Product List" 
-			borderStyle="solid" 
+		<mx:Panel title="{resourceManager.getString('MakeSupply', 'Product')}"
 			width="350" height="100%">
 			
 			<mx:DataGrid id="productList" 
@@ -46,12 +50,21 @@
 				variableRowHeight="true" dragEnabled="true" 
 				width="100%" height="100%">
 				<mx:columns>
-					<mx:DataGridColumn headerText="Name" 
-						dataField="name" wordWrap="true"/>
-					<mx:DataGridColumn headerText="Unit" 
-						dataField="unit" width="50"/>
-					<mx:DataGridColumn headerText="Price/Unit" 
-						dataField="costPerUnit" width="80"/>
+					<mx:DataGridColumn 
+						headerText="{resourceManager.getString('MakeSupply', 'Name')}" 
+						dataField="name" 
+						wordWrap="true"
+						headerStyleName="dgHeader"/>
+					<mx:DataGridColumn 
+						headerText="{resourceManager.getString('MakeSupply', 'Unit')}" 
+						dataField="unit" 
+						headerStyleName="dgHeader"
+						width="50"/>
+					<mx:DataGridColumn 
+						headerText="{resourceManager.getString('MakeSupply', 'PricePerUnit')}" 
+						dataField="costPerUnit"
+						headerStyleName="dgHeader"
+						width="90"/>
 				</mx:columns>
 			</mx:DataGrid>
 		</mx:Panel>

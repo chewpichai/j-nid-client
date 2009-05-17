@@ -74,12 +74,19 @@ package com.j_nid.models {
 		}
 		
 		public function toString():String {
-			return person.name + " " + created.toLocaleDateString();
+			return person.name + " [" + 
+				DateUtils.format(created, "DD MMM YYYY") +
+				"]";
 		}
 		
 /* ----- get-set function. ------------------------------------------------- */
 		
 		public function set person(obj:Person):void {
+			if (obj != null) {
+				personID = obj.id;
+			} else {
+				personID = 0;
+			}
 			_person = obj;
 		}
 		

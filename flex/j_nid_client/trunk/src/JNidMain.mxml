@@ -12,16 +12,15 @@
 	<mx:Style source="css/styles.css"/>
 	
 	<mx:Metadata>
-		[Event(name="viewChange", type="com.j_nid.events.ViewChangeEvent")]
+		[ResourceBundle("MainMenu")]
 	</mx:Metadata>
 	
 	<mx:Script>
 		<![CDATA[
-			import com.j_nid.events.ViewChangeEvent;
-			import mx.events.IndexChangedEvent;
 			import com.j_nid.controls.EventNames;
 			import com.j_nid.utils.CairngormUtils;
 			import mx.events.FlexEvent;
+			import mx.resources.ResourceBundle;
 			
 			private function init(e:FlexEvent):void {
 				CairngormUtils.dispatchEvent(EventNames.LIST_PRODUCT_TYPE);
@@ -46,44 +45,44 @@
 			public function setPage(page:String):void {
 				mainView.selectedChild = this[page];
 			}
-			
-			private function viewChange(e:IndexChangedEvent):void {
-				var event:ViewChangeEvent = new ViewChangeEvent(e.relatedObject);
-				dispatchEvent(event);
-			}
 		]]>
 	</mx:Script>
 	
 	<mx:states>
 		<mx:State name="loading">
-			<mx:RemoveChild target="{header}"/>
 			<mx:RemoveChild target="{mainView}"/>
 		</mx:State>
 	</mx:states>
 	
 	<control:JNidController/>
 	
-	<mx:HBox id="header"
-		verticalAlign="bottom"
-		width="100%" height="75">
+	<mx:ApplicationControlBar
+		dock="true"
+		paddingTop="0" paddingBottom="0"
+		paddingLeft="0">
 		
-		<mx:Image width="150" height="75"/>
-		
-		<mx:TabBar dataProvider="mainView"
-			width="500" height="30"/>
-	</mx:HBox>
+		<mx:TabBar dataProvider="mainView"/>
+	</mx:ApplicationControlBar>
 	
-	<mx:ViewStack id="mainView" 
-		change="viewChange(event)"
+	<mx:ViewStack id="mainView"
 		width="100%" height="100%">
 		
-		<jn:MainPage id="mainPage" label="Main"/>
-		<jn:SellProductPage id="sellProduct" label="Sell"/>
-		<jn:BuyProductPage id="buyProduct" label="Buy"/>
-		<jn:ProductPage id="productPage" label="Product"/>
-		<jn:PersonPage id="personForm" label="Person"/>
-		<jn:OrderPage id="orderPage" label="Order"/>
-		<jn:PaymentPage id="paymentPage" label="Payment"/>
+		<jn:MainPage id="mainPage"
+			label="{resourceManager.getString('MainMenu', 'Main')}"/>
+		<jn:MakeOrderPage id="sellPage"
+			label="{resourceManager.getString('MainMenu', 'MakeOrder')}"/>
+		<jn:MakeSupplyPage id="buyPage"
+			label="{resourceManager.getString('MainMenu', 'MakeSupply')}"/>
+		<jn:ProductPage id="productPage"
+			label="{resourceManager.getString('MainMenu', 'Product')}"/>
+		<jn:PersonPage id="personPage"
+			label="{resourceManager.getString('MainMenu', 'Person')}"/>
+		<jn:OrderPage id="orderPage"
+			label="{resourceManager.getString('MainMenu', 'Order')}"/>
+		<jn:SupplyPage id="supplyPage"
+			label="{resourceManager.getString('MainMenu', 'Supply')}"/>
+		<jn:PaymentPage id="paymentPage"
+			label="{resourceManager.getString('MainMenu', 'Payment')}"/>
 	</mx:ViewStack>
 	
 	<mx:Label id="footer"

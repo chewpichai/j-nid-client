@@ -70,8 +70,9 @@ package com.j_nid.models {
 		}
 		
 		public function toString():String {
-			return person.name + " " + 
-				created.toLocaleDateString();
+			return person.name + " [" + 
+				DateUtils.format(created, "DD MMM YYYY") +
+				"]";
 		}
 		
 /* ----- get-set function. --------------------------------------------------------------------- */

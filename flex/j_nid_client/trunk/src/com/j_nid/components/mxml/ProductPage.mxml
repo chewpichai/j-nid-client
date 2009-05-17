@@ -1,33 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:HDividedBox xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%">
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
+	width="100%" height="100%">
+	
+	<mx:Metadata>
+		[ResourceBundle("ProductPage")]
+	</mx:Metadata>
 	
 	<mx:Script>
 		<![CDATA[
-			import com.j_nid.components.mxml.forms.ProductTypeForm;
 			import com.j_nid.components.mxml.forms.ProductForm;
-			import mx.core.Application;
-			import mx.managers.PopUpManager;
-			import mx.collections.SortField;
-			import mx.collections.Sort;
+			import com.j_nid.components.mxml.forms.ProductTypeForm;
 			import com.j_nid.controls.EventNames;
-			import com.j_nid.utils.CairngormUtils;
-			import mx.collections.ArrayCollection;
+			import com.j_nid.models.JNidModelLocator;
 			import com.j_nid.models.Product;
 			import com.j_nid.models.ProductType;
-			import com.j_nid.models.JNidModelLocator;
+			import com.j_nid.utils.CairngormUtils;
+			import mx.collections.ListCollectionView;
+			import mx.core.Application;
+			import mx.events.ListEvent;
+			import mx.managers.PopUpManager;
+			import mx.resources.ResourceBundle;
 			
 			[Bindable]
 			private var model:JNidModelLocator = JNidModelLocator.getInstance();
 			
+			private function productTypeComboChange(e:ListEvent):void {
+				var type:ProductType = ProductType(productTypeCombo.selectedItem);
+				filterByType(type);
+			}
+			
 			private function filterByType(type:ProductType):void {
+				var products:ListCollectionView = ListCollectionView(productDg.dataProvider);
 				if (type == JNidModelLocator.ALL_TYPE) {
-					model.products.filterFunction = null;
+					products.filterFunction = null;
 				} else {
-					model.products.filterFunction = function(obj:Object):Boolean {
+					products.filterFunction = function(obj:Object):Boolean {
 						return Product(obj).type == type;
 					}
 				}
-				model.products.refresh();
+				products.refresh();
 			}
 			
 			internal function updateProductTypeColor(type:ProductType, color:uint):void {
@@ -69,46 +80,60 @@
 		paddingLeft="5" paddingRight="5"
 		width="100%" height="100%">
 		
-		<mx:VBox label="Product"
+		<mx:VBox label="{resourceManager.getString('ProductPage', 'Product')}"
 			width="100%" height="100%">
 			
 			<mx:HBox 
 				verticalAlign="middle"
 				width="100%">
 				
-				<mx:Label text="Product Type"/>
+				<mx:Label text="{resourceManager.getString('ProductPage', 'ProductType')}:"/>
 				
 				<mx:ComboBox id="productTypeCombo" 
-					dataProvider="{model.productTypesWithAll}" 
-					change="filterByType(ProductType(productTypeCombo.selectedItem))"
+					dataProvider="{model.productTypesWithAll.source}" 
+					change="productTypeComboChange(event)"
 					itemRenderer="com.j_nid.components.mxml.ProductTypeComboRenderer"
 					width="200" height="30"/>
 					
 				<mx:Spacer width="100%"/>
 					
 				<mx:Button
-					label="New Product"
+					label="{resourceManager.getString('ProductPage', 'Add')}"
 					click="newProductBtnClick(event)"/>
 			</mx:HBox>
 				
 			<mx:DataGrid id="productDg" 
-				dataProvider="{model.products}"
+				dataProvider="{model.products.source}"
 				doubleClickEnabled="true"
 				doubleClick="productDgDoubleClick(event)"
 				width="100%" height="100%">
 				<mx:columns>
-					<mx:DataGridColumn headerText="Name" dataField="name"/>
-					<mx:DataGridColumn headerText="Type" dataField="type"/>
-					<mx:DataGridColumn headerText="Unit" dataField="unit"/>
-					<mx:DataGridColumn headerText="Price/Unit"
-						dataField="pricePerUnit"/>
-					<mx:DataGridColumn headerText="Is Sale" dataField="isSale" 
+					<mx:DataGridColumn 
+						headerText="{resourceManager.getString('ProductPage', 'Name')}" 
+						dataField="name"
+						headerStyleName="dgHeader"/>
+					<mx:DataGridColumn
+						headerText="{resourceManager.getString('ProductPage', 'ProductType')}"
+						dataField="type"
+						headerStyleName="dgHeader"/>
+					<mx:DataGridColumn
+						headerText="{resourceManager.getString('ProductPage', 'Unit')}"
+						dataField="unit"
+						headerStyleName="dgHeader"/>
+					<mx:DataGridColumn
+						headerText="{resourceManager.getString('ProductPage', 'PricePerUnit')}"
+						dataField="pricePerUnit"
+						headerStyleName="dgHeader"/>
+					<mx:DataGridColumn
+						headerText="{resourceManager.getString('ProductPage', 'IsSale')}"
+						dataField="isSale"
+						headerStyleName="dgHeader"
 						itemRenderer="com.j_nid.components.mxml.ProductRenderer"/>
 				</mx:columns>
 			</mx:DataGrid>
 		</mx:VBox>
 		
-		<mx:VBox label="Product Type"
+		<mx:VBox label="{resourceManager.getString('ProductPage', 'ProductType')}"
 			width="100%" height="100%">
 			
 			<mx:HBox
@@ -116,24 +141,28 @@
 				width="100%">
 				
 				<mx:Button
-					label="New Product Type"
+					label="{resourceManager.getString('ProductPage', 'Add')}"
 					click="newProductTypeBtnClick(event)"/>
 			</mx:HBox>
 			
 			<mx:DataGrid id="productTypeDg"
-				dataProvider="{model.productTypes}"
+				dataProvider="{model.productTypes.source}"
 				doubleClickEnabled="true"
 				doubleClick="productTypeDgDoubleClick(event)"
 				width="100%" height="100%">
 				<mx:columns>
-					<mx:DataGridColumn headerText="Name">
+					<mx:DataGridColumn
+						headerText="{resourceManager.getString('ProductPage', 'Name')}"
+						headerStyleName="dgHeader">
 						<mx:itemRenderer>
 							<mx:Component>
 <mx:Label text="{data.name}" color="{data.color}"/>
 							</mx:Component>
 						</mx:itemRenderer>
 					</mx:DataGridColumn>
-					<mx:DataGridColumn headerText="Color">
+					<mx:DataGridColumn
+						headerText="{resourceManager.getString('ProductPage', 'Color')}"
+						headerStyleName="dgHeader">
 						<mx:itemRenderer>
 							<mx:Component>
 <mx:Canvas>
@@ -152,4 +181,4 @@
 			</mx:DataGrid>
 		</mx:VBox>
 	</mx:TabNavigator>
-</mx:HDividedBox>
+</mx:Canvas>

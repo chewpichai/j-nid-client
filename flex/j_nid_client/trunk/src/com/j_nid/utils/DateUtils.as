@@ -17,6 +17,7 @@ package com.j_nid.utils {
 			Use to move date by num days.
 		*/		
 		public static function moveDateByDay(date:Date, day:int):Date {
+			date = new Date(date.time);
 			return new Date(date.setDate(date.date + day));
 		}
 	}

@@ -7,15 +7,19 @@ package com.j_nid.models {
 	
 	import mx.collections.ArrayCollection;
 	import mx.collections.IViewCursor;
-	import mx.collections.Sort;
-	import mx.collections.SortField;
 	import mx.core.Application;
-
+	import mx.resources.ResourceManager;
+	import mx.resources.IResourceManager;
+	
+	[ResourceBundle("ProductPage")]
 	[Bindable]
 	public class JNidModelLocator implements IModelLocator {
 		
+		private static var resourceManager:IResourceManager = 
+			ResourceManager.getInstance();
 		private static var modelLocator:JNidModelLocator;
-		public static const ALL_TYPE:ProductType = new ProductType(0, "All");
+		public static const ALL_TYPE:ProductType = 
+			new ProductType(0, resourceManager.getString('ProductPage', 'All'));
 		private var _bankNames:XMLList;
 		private var _phoneTypes:XMLList;
 		// Array Collection for models.
@@ -60,7 +64,16 @@ package com.j_nid.models {
 		public var personToCreate:Person;
 		
 		public function JNidModelLocator() {
-			
+			_productIDMap = new Object();
+			_productTypeIDMap = new Object();
+			_personIDMap = new Object();
+			_personNameMap = new Object();
+			_orderIDMap = new Object();
+			_orderItemIDMap = new Object();
+			_bankAccountIDMap = new Object();
+			_phoneNumberIDMap = new Object();
+			_supplyIDMap = new Object();
+			_supplyItemIDMap = new Object();
 		}
 		
 		public static function getInstance():JNidModelLocator {
@@ -250,8 +263,8 @@ package com.j_nid.models {
 					cursor = supplyItems.createCursor();
 					while (!cursor.afterLast) {
 						var supplyItem:SupplyItem = SupplyItem(cursor.current);
-						getSupply(supplyItem.supplyID).addItem(supplyItem);;
-						item.product = getProduct(supplyItem.productID);;
+						getSupply(supplyItem.supplyID).addItem(supplyItem);
+						supplyItem.product = getProduct(supplyItem.productID);
 						cursor.moveNext();
 					}
 					// Set relate for orders.
@@ -261,37 +274,8 @@ package com.j_nid.models {
 						getPerson(supply.personID).addSupply(supply);
 						cursor.moveNext();
 					}
-					sortModels();
 					Application.application.currentState = null;
 				}
-		}
-		
-		public function sortModels():void {
-			// Add sort for people.
-			var sort:Sort = new Sort();
-			sort.fields = [new SortField("name")]
-			people.sort = sort;
-			people.refresh();
-			// Add sort for productTypes.
-			sort = new Sort();
-			sort.fields = [new SortField("name")]
-			productTypes.sort = sort;
-			productTypes.refresh();
-			// Add sort for products.
-			sort = new Sort();
-			sort.fields = [new SortField("type"), new SortField("name")];
-			products.sort = sort;
-			products.refresh();
-			// Add sort for orders.
-			sort = new Sort();
-			sort.fields = [new SortField("created", false, true)];
-			orders.sort = sort;
-			orders.refresh();
-			// Add sort for supplies.
-			sort = new Sort();
-			sort.fields = [new SortField("created", false, true)];
-			supplies.sort = sort;
-			supplies.refresh();
 		}
 		
 		public function createOrder(obj:XML):void {
@@ -362,6 +346,7 @@ package com.j_nid.models {
 				CairngormUtils.dispatchEvent(EventNames.CREATE_PHONE_NUMBER, phoneNumber);
 			}
 			people.addItem(person);
+			Application.application.personPage.closeForm();
 		}
 		
 		public function createBankAccount(obj:XML):void {
@@ -481,6 +466,20 @@ package com.j_nid.models {
 		public function removeOrderItem(item:OrderItem):void {
 			orderItems.removeItemAt(orderItems.getItemIndex(item));
 			delete _orderItemIDMap[item.id];
+		}
+		
+		public function removeSupply(supply:Supply):void {
+			supply.person.removeSupply(supply);
+			supplies.removeItemAt(supplies.getItemIndex(supply));
+			for each (var item:SupplyItem in supply.supplyItems) {
+				removeSupplyItem(item);
+			}
+			delete _supplyIDMap[supply.id];
+		}
+		
+		public function removeSupplyItem(item:SupplyItem):void {
+			supplyItems.removeItemAt(supplyItems.getItemIndex(item));
+			delete _supplyItemIDMap[item.id];
 		}
 		
 		public function getPersonByName(name:String):Person {
