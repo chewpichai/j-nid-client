@@ -41,13 +41,17 @@
 			}
 			
 			private function filterSupply(e:Event):void {
-				var supplies:ListCollectionView = ListCollectionView(supplyList.dataProvider);
-				supplies.filterFunction = function(obj:Object):Boolean {
-					var supply:Supply = Supply(obj);
-					return checkSupplier(supply.person) &&
-						checkDate(supply.created);
-				};
-				supplies.refresh();
+				try {
+					var supplies:ListCollectionView = ListCollectionView(supplyList.dataProvider);
+					supplies.filterFunction = function(obj:Object):Boolean {
+						var supply:Supply = Supply(obj);
+						return checkSupplier(supply.person) &&
+							checkDate(supply.created);
+					};
+					supplies.refresh();
+				} catch (err:TypeError) {
+					
+				}
 			}
 			
 			private function checkSupplier(person:Person):Boolean {
@@ -103,10 +107,18 @@
 					removeSupplyItem(item);
 				}
 			}
+			
+			private function formatNumber(item:Object,
+            								column:DataGridColumn):String {
+            	return numberFormatter.format(item.total);
+            }
 		]]>
 	</mx:Script>
 	
 	<mx:DateFormatter id="dateFormatter" formatString="DD/MM/YY J:NN:SS"/>
+	
+	<mx:NumberFormatter id="numberFormatter"
+    	precision="2"/>
 	
 	<mx:Panel title="{resourceManager.getString('SupplyPage', 'Filter')}"
 		paddingTop="5"
@@ -178,12 +190,14 @@
 				<mx:DataGridColumn
 					headerText="{resourceManager.getString('SupplyPage', 'PricePerUnit')}"
 					dataField="pricePerUnit"
+					labelFunction="formatNumber"
 					textAlign="right"
 					headerStyleName="dgHeader"
 					width="85"/>
 				<mx:DataGridColumn
 					headerText="{resourceManager.getString('SupplyPage', 'Total')}"
-					dataField="total" 
+					dataField="total"
+					labelFunction="formatNumber" 
 					textAlign="right"
 					headerStyleName="dgHeader"
 					width="85"/>

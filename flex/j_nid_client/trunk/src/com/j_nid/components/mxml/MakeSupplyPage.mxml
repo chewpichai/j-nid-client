@@ -10,6 +10,7 @@
 	
 	 <mx:Script>
 		<![CDATA[
+			import com.j_nid.models.SupplyItem;
 			import mx.resources.ResourceBundle;
 			import com.j_nid.models.JNidModelLocator;
 			import mx.rpc.events.ResultEvent;
@@ -26,6 +27,12 @@
 			
 			private function init(e:FlexEvent):void {
 
+			}
+			
+			private function productDoubleClick(e:MouseEvent):void {
+				var product:Product = Product(productList.selectedItem);
+				var item:SupplyItem = new SupplyItem(product);
+				supplyDetail.addSupplyItem(item);
 			}
 		]]>
 	</mx:Script>
@@ -47,7 +54,10 @@
 			
 			<mx:DataGrid id="productList" 
 				dataProvider="{productTypeList.selectedItem.products}"
-				variableRowHeight="true" dragEnabled="true" 
+				variableRowHeight="true"
+				dragEnabled="true"
+				doubleClickEnabled="true"
+				doubleClick="productDoubleClick(event)"
 				width="100%" height="100%">
 				<mx:columns>
 					<mx:DataGridColumn 
@@ -70,5 +80,6 @@
 		</mx:Panel>
 	</mx:HBox>
 	
-	<jn:SupplyDetail width="100%" height="100%"/>
+	<jn:SupplyDetail id="supplyDetail"
+		width="100%" height="100%"/>
 </mx:HBox>

@@ -87,13 +87,13 @@
 				verticalAlign="middle"
 				width="100%">
 				
-				<mx:Label text="{resourceManager.getString('ProductPage', 'ProductType')}:"/>
+				<mx:Label text="{resourceManager.getString(
+										'ProductPage', 'ProductType')}:"/>
 				
 				<mx:ComboBox id="productTypeCombo" 
 					dataProvider="{model.productTypesWithAll.source}" 
 					change="productTypeComboChange(event)"
-					itemRenderer="com.j_nid.components.mxml.ProductTypeComboRenderer"
-					width="200" height="30"/>
+					itemRenderer="com.j_nid.components.mxml.ProductTypeComboRenderer"/>
 					
 				<mx:Spacer width="100%"/>
 					

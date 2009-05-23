@@ -1,6 +1,8 @@
 package com.j_nid.models {
 	
-	public class Model extends Object {
+	import flash.events.EventDispatcher;
+	
+	public class Model extends EventDispatcher {
 		
 		private var _id:int;
 		private var _sortIndex:int;

@@ -69,7 +69,7 @@ package com.j_nid.models {
 			return xml;
 		}
 		
-		public function toString():String {
+		override public function toString():String {
 			return person.name + " [" + 
 				DateUtils.format(created, "DD MMM YYYY") +
 				"]";

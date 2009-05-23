@@ -1,12 +1,17 @@
 <?xml version="1.0"?>
 <!-- Custom control for the header area of the printed page. -->
-
-<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" 
-	width="60%"
-    horizontalAlign="right">
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml"
+	paddingLeft="15" paddingRight="15" 
+	width="60%">
+    
+    <mx:Metadata>
+		[ResourceBundle("OrderPrint")]
+	</mx:Metadata>
     
     <mx:Script>
     	<![CDATA[
+    		import mx.resources.ResourceBundle;
+    		
     		[Bindable]
     		public var personName:String;
     		[Bindable]
@@ -15,8 +20,13 @@
     </mx:Script>
     
     <mx:DateFormatter id="dateFormatter"
-    	formatString="EEE DD MMM YYYY JJ:NN:SS"/>
+    	formatString="DD-MM-YYYY JJ:NN:SS"/>
 
-    <mx:Label text="Name: {personName}"/>
-    <mx:Label text="Date: {dateFormatter.format(date)}"/>
+    <mx:Label text="{resourceManager.getString('OrderPrint', 'CustomerName',
+    					[personName])}"/>
+    					
+    <mx:Spacer width="100%"/>
+    					
+    <mx:Label text="{resourceManager.getString('OrderPrint', 'Date',
+    					[dateFormatter.format(date)])}"/>
 </mx:HBox>

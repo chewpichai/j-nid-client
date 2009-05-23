@@ -4,7 +4,6 @@ package com.j_nid.models {
 	import com.j_nid.controls.EventNames;
 	import com.j_nid.utils.CairngormUtils;
 	import com.j_nid.utils.PrintUtils;
-	
 	import mx.collections.ArrayCollection;
 	import mx.collections.IViewCursor;
 	import mx.core.Application;
@@ -19,7 +18,8 @@ package com.j_nid.models {
 			ResourceManager.getInstance();
 		private static var modelLocator:JNidModelLocator;
 		public static const ALL_TYPE:ProductType = 
-			new ProductType(0, resourceManager.getString('ProductPage', 'All'));
+			new ProductType(0, resourceManager.getString(
+										'ProductPage', 'All'));
 		private var _bankNames:XMLList;
 		private var _phoneTypes:XMLList;
 		// Array Collection for models.
@@ -274,7 +274,6 @@ package com.j_nid.models {
 						getPerson(supply.personID).addSupply(supply);
 						cursor.moveNext();
 					}
-					Application.application.currentState = null;
 				}
 		}
 		
@@ -305,8 +304,6 @@ package com.j_nid.models {
 					payment.person = item.order.person;
 					CairngormUtils.dispatchEvent(EventNames.CREATE_PAYMENT, payment);
 				}
-				Application.application.setPage("paymentPage");
-				Application.application.paymentPage.setPerson(orderToCreate.person);
 			}
 		}
 		

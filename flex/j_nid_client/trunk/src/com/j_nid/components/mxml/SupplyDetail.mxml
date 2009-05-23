@@ -5,8 +5,7 @@
 	xmlns:adobe="http://www.adobe.com/2006/fc"
 	layout="vertical" 
 	paddingLeft="5" paddingRight="5"
-	paddingTop="5"
-	creationComplete="init(event)">
+	paddingTop="5">
 	
 	<mx:Metadata>
 		[ResourceBundle("MakeSupply")]
@@ -14,6 +13,7 @@
 	
 	<mx:Script>
 		<![CDATA[
+			import com.j_nid.models.Person;
 			import mx.resources.ResourceBundle;
 			import mx.managers.PopUpManager;
 			import mx.managers.DragManager;
@@ -25,21 +25,13 @@
 			import com.j_nid.models.JNidModelLocator;
 			import com.j_nid.models.SupplyItem;
 			import mx.events.DragEvent;
-			import mx.events.FlexEvent;
-			
 			
 			[Bindable]
-			private var supply:Supply;
+			public var supply:Supply;
+			[Bindable]
+			public var supplier:Person;
 			[Bindable]
 			public var model:JNidModelLocator = JNidModelLocator.getInstance();
-			
-			private function init(e:FlexEvent):void {
-				initData();
-			}
-			
-			private function initData():void {
-				supply = new Supply();
-			}
 			
 			private function dragEnterListener(e:DragEvent):void {
 				DragManager.acceptDragDrop(DataGrid(e.currentTarget));
@@ -51,7 +43,7 @@
 				addSupplyItem(supplyItem);
 			}
 			
-			private function addSupplyItem(item:SupplyItem):void {
+			public function addSupplyItem(item:SupplyItem):void {
 				for each (var obj:SupplyItem in supply.supplyItems) {
 					if (item.product.id == obj.product.id) {
 						obj.unit += item.unit;
@@ -59,6 +51,8 @@
 					}
 				}
 				supply.addItem(item);
+				supplyItemList.verticalScrollPosition = 
+						supplyItemList.maxVerticalScrollPosition;
 			}
 			
 			private function clearListener(e:MouseEvent):void {
@@ -66,7 +60,7 @@
 			}
 			
 			private function removeListener(e:MouseEvent):void {
-				var item:SupplyItem = SupplyItem(orderItemList.selectedItem);
+				var item:SupplyItem = SupplyItem(supplyItemList.selectedItem);
 				supply.removeItem(item);
 			}
 			
@@ -100,7 +94,7 @@
 			width="100%"/>
 	</mx:HBox>
 	
-	<mx:DataGrid id="orderItemList" 
+	<mx:DataGrid id="supplyItemList" 
 		dataProvider="{supply.supplyItems}"
 		dragDrop="dragDropListener(event)" 
 		dragEnter="dragEnterListener(event)"

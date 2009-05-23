@@ -1,24 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" paddingLeft="10">
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml"
+	paddingLeft="10">
 
 	<mx:Script>
 		<![CDATA[
-			import com.j_nid.models.Product;
 			import com.j_nid.controls.EventNames;
+			import com.j_nid.models.Product;
 			import com.j_nid.utils.CairngormUtils;
-			import mx.rpc.http.HTTPService;
-			import mx.rpc.events.ResultEvent;
-			import mx.events.FlexEvent;
 			import mx.controls.CheckBox;
 			
 			private function changeListener(e:Event):void {
 				var target:CheckBox = CheckBox(e.currentTarget);
 				var product:Product = Product(data);
 				product.isSale = target.selected;
-				CairngormUtils.dispatchEvent(EventNames.UPDATE_PRODUCT, product);
+				CairngormUtils.dispatchEvent(
+					EventNames.UPDATE_PRODUCT, product);
 			}
 		]]>
 	</mx:Script>
 
-	<mx:CheckBox id="checkBox" selected="{data.isSale}" change="changeListener(event)"/>
+	<mx:CheckBox id="checkBox"
+		selected="{data.isSale}"
+		change="changeListener(event)"/>
 </mx:HBox>

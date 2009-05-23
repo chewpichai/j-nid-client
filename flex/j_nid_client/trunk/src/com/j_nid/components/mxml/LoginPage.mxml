@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml"
+	verticalAlign="middle"
+	horizontalAlign="center">
+	
+	<mx:Metadata>
+		[ResourceBundle("LoginPage")]
+	</mx:Metadata>
+	
+	<mx:Script>
+		<![CDATA[
+			import mx.core.Application;
+			import mx.resources.ResourceBundle;
+			
+			private function loginBtnClick(e:MouseEvent):void {
+				Application.application.currentState = "main";
+			}
+		]]>
+	</mx:Script>
+	
+	<mx:Panel title="{resourceManager.getString('LoginPage', 'Login')}">
+		
+		<mx:Form>
+			<mx:FormItem
+				label="{resourceManager.getString('LoginPage', 'Username')}"
+				width="100%">
+				
+				<mx:TextInput id="usernameField"
+					width="100%"/>
+			</mx:FormItem>
+			
+			<mx:FormItem
+				label="{resourceManager.getString('LoginPage', 'Password')}"
+				width="100%">
+				
+				<mx:TextInput id="passwordField"
+					width="100%"/>
+			</mx:FormItem>
+			
+		</mx:Form>
+		
+		<mx:ControlBar>
+			<mx:Spacer width="100%"/>
+			<mx:Button
+				label="{resourceManager.getString(
+											'LoginPage', 'Submit')}"
+				click="loginBtnClick(event)"/>
+		</mx:ControlBar>
+	</mx:Panel>
+</mx:HBox>

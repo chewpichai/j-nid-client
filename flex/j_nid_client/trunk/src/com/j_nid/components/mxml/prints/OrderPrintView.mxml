@@ -1,14 +1,17 @@
 <?xml version="1.0"?>
 <!-- Custom control to print the DataGrid control on multiple pages. -->
-
 <mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
 	xmlns:ns="com.j_nid.components.mxml.prints.*"
 	backgroundColor="#FFFFFF">
+	
+	<mx:Metadata>
+		[ResourceBundle("OrderPrint")]
+	</mx:Metadata>
 
     <mx:Script>
         <![CDATA[
         	import com.j_nid.models.Order;
-            
+        	import mx.resources.ResourceBundle;
             // Declare and initialize the variables used in the component.
             // The application sets the actual prodTotal value.
             [Bindable]
@@ -36,13 +39,25 @@
                 }
                 //Update the DataGrid layout to reflect the results.
                 validateNow();
-            }        
+            }
+            
+            private function formatNumber(item:Object,
+            								column:DataGridColumn):String {
+            	return numberFormatter.format(item.total);
+            }
         ]]>
     </mx:Script>
+    
+    <mx:NumberFormatter id="numberFormatter"
+    	precision="2"/>
 
     <!-- The template for the printed page, with the contents for all pages. -->
-    <mx:VBox width="100%" horizontalAlign="left" x="0" y="0">
-        <mx:Label text="Page {pageNumber}"/>
+    <mx:VBox horizontalAlign="left" 
+    	x="0" y="0"
+    	width="100%">
+    	
+        <mx:Label text="{resourceManager.getString('OrderPrint', 'OrderNo',
+        					[order.id, pageNumber])}"/>
     </mx:VBox>
 
     <ns:OrderPrintHeader id="header" 
@@ -57,11 +72,32 @@
     	top="60" horizontalCenter="0">
     <!-- Specify the columns to ensure that their order is correct. -->
         <mx:columns>
-			<mx:DataGridColumn headerText="Qty" dataField="quantity" width="50"/>
-			<mx:DataGridColumn headerText="Name" dataField="name"/>
-			<mx:DataGridColumn headerText="Unit" dataField="unit" width="50"/>
-			<mx:DataGridColumn headerText="Price/Unit" dataField="pricePerUnit" width="85"/>
-			<mx:DataGridColumn headerText="Total" dataField="total" width="85"/>
+			<mx:DataGridColumn
+				headerText="{resourceManager.getString('OrderPrint', 'Quantity')}"
+				dataField="quantity"
+				headerStyleName="dgHeader"
+				width="50"/>
+			<mx:DataGridColumn
+				headerText="{resourceManager.getString('OrderPrint', 'Name')}"
+				dataField="name"
+				headerStyleName="dgHeader"/>
+			<mx:DataGridColumn
+				headerText="{resourceManager.getString('OrderPrint', 'Unit')}"
+				dataField="unit"
+				headerStyleName="dgHeader"
+				width="50"/>
+			<mx:DataGridColumn
+				headerText="{resourceManager.getString('OrderPrint', 'PricePerUnit')}"
+				dataField="pricePerUnit"
+				labelFunction="formatNumber"
+				headerStyleName="dgHeader"
+				width="85"/>
+			<mx:DataGridColumn
+				headerText="{resourceManager.getString('OrderPrint', 'Subtotal')}"
+				dataField="total"
+				labelFunction="formatNumber"
+				headerStyleName="dgHeader"
+				width="85"/>
 		</mx:columns>
     </mx:PrintDataGrid>
 

@@ -1,15 +1,24 @@
 <?xml version="1.0"?>
 <!-- Custom control for the footer area of the printed page. -->
-
 <mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" 
 	horizontalAlign="right" verticalAlign="bottom">
-    <!-- Declare and initialize the product total variable. -->
+    
+    <mx:Metadata>
+		[ResourceBundle("OrderPrint")]
+	</mx:Metadata>
 
     <mx:Script>
         <![CDATA[
+        	import mx.resources.ResourceBundle;
+        	
             [Bindable]
             public var total:Number = 0;
         ]]>
     </mx:Script>
-    <mx:Label text="Total: {total}"/>
+    
+    <mx:NumberFormatter id="numberFormatter"
+    	precision="2"/>
+    
+    <mx:Label text="{resourceManager.getString('OrderPrint', 'Total',
+    					[numberFormatter.format(total)])}"/>
 </mx:VBox>

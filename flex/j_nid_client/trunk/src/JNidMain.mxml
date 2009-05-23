@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:WindowedApplication xmlns:mx="http://www.adobe.com/2006/mxml"
+<mx:WindowedApplication
+	xmlns:mx="http://www.adobe.com/2006/mxml"
 	xmlns:jn="com.j_nid.components.mxml.*" 
 	xmlns:control="com.j_nid.controls.*"
 	layout="vertical" 
@@ -22,6 +23,9 @@
 			import mx.events.FlexEvent;
 			import mx.resources.ResourceBundle;
 			
+			[Bindable]
+			private var currentYear:Number = new Date().fullYear;
+			
 			private function init(e:FlexEvent):void {
 				CairngormUtils.dispatchEvent(EventNames.LIST_PRODUCT_TYPE);
 				CairngormUtils.dispatchEvent(EventNames.LIST_PRODUCT);
@@ -38,54 +42,73 @@
 			}
 			
 			private function applicationComplete(e:FlexEvent):void {
-				currentState = "loading";
 				stage.nativeWindow.maximize();
-			}
-			
-			public function setPage(page:String):void {
-				mainView.selectedChild = this[page];
 			}
 		]]>
 	</mx:Script>
 	
 	<mx:states>
-		<mx:State name="loading">
-			<mx:RemoveChild target="{mainView}"/>
+		<mx:State name="main">
+			
+			<mx:RemoveChild target="{loginPage}"/>
+			
+			<mx:AddChild relativeTo="{footer}" position="before">
+				<mx:target>
+					<mx:ViewStack id="mainView"
+						creationPolicy="all"
+						width="100%" height="100%">
+						
+						<jn:MainPage id="mainPage"
+							label="{resourceManager.getString(
+							             'MainMenu', 'Main')}"/>
+						<jn:MakeOrderPage id="sellPage"
+							label="{resourceManager.getString(
+							             'MainMenu', 'MakeOrder')}"/>
+						<jn:MakeSupplyPage id="buyPage"
+							label="{resourceManager.getString(
+							             'MainMenu', 'MakeSupply')}"/>
+						<jn:ProductPage id="productPage"
+							label="{resourceManager.getString(
+							             'MainMenu', 'Product')}"/>
+						<jn:PersonPage id="personPage"
+							label="{resourceManager.getString(
+							             'MainMenu', 'Person')}"/>
+						<jn:OrderPage id="orderPage"
+							label="{resourceManager.getString(
+							             'MainMenu', 'Order')}"/>
+						<jn:SupplyPage id="supplyPage"
+							label="{resourceManager.getString(
+							             'MainMenu', 'Supply')}"/>
+						<jn:PaymentPage id="paymentPage"
+							label="{resourceManager.getString(
+							             'MainMenu', 'Payment')}"/>
+					</mx:ViewStack>
+				</mx:target>
+			</mx:AddChild>
+			
+			<mx:AddChild relativeTo="{mainView}" position="before">
+				<mx:ApplicationControlBar id="mainMenu"
+					dock="true"
+					paddingTop="0" paddingBottom="0"
+					paddingLeft="0">
+					
+					<mx:ToggleButtonBar
+						dataProvider="{mainView}"
+						firstButtonStyleName="squareBtn"
+						lastButtonStyleName="squareBtn"/>
+				</mx:ApplicationControlBar>
+			</mx:AddChild>
 		</mx:State>
 	</mx:states>
 	
 	<control:JNidController/>
 	
-	<mx:ApplicationControlBar
-		dock="true"
-		paddingTop="0" paddingBottom="0"
-		paddingLeft="0">
-		
-		<mx:TabBar dataProvider="mainView"/>
-	</mx:ApplicationControlBar>
+	<control:ApplicationManager/>
 	
-	<mx:ViewStack id="mainView"
-		width="100%" height="100%">
-		
-		<jn:MainPage id="mainPage"
-			label="{resourceManager.getString('MainMenu', 'Main')}"/>
-		<jn:MakeOrderPage id="sellPage"
-			label="{resourceManager.getString('MainMenu', 'MakeOrder')}"/>
-		<jn:MakeSupplyPage id="buyPage"
-			label="{resourceManager.getString('MainMenu', 'MakeSupply')}"/>
-		<jn:ProductPage id="productPage"
-			label="{resourceManager.getString('MainMenu', 'Product')}"/>
-		<jn:PersonPage id="personPage"
-			label="{resourceManager.getString('MainMenu', 'Person')}"/>
-		<jn:OrderPage id="orderPage"
-			label="{resourceManager.getString('MainMenu', 'Order')}"/>
-		<jn:SupplyPage id="supplyPage"
-			label="{resourceManager.getString('MainMenu', 'Supply')}"/>
-		<jn:PaymentPage id="paymentPage"
-			label="{resourceManager.getString('MainMenu', 'Payment')}"/>
-	</mx:ViewStack>
+	<jn:LoginPage id="loginPage" 
+		width="100%" height="100%"/>
 	
 	<mx:Label id="footer"
-		text="Copyright (c) 2009 ChewLab. All rights reserved."
+		text="Copyright (c) 2008-{currentYear} ChewLab. All rights reserved."
 		styleName="copyright"/>
 </mx:WindowedApplication>

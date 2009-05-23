@@ -79,7 +79,9 @@
 			}
 			
 			public function setPerson(person:Person):void {
-				var index:int = ListCollectionView(personList.dataProvider).getItemIndex(person);
+				var people:ListCollectionView = 
+						ListCollectionView(personList.dataProvider);
+				var index:int = people.getItemIndex(person);
 				personList.selectedIndex = index;
 				personList.scrollToIndex(index);
 			}

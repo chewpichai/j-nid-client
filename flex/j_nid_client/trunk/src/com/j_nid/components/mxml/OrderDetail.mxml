@@ -5,8 +5,7 @@
 	xmlns:adobe="http://www.adobe.com/2006/fc"
 	layout="vertical" 
 	paddingLeft="5" paddingRight="5"
-	paddingTop="5"
-	creationComplete="init(event)">
+	paddingTop="5">
 	
 	<mx:Metadata>
 		[ResourceBundle("MakeOrder")]
@@ -14,6 +13,7 @@
 	
 	<mx:Script>
 		<![CDATA[
+			import com.j_nid.models.Person;
 			import mx.resources.ResourceBundle;
 			import mx.managers.PopUpManager;
 			import mx.managers.DragManager;
@@ -24,22 +24,14 @@
 			import com.j_nid.models.Order;
 			import com.j_nid.models.JNidModelLocator;
 			import com.j_nid.models.OrderItem;
-			import mx.events.FlexEvent;
 			import mx.events.DragEvent;
 			
 			[Bindable]
-			private var order:Order;
+			public var order:Order;
+			[Bindable]
+			public var customer:Person;
 			[Bindable]
 			public var model:JNidModelLocator = JNidModelLocator.getInstance();
-			
-			private function init(e:FlexEvent):void {
-				initData();
-			}
-			
-			private function initData():void {
-				order = new Order();
-				setDefaultPerson();
-			}
 			
 			private function dragEnterListener(e:DragEvent):void {
 				DragManager.acceptDragDrop(DataGrid(e.currentTarget));
@@ -49,10 +41,9 @@
 				var product:Product = e.dragSource.dataForFormat("items")[0];
 				var orderItem:OrderItem = new OrderItem(product);
 				addOrderItem(orderItem);
-				orderItemList.verticalScrollPosition = orderItemList.maxVerticalScrollPosition;
 			}
 			
-			private function addOrderItem(item:OrderItem):void {
+			public function addOrderItem(item:OrderItem):void {
 				for each (var obj:OrderItem in order.orderItems) {
 					if (item.product.id == obj.product.id) {
 						obj.unit += item.unit;
@@ -60,6 +51,8 @@
 					}
 				}
 				order.addItem(item);
+				orderItemList.verticalScrollPosition = 
+						orderItemList.maxVerticalScrollPosition;
 			}
 			
 			private function clearListener(e:MouseEvent):void {
@@ -76,12 +69,14 @@
 					order.person = model.getPersonByName(personFiled.text);
 					order.notation = notationField.text;
 					var orderProcessForm:OrderProcessForm = OrderProcessForm(
-						PopUpManager.createPopUp(Application(Application.application), 
+						PopUpManager.createPopUp(
+							Application(Application.application), 
 							OrderProcessForm, true)
 					);
 					orderProcessForm.order = order;
 				} else {
-					Alert.show("Your order must contain at least 1 item.", "Error");
+					Alert.show(
+						"Your order must contain at least 1 item.", "Error");
 				}
 			}
 			
@@ -89,11 +84,16 @@
 				return order.orderItems.length > 0;
 			}
 			
-			private function setDefaultPerson():void {
-				personFiled.typedText = model.people.source[new Date().hours].name;
-			}
+			private function formatNumber(item:Object,
+            							  column:DataGridColumn):String {
+            							  	
+            	return numberFormatter.format(item.total);
+            }
 		]]>
 	</mx:Script>
+	
+	<mx:NumberFormatter id="numberFormatter"
+    	precision="2"/>
 	
 	<mx:HBox width="100%" verticalAlign="middle">
 		
@@ -102,6 +102,7 @@
 		<adobe:AutoComplete id="personFiled" 
 			labelField="name" 
 			dataProvider="{model.people.source}"
+			typedText="{customer.name}"
 			width="100%"/>
 	</mx:HBox>
 	
@@ -167,6 +168,7 @@
 				headerText="{resourceManager.getString('MakeOrder', 'Total')}"
 				dataField="total"
 				textAlign="right"
+				labelFunction="formatNumber"
 				editable="false"
 				headerStyleName="dgHeader"
 				width="85"/>
@@ -174,7 +176,8 @@
 	</mx:DataGrid>
 	
 	<mx:Text id="totalTxt" 
-		text="{resourceManager.getString('MakeOrder', 'Total')} {order.total}" 
+		text="{resourceManager.getString('MakeOrder', 'Total')} 
+				{numberFormatter.format(order.total)}" 
 		textAlign="right" 
 		paddingRight="10"
 		width="100%" height="30"/>

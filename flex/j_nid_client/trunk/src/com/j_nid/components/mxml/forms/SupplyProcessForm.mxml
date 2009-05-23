@@ -1,16 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" 
+<mx:TitleWindow
+	title="{resourceManager.getString('SupplyPage', 'Detail')}" 
+	xmlns:mx="http://www.adobe.com/2006/mxml" 
 	xmlns:adobe="http://www.adobe.com/2006/fc" 
 	xmlns:jn="com.j_nid.components.mxml.*" 
-	title="Process Supply" 
-	layout="vertical" 
-	width="500"	
+	layout="vertical"
 	creationComplete="init(event)"
 	borderAlpha="0.8"
-	verticalScrollPolicy="off">
+	verticalScrollPolicy="off"
+	width="500">
+	
+	<mx:Metadata>
+		[ResourceBundle("SupplyPage")]
+	</mx:Metadata>
 	
 	<mx:Script>
 		<![CDATA[
+			import mx.resources.ResourceBundle;
 			import com.j_nid.models.Supply;
 			import com.j_nid.controls.EventNames;
 			import com.j_nid.utils.CairngormUtils;
@@ -43,12 +49,15 @@
 		]]>
 	</mx:Script>
 	
+	<mx:DateFormatter id="dateFormatter"
+    	formatString="DD-MM-YYYY JJ:NN:SS"/>
+	
 	<mx:HBox width="100%">
-		<mx:Label text="Customer:"/>
+		<mx:Label text="{resourceManager.getString('SupplyPage', 'Suppiler')}:"/>
 		<mx:Label text="{supply.person.name}"/>
 		<mx:Spacer width="100%"/>
-		<mx:Label text="Date:"/>
-		<mx:Label text="{supply.created}"/>
+		<mx:Label text="{resourceManager.getString('SupplyPage', 'Date')}:"/>
+		<mx:Label text="{dateFormatter.format(supply.created)}"/>
 	</mx:HBox>
 	
 	<mx:DataGrid id="orderItemList" 
@@ -56,39 +65,51 @@
 		wordWrap="true" variableRowHeight="true" 
 		width="100%" height="100%">
 		<mx:columns>
-			<mx:DataGridColumn headerText="Qty" 
+			<mx:DataGridColumn
+				headerText="{resourceManager.getString('SupplyPage', 'Quantity')}" 
+				headerStyleName="dgHeader"
 				dataField="quantity"/>
-			<mx:DataGridColumn headerText="Name" 
-				dataField="name" width="150"/>
-			<mx:DataGridColumn headerText="Unit" 
-				dataField="unit" width="70"/>
-			<mx:DataGridColumn headerText="Price/Unit" 
-				dataField="pricePerUnit" width="85"/>
-			<mx:DataGridColumn headerText="Total" 
+			<mx:DataGridColumn
+				headerText="{resourceManager.getString('SupplyPage', 'Name')}" 
+				dataField="name"
+				headerStyleName="dgHeader"
+				width="150"/>
+			<mx:DataGridColumn
+				headerText="{resourceManager.getString('SupplyPage', 'Unit')}" 
+				dataField="unit"
+				headerStyleName="dgHeader"
+				width="70"/>
+			<mx:DataGridColumn
+				headerText="{resourceManager.getString('SupplyPage', 'PricePerUnit')}" 
+				dataField="pricePerUnit"
+				headerStyleName="dgHeader"
+				width="85"/>
+			<mx:DataGridColumn
+				headerText="{resourceManager.getString('SupplyPage', 'Total')}" 
 				dataField="total" width="85"/>
 		</mx:columns>
 	</mx:DataGrid>
 	
 	<mx:HBox width="100%">
 		
-		<mx:Label text="Notation:"/>
+		<mx:Label text="{resourceManager.getString('SupplyPage', 'Note')}:"/>
 		
 		<mx:Text text="{supply.notation}" 
 			width="100%"/>
 	</mx:HBox>
 	
-	<mx:Label text="Total: {supply.total}" 
+	<mx:Label text="{resourceManager.getString('SupplyPage', 'Total')}: {supply.total}" 
 		textAlign="right" width="100%"/>
 	
 	<mx:ControlBar id="mainControlBar" 
 		horizontalAlign="right">
 		
 		<mx:Button id="submitBtn" 
-			label="submit" 
+			label="{resourceManager.getString('SupplyPage', 'Submit')}" 
 			click="submitBtnClickListener(event)"/>
 		
 		<mx:Button id="cancelBtn" 
-			label="cancel" 
+			label="{resourceManager.getString('SupplyPage', 'Cancel')}" 
 			click="cancelBtnClickListener(event)"/>
 	</mx:ControlBar>
 </mx:TitleWindow>

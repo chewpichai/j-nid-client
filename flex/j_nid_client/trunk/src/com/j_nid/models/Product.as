@@ -38,7 +38,7 @@ package com.j_nid.models {
 			return xml;
 		}
 		
-		public function toString():String {
+		override public function toString():String {
 			return name;
 		}
 

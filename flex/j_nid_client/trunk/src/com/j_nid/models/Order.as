@@ -34,7 +34,8 @@ package com.j_nid.models {
 			paidTotal = 0;
 			created = new Date();
 			orderItems = new ArrayCollection();
-			orderItems.addEventListener(CollectionEvent.COLLECTION_CHANGE, itemChangeListener);
+			orderItems.addEventListener(
+					CollectionEvent.COLLECTION_CHANGE, itemChangeListener);
 		}
 		
 		private function itemChangeListener(evt:CollectionEvent):void {
@@ -73,7 +74,7 @@ package com.j_nid.models {
 			return xml;
 		}
 		
-		public function toString():String {
+		override public function toString():String {
 			return person.name + " [" + 
 				DateUtils.format(created, "DD MMM YYYY") +
 				"]";
