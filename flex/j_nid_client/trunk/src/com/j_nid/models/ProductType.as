@@ -1,6 +1,8 @@
 package com.j_nid.models {
 	
 	import mx.collections.ArrayCollection;
+	import mx.collections.Sort;
+	import mx.collections.SortField;
 	
 	[Bindable]
 	public class ProductType extends Model {
@@ -26,7 +28,7 @@ package com.j_nid.models {
 		}
 		
 		public function addProduct(product:Product):void {
-			product.type = this;
+			product.productType = this;
 			products.addItem(product);
 		}
 		
@@ -53,10 +55,14 @@ package com.j_nid.models {
 			return name;
 		}
 		
-/* ----- get-set function. --------------------------------------------------------------------- */
+/* ----- get-set function. ------------------------------------------------- */
 		
 		public function set products(obj:ArrayCollection):void {
 			_products = obj;
+			var sort:Sort = new Sort();
+			sort.fields = [new SortField("name")];
+			_products.sort = sort;
+			_products.refresh();
 		}
 		
 		public function get products():ArrayCollection {

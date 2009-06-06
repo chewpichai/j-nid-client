@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" 
 	creationComplete="creationComplete(event)"
+	show="showHandler(event)"
 	width="100%" height="100%">
 	
 	<mx:Metadata>
@@ -13,10 +14,10 @@
 			import mx.collections.SortField;
 			import mx.collections.Sort;
 			import mx.collections.ArrayCollection;
-			import com.j_nid.utils.DateUtils;
+			import com.j_nid.utils.Utils;
 			import com.j_nid.models.Person;
 			import mx.binding.utils.ChangeWatcher;
-			import com.j_nid.controls.EventNames;
+			import com.j_nid.events.JNidEvent;
 			import com.j_nid.utils.CairngormUtils;
 			import mx.events.FlexEvent;
 			import mx.collections.ListCollectionView;
@@ -29,12 +30,46 @@
 			
 			[Bindable]
 			private var model:JNidModelLocator = JNidModelLocator.getInstance();
+			[Bindable]
+			private var people:ArrayCollection;
+			[Bindable]
+            private var orders:ArrayCollection;
+            [Bindable]
+            private var utils:Utils = Utils.getInstance();
 			
 			private function creationComplete(e:FlexEvent):void {
+				// Create people.
+				people = new ArrayCollection(model.people);
+				var sort:Sort = new Sort();
+                sort.fields = [new SortField("name")];
+                people.sort = sort;
+                people.filterFunction =
+                    function(obj:Object):Boolean {
+                        return Person(obj).isCustomer;
+                    };
+                personField.dataProvider = people;
+                // Create orders.
+                orders = new ArrayCollection(model.orders);
+                sort = new Sort();
+                sort.fields = [new SortField("created", false, true)];
+                orders.sort = sort;
+                orders.filterFunction =
+                    function(obj:Object):Boolean {
+                        var order:Order = Order(obj);
+                        return checkPerson(order.person) &&
+                               checkStatus(order) &&
+                               checkDate(order.created);
+                    };
+                orderList.dataProvider = orders;
+                // Add change watchers.
 				ChangeWatcher.watch(personField, "selectedIndex", filterOrder);
 				ChangeWatcher.watch(dateField, "selectedRanges", filterOrder);
 				ChangeWatcher.watch(outstandingField, "selected", filterOrder);
 				ChangeWatcher.watch(paidField, "selected", filterOrder);
+			}
+			
+			private function showHandler(e:FlexEvent):void {
+				people.refresh();
 				initData();
 			}
 			
@@ -42,23 +77,12 @@
 				outstandingField.selected = true;
 				var today:Date = new Date();
 				var rangeEnd:Date = new Date(today.fullYear, today.month, today.date);
-				var rangeStart:Date = DateUtils.moveDateByDay(rangeEnd, -365);
+				var rangeStart:Date = utils.moveDateByDay(rangeEnd, -365);
 				dateField.selectedRanges = [{rangeStart: rangeStart, rangeEnd: rangeEnd}];
 			}
 			
 			private function filterOrder(e:Event):void {
-				try {
-					var orders:ListCollectionView = ListCollectionView(orderList.dataProvider);
-					orders.filterFunction = function(obj:Object):Boolean {
-						var order:Order = Order(obj);
-						return checkPerson(order.person) &&
-							checkStatus(order) &&
-							checkDate(order.created);
-					};
-					orders.refresh();
-				} catch (err:TypeError) {
-					
-				}
+				orders.refresh();
 			}
 			
 			private function checkPerson(person:Person):Boolean {
@@ -76,7 +100,7 @@
 					var start:Date = new Date(obj.rangeStart.time);
 					var end:Date = new Date(obj.rangeEnd.time);
 					// Move end date to the midnight of the next day.
-					end = DateUtils.moveDateByDay(end, 1);
+					end = utils.moveDateByDay(end, 1);
 					if (date >= start && date < end) {
 						return true;
 					}
@@ -96,9 +120,9 @@
 			}
 			
 			internal function removeOrderItem(item:OrderItem):void {
-				item.order.removeItem(item);
+				item.order.removeOrderItem(item);
 				model.removeOrderItem(item);
-				CairngormUtils.dispatchEvent(EventNames.DELETE_ORDER_ITEM, item);
+				CairngormUtils.dispatchEvent(JNidEvent.DELETE_ORDER_ITEM, item);
 			}
 			
 			private function printOrder(e:MouseEvent):void {
@@ -109,31 +133,21 @@
 			private function deleteOrderClick(e:MouseEvent):void {
 				var order:Order = Order(orderList.selectedItem);
 				model.removeOrder(order);
-				CairngormUtils.dispatchEvent(EventNames.DELETE_ORDER, order);
-			}
-			
-			private function getCustomer(peopleArray:Array):ArrayCollection {
-				var customers:ArrayCollection = new ArrayCollection(peopleArray);
-				var sort:Sort = new Sort();
-				sort.fields = [new SortField("name")];
-				customers.sort = sort;
-				customers.filterFunction = function(obj:Object):Boolean {
-					return Person(obj).isCustomer;
-				};
-				customers.refresh();
-				return customers;
+				CairngormUtils.dispatchEvent(JNidEvent.DELETE_ORDER, order);
 			}
 			
 			private function searchChange(e:Event):void {
-				personField.dataProvider.filterFunction = function(item:Object):Boolean {
-					var person:Person = Person(item);
-					person.sortIndex = person.name.indexOf(personSearchField.text);
-					return person.sortIndex != -1;
-				};
 				var sort:Sort = new Sort();
 				sort.fields = [new SortField("sortIndex"), new SortField("name")];
-				personField.dataProvider.sort = sort;
-				personField.dataProvider.refresh();
+				people.sort = sort;
+				people.filterFunction = 
+					function(obj:Object):Boolean {
+						var person:Person = Person(obj);
+						person.sortIndex = 
+						     person.name.indexOf(personSearchField.text);
+						return person.sortIndex != -1 && Person(obj).isCustomer;
+					};
+				people.refresh();
 			}
 			
 			private function itemListKeyDown(e:KeyboardEvent):void {
@@ -143,17 +157,15 @@
 				}
 			}
 			
-			private function formatNumber(item:Object,
-            								column:DataGridColumn):String {
-            	return numberFormatter.format(item.total);
+			private function formatPrice(item:Object,
+                                          column:DataGridColumn):String {
+                                          	
+            	return utils.formatPrice(item[column.dataField]);
             }
 		]]>
 	</mx:Script>
 	
 	<mx:DateFormatter id="dateFormatter" formatString="DD/MM/YY J:NN:SS"/>
-	
-	<mx:NumberFormatter id="numberFormatter"
-    	precision="2"/>
 	
 	<mx:Panel title="{resourceManager.getString('OrderPage', 'Filter')}"
 		verticalGap="5"
@@ -173,8 +185,7 @@
 				width="100%"/>
 		</mx:HBox>
 		
-		<mx:List id="personField" 
-			dataProvider="{getCustomer(model.people.source)}"
+		<mx:List id="personField"
 			labelField="name"
 			borderThickness="0"
 			width="100%" height="100%"/>
@@ -203,8 +214,14 @@
 		width="250" height="100%">
 		
 		<mx:List id="orderList" 
-			dataProvider="{model.orders.source}" 
-			width="100%" height="100%"/>
+			width="100%" height="100%">
+			
+			<mx:itemRenderer>
+				<mx:Component>
+<mx:Label text="{data}" color="{data.isPaid ? 0x0000FF:0xFF0000}"/>
+				</mx:Component>
+			</mx:itemRenderer>
+		</mx:List>
 	</mx:Panel>
 	
 	<mx:Panel title="{resourceManager.getString('OrderPage', 'Detail')}" 
@@ -219,7 +236,8 @@
 			horizontalAlign="right">
 			
 			<mx:Label text="{orderList.selectedItem.person.name}"/>
-			<mx:Label text="{dateFormatter.format(orderList.selectedItem.created)}"/>
+			<mx:Label
+				text="{dateFormatter.format(orderList.selectedItem.created)}"/>
 		</mx:HBox>
 		
 		<mx:DataGrid id="orderItemList" 
@@ -229,7 +247,8 @@
 			width="100%" height="100%">
 			<mx:columns>
 				<mx:DataGridColumn
-					headerText="{resourceManager.getString('OrderPage', 'Quantity')}"
+					headerText="{resourceManager.getString(
+					                   'OrderPage', 'Quantity')}"
 					dataField="quantity"
 					headerStyleName="dgHeader"
 					width="50"/>
@@ -244,16 +263,17 @@
 					headerStyleName="dgHeader"
 					width="50"/>
 				<mx:DataGridColumn
-					headerText="{resourceManager.getString('OrderPage', 'PricePerUnit')}"
+					headerText="{resourceManager.getString(
+					                   'OrderPage', 'PricePerUnit')}"
 					dataField="pricePerUnit"
-					labelFunction="formatNumber"
+					labelFunction="formatPrice"
 					textAlign="right"
 					headerStyleName="dgHeader"
 					width="85"/>
 				<mx:DataGridColumn
 					headerText="{resourceManager.getString('OrderPage', 'Total')}"
 					dataField="total"
-					labelFunction="formatNumber"
+					labelFunction="formatPrice"
 					textAlign="right"
 					headerStyleName="dgHeader"
 					width="85"/>
@@ -265,7 +285,11 @@
 			width="100%" height="35">
 			
 			<mx:Label
-				text="{numberFormatter.format(orderList.selectedItem.total)}"/>
+				text="{resourceManager.getString('OrderPage', 'Summary',
+				            [utils.formatPrice(
+				                orderList.selectedItem.total),
+				             utils.formatPrice(
+				                orderList.selectedItem.paidTotal)])}"/>
 		</mx:HBox>
 		
 		<mx:ControlBar horizontalAlign="right">

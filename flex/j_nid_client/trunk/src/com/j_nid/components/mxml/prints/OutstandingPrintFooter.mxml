@@ -1,17 +1,17 @@
 <?xml version="1.0"?>
 <!-- Custom control for the footer area of the printed page. -->
 <mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" 
-	horizontalAlign="right" verticalAlign="bottom">
+    horizontalAlign="right" verticalAlign="bottom">
     
     <mx:Metadata>
-		[ResourceBundle("OrderPrint")]
-	</mx:Metadata>
+        [ResourceBundle("OutstandingPrint")]
+    </mx:Metadata>
 
     <mx:Script>
         <![CDATA[
         	import com.j_nid.utils.Utils;
-        	import mx.resources.ResourceBundle;
-        	
+            import mx.resources.ResourceBundle;
+            
             [Bindable]
             public var total:Number = 0;
             [Bindable]
@@ -19,6 +19,6 @@
         ]]>
     </mx:Script>
     
-    <mx:Label text="{resourceManager.getString('OrderPrint', 'Total',
-    					[utils.formatPrice(total)])}"/>
+    <mx:Label text="{resourceManager.getString('OutstandingPrint', 'Summary',
+                        [utils.formatPrice(total)])}"/>
 </mx:VBox>

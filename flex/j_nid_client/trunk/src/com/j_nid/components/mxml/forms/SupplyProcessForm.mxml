@@ -18,7 +18,7 @@
 		<![CDATA[
 			import mx.resources.ResourceBundle;
 			import com.j_nid.models.Supply;
-			import com.j_nid.controls.EventNames;
+			import com.j_nid.events.JNidEvent;
 			import com.j_nid.utils.CairngormUtils;
 			import com.j_nid.models.JNidModelLocator;
 			import mx.rpc.events.ResultEvent;
@@ -39,7 +39,7 @@
 			
 			private function submitBtnClickListener(e:MouseEvent):void {
 				model.supplyToCreate = supply;
-				CairngormUtils.dispatchEvent(EventNames.CREATE_SUPPLY, supply);
+				CairngormUtils.dispatchEvent(JNidEvent.CREATE_SUPPLY, supply);
 				PopUpManager.removePopUp(this);
 			}
 			

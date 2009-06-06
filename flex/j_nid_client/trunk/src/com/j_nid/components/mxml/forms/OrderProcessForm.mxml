@@ -17,7 +17,7 @@
 	<mx:Script>
 		<![CDATA[
 			import mx.resources.ResourceBundle;
-			import com.j_nid.controls.EventNames;
+			import com.j_nid.events.JNidEvent;
 			import com.j_nid.utils.CairngormUtils;
 			import com.j_nid.models.JNidModelLocator;
 			import mx.rpc.events.ResultEvent;
@@ -35,15 +35,20 @@
 			
 			private function init(e:FlexEvent):void {
 				PopUpManager.centerPopUp(this);
+				model.addEventListener(JNidEvent.ORDER_CREATED, orderCreated);
 			}
 			
 			private function submitBtnClickListener(e:MouseEvent):void {
 				model.orderToCreate = order;
-				CairngormUtils.dispatchEvent(EventNames.CREATE_ORDER, order);
+				CairngormUtils.dispatchEvent(JNidEvent.CREATE_ORDER, order);
 				PopUpManager.removePopUp(this);
 			}
 			
 			private function cancelBtnClickListener(e:MouseEvent):void {
+				PopUpManager.removePopUp(this);
+			}
+			
+			private function orderCreated(e:JNidEvent):void {
 				PopUpManager.removePopUp(this);
 			}
 		]]>
@@ -81,7 +86,8 @@
 				headerStyleName="dgHeader"
 				width="70"/>
 			<mx:DataGridColumn
-				headerText="{resourceManager.getString('OrderPage', 'PricePerUnit')}" 
+				headerText="{resourceManager.getString(
+				                    'OrderPage', 'PricePerUnit')}" 
 				dataField="pricePerUnit"
 				headerStyleName="dgHeader"
 				width="85"/>

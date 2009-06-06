@@ -4,7 +4,7 @@
 
 	<mx:Script>
 		<![CDATA[
-			import com.j_nid.controls.EventNames;
+			import com.j_nid.events.JNidEvent;
 			import com.j_nid.models.Product;
 			import com.j_nid.utils.CairngormUtils;
 			import mx.controls.CheckBox;
@@ -14,7 +14,7 @@
 				var product:Product = Product(data);
 				product.isSale = target.selected;
 				CairngormUtils.dispatchEvent(
-					EventNames.UPDATE_PRODUCT, product);
+					JNidEvent.UPDATE_PRODUCT, product);
 			}
 		]]>
 	</mx:Script>

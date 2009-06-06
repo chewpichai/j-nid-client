@@ -1,25 +1,48 @@
 <?xml version="1.0"?>
 <!-- Custom control to print the DataGrid control on multiple pages. -->
 <mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
-    xmlns:jn="com.j_nid.components.mxml.prints.*"
+    xmlns:print="com.j_nid.components.mxml.prints.*"
     backgroundColor="#FFFFFF">
     
     <mx:Metadata>
-        [ResourceBundle("OrderPrint")]
+        [ResourceBundle("OutstandingPrint")]
     </mx:Metadata>
 
     <mx:Script>
         <![CDATA[
-            import com.j_nid.utils.Utils;
-            import com.j_nid.models.Order;
+        	import com.j_nid.utils.Utils;
+            import com.j_nid.models.Person;
             import mx.resources.ResourceBundle;
-            // Declare and initialize the variables used in the component.
-            // The application sets the actual prodTotal value.
+            
+            private var _person:Person;
+            private var orders:Array;
             [Bindable]
-            public var pageNumber:Number = 1;
+            public var startDate:Date;
             [Bindable]
-            public var order:Order;
+            public var endDate:Date;
+            [Bindable]
+            private var total:Number;
             private var utils:Utils = Utils.getInstance();
+            
+            public function set person(obj:Person):void {
+                _person = obj;
+                var lastDate:Date = utils.moveDateByDay(endDate, 1);
+                orders = new Array();
+                total = 0;
+                for each (var order:* in person.orders) {
+                    if (order.created > startDate &&
+                        order.created < lastDate) {
+                        
+                        orders.push(order);
+                        total += order.total;
+                    }
+                }
+                orderList.dataProvider = orders;
+            }
+            
+            public function get person():Person {
+                return _person;
+            }
 
             // Control the page contents by selectively hiding the header and
             // footer based on the page type.
@@ -45,66 +68,49 @@
             
             private function formatPrice(item:Object,
                                          column:DataGridColumn):String {
-                                          	
+                
                 return utils.formatPrice(item[column.dataField]);
+            }
+            
+            private function formatDate(item:Object,
+                                        column:DataGridColumn):String {
+                                            
+                return utils.formatDate(item[column.dataField], "DD-MM-YYYY");
             }
         ]]>
     </mx:Script>
 
-    <!-- The template for the printed page, with the contents for all pages. -->
-    <mx:VBox horizontalAlign="left" 
-        x="0" y="0"
-        width="100%">
-        
-        <mx:Label text="{resourceManager.getString('OrderPrint', 'OrderNo',
-                            [order.id, pageNumber])}"/>
-    </mx:VBox>
-
-    <jn:OrderPrintHeader id="header" 
-        personName="{order.person.name}"
-        date="{order.created}"
+    <print:OutstandingPrintHeader id="header" 
+        startDate="{startDate}"
+        endDate="{endDate}"
         top="30" horizontalCenter="0" 
         width="100%"/>
+    
     <!-- The data grid. The sizeToPage property is true by default, so the last
         page has only as many grid rows as are needed for the data. -->
-    <mx:PrintDataGrid id="orderItemList"
-        dataProvider="{order.orderItems}"
-        top="60" horizontalCenter="0"
-        width="95%" height="100%">
+    <mx:PrintDataGrid id="orderList"
+        width="95%" height="100%"
+        top="60" horizontalCenter="0">
     <!-- Specify the columns to ensure that their order is correct. -->
         <mx:columns>
             <mx:DataGridColumn
-                headerText="{resourceManager.getString('OrderPrint', 'Quantity')}"
-                dataField="quantity"
-                headerStyleName="dgHeader"
-                width="50"/>
-            <mx:DataGridColumn
-                headerText="{resourceManager.getString('OrderPrint', 'Name')}"
-                dataField="name"
+                headerText="{resourceManager.getString('OutstandingPrint',
+                                    'Date')}"
+                dataField="created"
+                labelFunction="formatDate"
                 headerStyleName="dgHeader"/>
             <mx:DataGridColumn
-                headerText="{resourceManager.getString('OrderPrint', 'Unit')}"
-                dataField="unit"
-                headerStyleName="dgHeader"
-                width="50"/>
-            <mx:DataGridColumn
-                headerText="{resourceManager.getString('OrderPrint', 'PricePerUnit')}"
-                dataField="pricePerUnit"
-                labelFunction="formatPrice"
-                headerStyleName="dgHeader"
-                width="85"/>
-            <mx:DataGridColumn
-                headerText="{resourceManager.getString('OrderPrint', 'Subtotal')}"
+                headerText="{resourceManager.getString('OutstandingPrint',
+                                    'Total')}"
                 dataField="total"
                 labelFunction="formatPrice"
-                headerStyleName="dgHeader"
-                width="85"/>
+                headerStyleName="dgHeader"/>
         </mx:columns>
     </mx:PrintDataGrid>
 
     <!-- Create a FormPrintFooter control and set its prodTotal variable. -->
-    <jn:OrderPrintFooter id="footer" 
-        total="{order.total}"
+    <print:OutstandingPrintFooter id="footer"
+        total="{total}"
         width="100%" 
         bottom="0"/>
 </mx:Canvas>

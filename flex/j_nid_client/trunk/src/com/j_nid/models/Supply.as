@@ -1,7 +1,5 @@
 package com.j_nid.models {
 	
-	import com.j_nid.utils.DateUtils;
-	
 	import mx.collections.ArrayCollection;
 	import mx.collections.IViewCursor;
 	import mx.events.CollectionEvent;
@@ -31,7 +29,8 @@ package com.j_nid.models {
 			created = new Date();
 			total = 0;
 			supplyItems = new ArrayCollection();
-			supplyItems.addEventListener(CollectionEvent.COLLECTION_CHANGE, itemChangeListener);
+			supplyItems.addEventListener(CollectionEvent.COLLECTION_CHANGE,
+			     itemChangeListener);
 		}
 		
 		private function itemChangeListener(evt:CollectionEvent):void {
@@ -43,21 +42,21 @@ package com.j_nid.models {
 			}
 		}
 		
-		public function addItem(item:SupplyItem):void {
+		public function addSupplyItem(item:SupplyItem):void {
 			item.supply = this;
 			supplyItems.addItem(item);
 		}
 		
-		public function removeItem(item:SupplyItem):void {
+		public function removeSupplyItem(item:SupplyItem):void {
 			item.supply = null;
 			supplyItems.removeItemAt(supplyItems.getItemIndex(item));
 		}
 		
-		public function clearItems():void {
+		public function clearSupplyItems():void {
 			supplyItems.removeAll();
 		}
 		
-		public function getItemAt(obj:int):SupplyItem {
+		public function getSupplyItemAt(obj:int):SupplyItem {
 			return SupplyItem(supplyItems.getItemAt(obj));
 		}
 		
@@ -65,14 +64,13 @@ package com.j_nid.models {
 			var xml:XML = <supply/>
 			xml.person_id = person.id;
 			xml.notation = notation;
-			xml.created = DateUtils.format(created);
+			xml.created = utils.formatDate(created);
 			return xml;
 		}
 		
 		override public function toString():String {
 			return person.name + " [" + 
-				DateUtils.format(created, "DD MMM YYYY") +
-				"]";
+				   utils.formatDate(created, "DD MMM YYYY") + "]";
 		}
 		
 /* ----- get-set function. --------------------------------------------------------------------- */

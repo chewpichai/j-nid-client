@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" 
-	creationComplete="creationComplete(event)"
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml"
+	show="showHandler(event)"
+	creationComplete="init(event)"
 	width="100%" height="100%">
 	
 	<mx:Metadata>
@@ -9,21 +10,22 @@
 
 	<mx:Script>
 		<![CDATA[
+			import com.j_nid.controls.ApplicationManager;
+			import mx.events.ValidationResultEvent;
+			import mx.validators.ValidationResult;
 			import mx.resources.ResourceBundle;
 			import com.j_nid.utils.PrintUtils;
 			import mx.binding.utils.ChangeWatcher;
-			import com.j_nid.utils.DateUtils;
-			import mx.utils.ObjectProxy;
+			import com.j_nid.utils.Utils;
 			import mx.events.CalendarLayoutChangeEvent;
 			import mx.events.FlexEvent;
 			import mx.controls.List;
 			import mx.collections.ListCollectionView;
 			import mx.collections.ICollectionView;
-			import com.j_nid.controls.EventNames;
+			import com.j_nid.events.JNidEvent;
 			import com.j_nid.utils.CairngormUtils;
 			import mx.collections.SortField;
 			import mx.collections.Sort;
-			import mx.messaging.channels.AMFChannel;
 			import com.j_nid.models.Payment;
 			import com.j_nid.models.Order;
 			import mx.collections.IViewCursor;
@@ -33,16 +35,55 @@
 			
 			[Bindable]
 			private var model:JNidModelLocator = JNidModelLocator.getInstance();
+			[Bindable]
+			private var appMgr:ApplicationManager = ApplicationManager.getInstance();
+			[Bindable]
+			private var people:ArrayCollection;
+			private var errMsg:String;
+			[Bindable]
+			internal var utils:Utils = Utils.getInstance();
 			
-			private function creationComplete(e:FlexEvent):void {
+			private function init(e:FlexEvent):void {
+				people = new ArrayCollection(model.people);
+				var sort:Sort = new Sort();
+                sort.fields = [new SortField("name")];
+                people.sort = sort;
+                people.filterFunction = 
+                    function(item:Object):Boolean {
+                        return Person(item).outstandingTotal != 0;
+                    };
+                personList.dataProvider = people;
+                // Add event listeners.
+                model.addEventListener(JNidEvent.PAYMENT_CREATED, paymentCreated);
+			}
+			
+			private function showHandler(e:FlexEvent):void {
+				people.refresh();
+				if (model.orderToCreate) {
+					var person:Person = model.orderToCreate.person;
+				    personList.selectedItem = person;
+				    transactionList.dataProvider = person.transactions; 
+				}
 				initData();
 			}
 			
+			private function paymentCreated(e:JNidEvent):void {
+				clearPaymentForm();
+				people.refresh();
+			}
+			
+			private function clearPaymentForm():void {
+				amountField.value = 0;
+				notationField.text = "";
+			}
+			
 			private function initData():void {
-				startDateField.selectedDate = DateUtils.moveDateByDay(new Date(), -180);
-				var rangeStart:Date = DateUtils.moveDateByDay(new Date(), 1);
+				startDateField.selectedDate = 
+				    utils.moveDateByDay(new Date(), -180);
+				var rangeStart:Date = utils.moveDateByDay(new Date(), 1);
 				startDateField.disabledRanges = [{rangeStart: rangeStart}];
-				endDateField.disabledRanges = [{rangeStart: rangeStart}, {rangeEnd: rangeStart}];
+				endDateField.disabledRanges = 
+				    [{rangeStart: rangeStart}, {rangeEnd: rangeStart}];
 			}
 			
 			private function dateChange(e:CalendarLayoutChangeEvent):void {
@@ -54,28 +95,48 @@
 				disabledRanges = startDateField.disabledRanges;
 				disabledRanges[0] = {rangeStart: endDate};
 				startDateField.disabledRanges = disabledRanges;
-				var transactions:ArrayCollection = ArrayCollection(transactionList.dataProvider);
+				var transactions:ArrayCollection = 
+				        ArrayCollection(transactionList.dataProvider);
 				filterTransaction(transactions,	startDate, endDate);
 			}
 			
 			private function filterTransaction(transaction:ArrayCollection, 
-				start:Date, end:Date):void {
+				                               start:Date, end:Date):void {
 				
 				if (transaction != null) {
-					end = DateUtils.moveDateByDay(end, 1);
-					transaction.filterFunction = function(obj:Object):Boolean {
-						return obj.created > start && obj.created < end;
-					}
+					end = utils.moveDateByDay(end, 1);
+					transaction.filterFunction = 
+						function(obj:Object):Boolean {
+							return obj.created > start && obj.created < end;
+						};
 					transaction.refresh();
 				}
 			}
 			
+			private function isValid():Boolean {
+				errMsg = "";
+				var event:ValidationResultEvent = numberValidator.validate();
+				if (event.type == ValidationResultEvent.INVALID) {
+					for each (var result:ValidationResult in event.results) {
+						errMsg += result.errorMessage + "\n";
+					}
+				}
+				if (personList.selectedItem == null) {
+					errMsg += "Please select person.";
+				}
+				return errMsg.length == 0;
+			}
+			
 			private function payBtnClickListener(evt:MouseEvent):void {
-				var payment:Payment = new Payment();
-				payment.amount = amountField.value;
-				payment.notation = notationField.text;
-				payment.person = Person(personList.selectedItem);
-				CairngormUtils.dispatchEvent(EventNames.CREATE_PAYMENT, payment);
+				if (isValid()) {
+					var payment:Payment = new Payment();
+					payment.amount = amountField.value;
+					payment.notation = notationField.text;
+					payment.person = Person(personList.selectedItem);
+					CairngormUtils.dispatchEvent(JNidEvent.CREATE_PAYMENT, payment);
+				} else {
+					appMgr.showMessage(errMsg);
+				}
 			}
 			
 			public function setPerson(person:Person):void {
@@ -87,35 +148,38 @@
 			}
 			
 			private function printBtnClick(e:MouseEvent):void {
-				PrintUtils.printPayment();
+				PrintUtils.printTransaction(Person(personList.selectedItem),
+				    startDateField.selectedDate,
+				    endDateField.selectedDate);
 			}
 			
-			private function filterPeople(peopleArray:Array):ArrayCollection {
-				var people:ArrayCollection = new ArrayCollection(peopleArray);
-				people.filterFunction = function(item:Object):Boolean {
-					return Person(item).outstandingTotal != 0;
-				};
-				people.refresh();
-				return people;
-			}
+			private function formatPrice(item:Object,
+                                          column:DataGridColumn):String {
+                
+                try {
+                    return utils.formatPrice(item[column.dataField]);
+                } catch (err:ReferenceError) {
+                	
+                }
+                return "";
+            }
 		]]>
 	</mx:Script>
-	
-	<mx:DateFormatter id="dateFormatter" formatString="DD-MM-YY J:NN:SS"/>
 
 	<mx:Panel title="{resourceManager.getString('PaymentPage', 'Customer')}"
 		layout="absolute"
 		width="380" height="100%" >
 		
-		<mx:DataGrid id="personList" 
-			dataProvider="{filterPeople(model.people.source)}"
+		<mx:DataGrid id="personList"
 			width="100%" height="100%">
 			<mx:columns>
 				<mx:DataGridColumn dataField="name"
-					headerText="{resourceManager.getString('PaymentPage', 'Name')}"
+					headerText="{resourceManager.getString(
+					                   'PaymentPage', 'Name')}"
 					headerStyleName="dgHeader"/>
 				<mx:DataGridColumn dataField="outstandingTotal" 
-					headerText="{resourceManager.getString('PaymentPage', 'OutstandingTotal')}"
+					headerText="{resourceManager.getString(
+					                   'PaymentPage', 'OutstandingTotal')}"
 					headerStyleName="dgHeader"/>
 			</mx:columns>
 		</mx:DataGrid>
@@ -130,13 +194,15 @@
 		<mx:HBox verticalAlign="middle"
 			width="100%">
 			
-			<mx:Label text="{resourceManager.getString('PaymentPage', 'PayAmount')}:"/>
+			<mx:Label
+				text="{resourceManager.getString('PaymentPage', 'PayAmount')}:"/>
 			
 			<mx:NumericStepper id="amountField" 
 				maximum="1000000" 
 				width="250"/>
 				
-			<mx:Label text="{resourceManager.getString('PaymentPage', 'Note')}:"/>
+			<mx:Label
+				text="{resourceManager.getString('PaymentPage', 'Note')}:"/>
 			
 			<mx:TextArea id="notationField"
 				width="100%"/>
@@ -152,34 +218,43 @@
 			width="100%" height="100%">
 			<mx:columns>
 				<mx:DataGridColumn 
-					headerText="{resourceManager.getString('PaymentPage', 'Date')}"
+					headerText="{resourceManager.getString(
+					                   'PaymentPage', 'Date')}"
 					headerStyleName="dgHeader">
 					<mx:itemRenderer>
 						<mx:Component>
-<mx:Label text="{outerDocument.dateFormatter.format(data.created)}"/>
+<mx:Label text="{outerDocument.utils.formatDate(data.created,
+                                        'DD-MM-YY J:NN:SS')}"/>
 						</mx:Component>
 					</mx:itemRenderer>
 				</mx:DataGridColumn>
 				<mx:DataGridColumn dataField="amount"
-					headerText="{resourceManager.getString('PaymentPage', 'Paid')}"
-					headerStyleName="dgHeader"/>
+					headerText="{resourceManager.getString(
+					                   'PaymentPage', 'Paid')}"
+					headerStyleName="dgHeader"
+					labelFunction="formatPrice"/>
 				<mx:DataGridColumn dataField="total"
-					headerText="{resourceManager.getString('PaymentPage', 'Outstanding')}"
-					headerStyleName="dgHeader"/>
+					headerText="{resourceManager.getString(
+					                   'PaymentPage', 'Outstanding')}"
+					headerStyleName="dgHeader"
+					labelFunction="formatPrice"/>
 				<mx:DataGridColumn dataField="notation"
-					headerText="{resourceManager.getString('PaymentPage', 'Note')}"
+					headerText="{resourceManager.getString(
+					                   'PaymentPage', 'Note')}"
 					headerStyleName="dgHeader"/>
 			</mx:columns>
 		</mx:DataGrid>
 		
 		<mx:ControlBar>
-			<mx:Label text="{resourceManager.getString('PaymentPage', 'StartDate')}:"/>
+			<mx:Label
+				text="{resourceManager.getString('PaymentPage', 'StartDate')}:"/>
 			
 			<mx:DateField id="startDateField"
 				formatString="DD-MM-YYYY"
 				change="dateChange(event)"/>
 				
-			<mx:Label text="{resourceManager.getString('PaymentPage', 'ToDate')}:"/>
+			<mx:Label
+				text="{resourceManager.getString('PaymentPage', 'ToDate')}:"/>
 			
 			<mx:DateField id="endDateField"
 				selectedDate="{new Date()}"
@@ -187,7 +262,10 @@
 				change="dateChange(event)"/>
 				
 			<mx:Spacer width="100%"/>
-			<mx:Button label="{resourceManager.getString('PaymentPage', 'Print')}"
+			
+			<mx:Button
+				label="{resourceManager.getString('PaymentPage', 'Print')}"
+				enabled="{personList.selectedItem != null}"
 				click="printBtnClick(event)"/>
 		</mx:ControlBar>
 	</mx:Panel>

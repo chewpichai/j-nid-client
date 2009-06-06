@@ -10,17 +10,17 @@
     
     <mx:Script>
     	<![CDATA[
+    		import com.j_nid.utils.Utils;
     		import mx.resources.ResourceBundle;
     		
     		[Bindable]
     		public var personName:String;
     		[Bindable]
     		public var date:Date;
+    		[Bindable]
+    		private var utils:Utils = Utils.getInstance();
     	]]>
     </mx:Script>
-    
-    <mx:DateFormatter id="dateFormatter"
-    	formatString="DD-MM-YYYY JJ:NN:SS"/>
 
     <mx:Label text="{resourceManager.getString('OrderPrint', 'CustomerName',
     					[personName])}"/>
@@ -28,5 +28,5 @@
     <mx:Spacer width="100%"/>
     					
     <mx:Label text="{resourceManager.getString('OrderPrint', 'Date',
-    					[dateFormatter.format(date)])}"/>
+    					[utils.formatDate(date)])}"/>
 </mx:HBox>

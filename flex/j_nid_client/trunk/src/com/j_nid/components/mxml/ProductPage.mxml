@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
+	show="showHandler(event)"
+	creationComplete="init(event)"
 	width="100%" height="100%">
 	
 	<mx:Metadata>
@@ -8,9 +10,13 @@
 	
 	<mx:Script>
 		<![CDATA[
+			import mx.collections.SortField;
+			import mx.collections.Sort;
+			import mx.collections.ArrayCollection;
+			import mx.events.FlexEvent;
 			import com.j_nid.components.mxml.forms.ProductForm;
 			import com.j_nid.components.mxml.forms.ProductTypeForm;
-			import com.j_nid.controls.EventNames;
+			import com.j_nid.events.JNidEvent;
 			import com.j_nid.models.JNidModelLocator;
 			import com.j_nid.models.Product;
 			import com.j_nid.models.ProductType;
@@ -23,40 +29,88 @@
 			
 			[Bindable]
 			private var model:JNidModelLocator = JNidModelLocator.getInstance();
+			[Bindable]
+			private var products:ArrayCollection;
+			[Bindable]
+            private var productTypes:ArrayCollection;
+			private var selectedProductType:ProductType;
+			
+			private function init(e:FlexEvent):void {
+				// Create products.
+				products = new ArrayCollection(model.products);
+				var sort:Sort = new Sort();
+				sort.fields = [new SortField("productType"), new SortField("name")];
+				products.sort = sort;
+				productList.dataProvider = products;
+				// Create product types.
+				productTypes = new ArrayCollection(model.productTypes);
+				productTypeList.dataProvider = productTypes;
+				// Add event listeners.
+				model.addEventListener(JNidEvent.PRODUCT_CREATED,
+				    productCreated);
+				model.addEventListener(JNidEvent.PRODUCT_TYPE_CREATED,
+                    productTypeCreated);
+				// init selected product.
+				selectedProductType = JNidModelLocator.ALL_TYPE;
+			}
+			
+			private function showHandler(e:FlexEvent):void {
+				products.refresh();
+			}
+			
+			private function productCreated(e:JNidEvent):void {
+				var product:Product = Product(e.data);
+				var type:ProductType = product.productType;
+				productTypeCombo.selectedItem = type;
+				selectedProductType = type;
+				filterProduct();
+				productList.selectedItem = product;
+			}
+			
+			private function productTypeCreated(e:JNidEvent):void {
+                productTypes.refresh();
+                var productType:ProductType = ProductType(e.data);
+                productTypeList.selectedItem = productType;
+                productTypeCombo.selectedItem = selectedProductType;
+            }
 			
 			private function productTypeComboChange(e:ListEvent):void {
 				var type:ProductType = ProductType(productTypeCombo.selectedItem);
-				filterByType(type);
+				selectedProductType = type;
+				filterProduct();
 			}
 			
-			private function filterByType(type:ProductType):void {
-				var products:ListCollectionView = ListCollectionView(productDg.dataProvider);
-				if (type == JNidModelLocator.ALL_TYPE) {
+			private function filterProduct():void {
+				if (selectedProductType == JNidModelLocator.ALL_TYPE) {
 					products.filterFunction = null;
 				} else {
-					products.filterFunction = function(obj:Object):Boolean {
-						return Product(obj).type == type;
-					}
+					products.filterFunction =
+					   function(obj:Object):Boolean {
+					       return Product(obj).productType == selectedProductType;
+					   };
 				}
 				products.refresh();
 			}
 			
 			internal function updateProductTypeColor(type:ProductType, color:uint):void {
 				type.color = color;
-				CairngormUtils.dispatchEvent(EventNames.UPDATE_PRODUCT_TYPE, type);
+				CairngormUtils.dispatchEvent(JNidEvent.UPDATE_PRODUCT_TYPE, type);
 			}
 			
 			private function newProductBtnClick(e:MouseEvent):void {
 				var form:ProductForm = ProductForm(PopUpManager.createPopUp(
-					Application(Application.application),
-					ProductForm, true));
+				                                        Application(
+				                                            Application.application),
+                                                        ProductForm, true));
 				form.product = new Product();
 			}
 			
 			private function newProductTypeBtnClick(e:MouseEvent):void {
-				var form:ProductTypeForm = ProductTypeForm(PopUpManager.createPopUp(
-					Application(Application.application),
-					ProductTypeForm, true));
+				var form:ProductTypeForm = ProductTypeForm(
+                                                PopUpManager.createPopUp(
+                                                    Application(
+                                                        Application.application),
+					                                ProductTypeForm, true));
 				form.productType = new ProductType();
 			}
 			
@@ -64,14 +118,14 @@
 				var form:ProductTypeForm = ProductTypeForm(PopUpManager.createPopUp(
 					Application(Application.application),
 					ProductTypeForm, true));
-				form.productType = ProductType(productTypeDg.selectedItem);
+				form.productType = ProductType(productTypeList.selectedItem);
 			}
 			
 			private function productDgDoubleClick(e:MouseEvent):void {
 				var form:ProductForm = ProductForm(PopUpManager.createPopUp(
 					Application(Application.application),
 					ProductForm, true));
-				form.product = Product(productDg.selectedItem);
+				form.product = Product(productList.selectedItem);
 			}
 		]]>
 	</mx:Script>
@@ -91,7 +145,7 @@
 										'ProductPage', 'ProductType')}:"/>
 				
 				<mx:ComboBox id="productTypeCombo" 
-					dataProvider="{model.productTypesWithAll.source}" 
+					dataProvider="{model.productTypesWithAll}"
 					change="productTypeComboChange(event)"
 					itemRenderer="com.j_nid.components.mxml.ProductTypeComboRenderer"/>
 					
@@ -102,30 +156,34 @@
 					click="newProductBtnClick(event)"/>
 			</mx:HBox>
 				
-			<mx:DataGrid id="productDg" 
-				dataProvider="{model.products.source}"
+			<mx:DataGrid id="productList"
 				doubleClickEnabled="true"
 				doubleClick="productDgDoubleClick(event)"
 				width="100%" height="100%">
 				<mx:columns>
 					<mx:DataGridColumn 
-						headerText="{resourceManager.getString('ProductPage', 'Name')}" 
+						headerText="{resourceManager.getString(
+						                  'ProductPage', 'Name')}" 
 						dataField="name"
 						headerStyleName="dgHeader"/>
 					<mx:DataGridColumn
-						headerText="{resourceManager.getString('ProductPage', 'ProductType')}"
-						dataField="type"
+						headerText="{resourceManager.getString(
+						                  'ProductPage', 'ProductType')}"
+						dataField="productType"
 						headerStyleName="dgHeader"/>
 					<mx:DataGridColumn
-						headerText="{resourceManager.getString('ProductPage', 'Unit')}"
+						headerText="{resourceManager.getString(
+						                  'ProductPage', 'Unit')}"
 						dataField="unit"
 						headerStyleName="dgHeader"/>
 					<mx:DataGridColumn
-						headerText="{resourceManager.getString('ProductPage', 'PricePerUnit')}"
+						headerText="{resourceManager.getString(
+						                  'ProductPage', 'PricePerUnit')}"
 						dataField="pricePerUnit"
 						headerStyleName="dgHeader"/>
 					<mx:DataGridColumn
-						headerText="{resourceManager.getString('ProductPage', 'IsSale')}"
+						headerText="{resourceManager.getString(
+						                  'ProductPage', 'IsSale')}"
 						dataField="isSale"
 						headerStyleName="dgHeader"
 						itemRenderer="com.j_nid.components.mxml.ProductRenderer"/>
@@ -133,7 +191,8 @@
 			</mx:DataGrid>
 		</mx:VBox>
 		
-		<mx:VBox label="{resourceManager.getString('ProductPage', 'ProductType')}"
+		<mx:VBox label="{resourceManager.getString(
+		                      'ProductPage', 'ProductType')}"
 			width="100%" height="100%">
 			
 			<mx:HBox
@@ -141,18 +200,19 @@
 				width="100%">
 				
 				<mx:Button
-					label="{resourceManager.getString('ProductPage', 'Add')}"
+					label="{resourceManager.getString(
+					               'ProductPage', 'Add')}"
 					click="newProductTypeBtnClick(event)"/>
 			</mx:HBox>
 			
-			<mx:DataGrid id="productTypeDg"
-				dataProvider="{model.productTypes.source}"
+			<mx:DataGrid id="productTypeList"
 				doubleClickEnabled="true"
 				doubleClick="productTypeDgDoubleClick(event)"
 				width="100%" height="100%">
 				<mx:columns>
 					<mx:DataGridColumn
-						headerText="{resourceManager.getString('ProductPage', 'Name')}"
+						headerText="{resourceManager.getString(
+						                  'ProductPage', 'Name')}"
 						headerStyleName="dgHeader">
 						<mx:itemRenderer>
 							<mx:Component>
@@ -161,7 +221,8 @@
 						</mx:itemRenderer>
 					</mx:DataGridColumn>
 					<mx:DataGridColumn
-						headerText="{resourceManager.getString('ProductPage', 'Color')}"
+						headerText="{resourceManager.getString(
+						                  'ProductPage', 'Color')}"
 						headerStyleName="dgHeader">
 						<mx:itemRenderer>
 							<mx:Component>
@@ -172,7 +233,8 @@
 		]]>
 	</mx:Script>
 	<mx:ColorPicker id="colorPicker" selectedColor="{data.color}" 
-		change="{outerDocument.updateProductTypeColor(ProductType(data), colorPicker.selectedColor)}"/>
+		change="{outerDocument.updateProductTypeColor(
+		              ProductType(data), colorPicker.selectedColor)}"/>
 </mx:Canvas>
 							</mx:Component>
 						</mx:itemRenderer>

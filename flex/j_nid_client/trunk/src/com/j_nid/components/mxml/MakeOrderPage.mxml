@@ -10,6 +10,7 @@
 	
 	 <mx:Script>
 		<![CDATA[
+			import com.j_nid.models.Person;
 			import com.j_nid.models.Order;
 			import mx.events.FlexEvent;
 			import com.j_nid.models.Product;
@@ -22,7 +23,7 @@
 			
 			private function showHandler(e:FlexEvent):void {
 				orderDetail.order = new Order();
-				orderDetail.customer = model.people.source[new Date().hours];
+				orderDetail.customer = model.people[new Date().hours];
 				validateNow();
 			}
 						
@@ -41,7 +42,7 @@
 			width="220" height="100%">
 			
 			<mx:List id="productTypeList"
-				dataProvider="{model.productTypes.source}"
+				dataProvider="{model.productTypes}"
 				labelField="name" borderStyle="none"
 				height="100%" width="100%"/>
 		</mx:Panel>

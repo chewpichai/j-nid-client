@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" 
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml"
+	show="showHandler(event)"
 	creationComplete="init(event)"
 	width="100%" height="100%">
 	
@@ -7,42 +8,39 @@
 		<![CDATA[
 			import mx.collections.SortField;
 			import mx.collections.Sort;
-			import mx.collections.IViewCursor;
 			import mx.collections.ArrayCollection;
-			import com.j_nid.controls.EventNames;
-			import com.j_nid.utils.CairngormUtils;
-			import com.j_nid.models.JNidModelLocator;
-			import mx.containers.ViewStack;
-			import mx.events.IndexChangedEvent;
-			import mx.core.Application;
-			import com.j_nid.models.ProductType;
 			import com.j_nid.models.Product;
+			import com.j_nid.models.JNidModelLocator;
 			import mx.events.FlexEvent;
 			
 			[Bindable]
 			private var model:JNidModelLocator = JNidModelLocator.getInstance();
+			[Bindable]
+			private var products:ArrayCollection;
 			
 			private function init(e:FlexEvent):void {
-				
+				products = new ArrayCollection(model.products);
+				var sort:Sort = new Sort();
+				sort.fields = [new SortField("productType"), new SortField("name")];
+				products.sort = sort;
+				products.filterFunction =
+				    function(obj:Object):Boolean {
+	                    return Product(obj).isSale;
+	                };
+	            productList.dataProvider = products;
 			}
 			
-			private function filterIsSale(productArray:Array):ArrayCollection {
-				var products:ArrayCollection = new ArrayCollection(productArray);
-				products.filterFunction = function(obj:Object):Boolean {
-					return Product(obj).isSale;
-				};
-				var sort:Sort = new Sort();
-				sort.fields = [new SortField("type"), new SortField("name")];
-				products.sort = sort;
+			private function showHandler(e:FlexEvent):void {
 				products.refresh();
-				return products;
 			}
 		]]>
 	</mx:Script>
 	
 	<mx:TileList id="productList"
-		dataProvider="{filterIsSale(model.products.source)}"
-		columnWidth="245" rowHeight="40" selectable="false" direction="vertical" 
+		columnWidth="245"
+		rowHeight="40"
+		selectable="false"
+		direction="vertical" 
 		itemRenderer="com.j_nid.components.mxml.MainProductRenderer"
 		width="100%" height="100%"/>
 </mx:VBox>

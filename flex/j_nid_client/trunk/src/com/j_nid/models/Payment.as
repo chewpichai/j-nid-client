@@ -1,5 +1,6 @@
 package com.j_nid.models {
 	
+	[Bindable]
 	public class Payment extends Model {
 		
 		private var _person:Person;
@@ -21,6 +22,7 @@ package com.j_nid.models {
 		public function Payment() {
 			super();
 			amount = 0;
+			notation = "";
 			created = new Date();
 		}
 		

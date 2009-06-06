@@ -19,7 +19,7 @@
 			import mx.events.FlexEvent;
 			import com.j_nid.models.JNidModelLocator;
 			import com.j_nid.models.Person;
-			import com.j_nid.controls.EventNames;
+			import com.j_nid.events.JNidEvent;
 			import com.j_nid.utils.CairngormUtils;
 			import mx.controls.Alert;
 			import mx.events.ValidationResultEvent;
@@ -73,7 +73,7 @@
 					person.detail1 = detail1Field.text;
 					person.detail2 = detail2Field.text;
 					model.personToCreate = person;
-					CairngormUtils.dispatchEvent(EventNames.CREATE_PERSON, person);
+					CairngormUtils.dispatchEvent(JNidEvent.CREATE_PERSON, person);
 				} else {
 					Alert.show(errorMessage, "Error");
 				}
@@ -81,8 +81,8 @@
 			
 			private function isValid():Boolean {
 				errorMessage = "";
-				var validationResult:ValidationResultEvent = nameValidator.validate();
-				if (validationResult.type == ValidationResultEvent.INVALID) {
+				var event:ValidationResultEvent = nameValidator.validate();
+				if (event.type == ValidationResultEvent.INVALID) {
 					errorMessage += "Check name.\n";
 				}
 				return errorMessage.length == 0;
@@ -112,7 +112,7 @@
 				phoneNumber.type = phoneTypeField.selectedItem.data;
 				person.addPhoneNumber(phoneNumber);
 				if (person.id != 0) {
-					CairngormUtils.dispatchEvent(EventNames.CREATE_PHONE_NUMBER, phoneNumber);
+					CairngormUtils.dispatchEvent(JNidEvent.CREATE_PHONE_NUMBER, phoneNumber);
 				}
 				clearPhoneNumberForm();
 			}
@@ -133,7 +133,8 @@
 				bankAccount.bank = bankNameField.selectedItem.data;
 				person.addBankAccount(bankAccount);
 				if (person.id != 0) {
-					CairngormUtils.dispatchEvent(EventNames.CREATE_BANK_ACCOUNT, bankAccount);
+					CairngormUtils.dispatchEvent(
+					   JNidEvent.CREATE_BANK_ACCOUNT, bankAccount);
 				}
 				clearBankAccountForm();
 			}

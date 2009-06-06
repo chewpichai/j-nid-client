@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml"
 	creationComplete="createtionComplete(event)"
+	show="showHandler(event)"
 	width="100%" height="100%">
 	
 	<mx:Metadata>
@@ -10,7 +11,7 @@
 	<mx:Script>
 		<![CDATA[
 			import mx.resources.ResourceBundle;
-			import com.j_nid.utils.DateUtils;
+			import com.j_nid.utils.Utils;
 			import mx.collections.ListCollectionView;
 			import mx.binding.utils.ChangeWatcher;
 			import mx.events.FlexEvent;
@@ -20,38 +21,60 @@
 			import mx.collections.Sort;
 			import mx.collections.ArrayCollection;
 			import com.j_nid.utils.CairngormUtils;
-			import com.j_nid.controls.EventNames;
+			import com.j_nid.events.JNidEvent;
 			import com.j_nid.models.SupplyItem;
 			import com.j_nid.models.JNidModelLocator;
 			
 			[Bindable]
 			private var model:JNidModelLocator = JNidModelLocator.getInstance();
+			[Bindable]
+            private var people:ArrayCollection;
+            [Bindable]
+            private var supplies:ArrayCollection;
+            private var utils:Utils = Utils.getInstance();
 			
 			private function createtionComplete(e:FlexEvent):void {
+				// Create people.
+				people = new ArrayCollection(model.people);
+				var sort:Sort = new Sort();
+                sort.fields = [new SortField("name")];
+                people.sort = sort;
+                people.filterFunction = 
+                    function(obj:Object):Boolean {
+                        return Person(obj).isSupplier;
+                    };
+                supplierList.dataProvider = people;
+                // Create supplies.
+                supplies = new ArrayCollection(model.supplies);
+                sort = new Sort();
+                sort.fields = [new SortField("created", false, true)];
+                supplies.sort = sort;
+                supplies.filterFunction =
+                    function(obj:Object):Boolean {
+                        var supply:Supply = Supply(obj);
+                        return checkSupplier(supply.person) &&
+                               checkDate(supply.created);
+                    };
+                supplyList.dataProvider = supplies; 
+                // Add change watchers.
 				ChangeWatcher.watch(supplierList, "selectedIndex", filterSupply);
 				ChangeWatcher.watch(dateField, "selectedRanges", filterSupply);
-				initData();
 			}
+			
+			private function showHandler(e:FlexEvent):void {
+				people.refresh();
+                initData();
+            }
 			
 			private function initData():void {
 				var today:Date = new Date();
 				var rangeEnd:Date = new Date(today.fullYear, today.month, today.date);
-				var rangeStart:Date = DateUtils.moveDateByDay(rangeEnd, -7);
+				var rangeStart:Date = utils.moveDateByDay(rangeEnd, -7);
 				dateField.selectedRanges = [{rangeStart: rangeStart, rangeEnd: rangeEnd}];
 			}
 			
 			private function filterSupply(e:Event):void {
-				try {
-					var supplies:ListCollectionView = ListCollectionView(supplyList.dataProvider);
-					supplies.filterFunction = function(obj:Object):Boolean {
-						var supply:Supply = Supply(obj);
-						return checkSupplier(supply.person) &&
-							checkDate(supply.created);
-					};
-					supplies.refresh();
-				} catch (err:TypeError) {
-					
-				}
+				supplies.refresh();
 			}
 			
 			private function checkSupplier(person:Person):Boolean {
@@ -69,7 +92,7 @@
 					var start:Date = new Date(obj.rangeStart.time);
 					var end:Date = new Date(obj.rangeEnd.time);
 					// Move end date to the midnight of the next day.
-					end = DateUtils.moveDateByDay(end, 1);
+					end = utils.moveDateByDay(end, 1);
 					if (date >= start && date < end) {
 						return true;
 					}
@@ -77,28 +100,30 @@
 				return false;
 			}
 			
-			private function getSupplier(peopleArray:Array):ArrayCollection {
-				var suppliers:ArrayCollection = new ArrayCollection(peopleArray);
-				var sort:Sort = new Sort();
-				sort.fields = [new SortField("name")];
-				suppliers.sort = sort;
-				suppliers.filterFunction = function(obj:Object):Boolean {
-					return Person(obj).isSupplier;
-				};
-				suppliers.refresh();
-				return suppliers;
+			internal function removeSupplyItem(item:SupplyItem):void {
+				item.supply.removeSupplyItem(item);
+				model.removeSupplyItem(item);
+				CairngormUtils.dispatchEvent(JNidEvent.DELETE_SUPPLY_ITEM, item);
 			}
 			
-			internal function removeSupplyItem(item:SupplyItem):void {
-				item.supply.removeItem(item);
-				model.removeSupplyItem(item);
-				CairngormUtils.dispatchEvent(EventNames.DELETE_SUPPLY_ITEM, item);
-			}
+			private function searchChange(e:Event):void {
+                var sort:Sort = new Sort();
+                sort.fields = [new SortField("sortIndex"), new SortField("name")];
+                people.sort = sort;
+                people.filterFunction = 
+                    function(obj:Object):Boolean {
+                        var person:Person = Person(obj);
+                        person.sortIndex = 
+                             person.name.indexOf(supplierSearchField.text);
+                        return person.sortIndex != -1 && Person(obj).isSupplier;
+                    };
+                people.refresh();
+            }
 			
 			private function deleteSupplyClick(e:MouseEvent):void {
 				var supply:Supply = Supply(supplierList.selectedItem);
 				model.removeSupply(supply);
-				CairngormUtils.dispatchEvent(EventNames.DELETE_SUPPLY, supply);
+				CairngormUtils.dispatchEvent(JNidEvent.DELETE_SUPPLY, supply);
 			}
 			
 			private function itemListKeyDown(e:KeyboardEvent):void {
@@ -108,32 +133,31 @@
 				}
 			}
 			
-			private function formatNumber(item:Object,
-            								column:DataGridColumn):String {
-            	return numberFormatter.format(item.total);
+			private function formatPrice(item:Object,
+                                          column:DataGridColumn):String {
+                                          	
+            	return utils.formatPrice(item[column.dataField]);
             }
 		]]>
 	</mx:Script>
 	
 	<mx:DateFormatter id="dateFormatter" formatString="DD/MM/YY J:NN:SS"/>
 	
-	<mx:NumberFormatter id="numberFormatter"
-    	precision="2"/>
-	
 	<mx:Panel title="{resourceManager.getString('SupplyPage', 'Filter')}"
 		paddingTop="5"
 		width="220" height="100%">
 		
-		<mx:FormItem label="{resourceManager.getString('SupplyPage', 'SearchSupplier')}:"
+		<mx:FormItem label="{resourceManager.getString(
+		                          'SupplyPage', 'SearchSupplier')}:"
 			paddingRight="5" paddingLeft="5"
 			width="100%">
 			
-			<mx:TextInput id="searchSupplierField"
+			<mx:TextInput id="supplierSearchField"
+				change="searchChange(event)"
 				width="100%"/>
 		</mx:FormItem>
 		
 		<mx:List id="supplierList"
-			dataProvider="{getSupplier(model.people.source)}"
 			labelField="name"
 			borderThickness="0"
 			width="100%" height="100%"/>
@@ -147,7 +171,6 @@
 		width="250" height="100%">
 		
 		<mx:List id="supplyList" 
-			dataProvider="{model.supplies.source}" 
 			width="100%" height="100%"/>
 	</mx:Panel>
 	
@@ -190,14 +213,14 @@
 				<mx:DataGridColumn
 					headerText="{resourceManager.getString('SupplyPage', 'PricePerUnit')}"
 					dataField="pricePerUnit"
-					labelFunction="formatNumber"
+					labelFunction="formatPrice"
 					textAlign="right"
 					headerStyleName="dgHeader"
 					width="85"/>
 				<mx:DataGridColumn
 					headerText="{resourceManager.getString('SupplyPage', 'Total')}"
 					dataField="total"
-					labelFunction="formatNumber" 
+					labelFunction="formatPrice" 
 					textAlign="right"
 					headerStyleName="dgHeader"
 					width="85"/>

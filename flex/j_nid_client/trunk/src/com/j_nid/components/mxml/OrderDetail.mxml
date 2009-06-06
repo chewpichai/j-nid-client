@@ -13,6 +13,8 @@
 	
 	<mx:Script>
 		<![CDATA[
+			import com.j_nid.utils.Utils;
+			import mx.collections.ArrayCollection;
 			import com.j_nid.models.Person;
 			import mx.resources.ResourceBundle;
 			import mx.managers.PopUpManager;
@@ -32,6 +34,8 @@
 			public var customer:Person;
 			[Bindable]
 			public var model:JNidModelLocator = JNidModelLocator.getInstance();
+			[Bindable]
+			private var utils:Utils = Utils.getInstance();
 			
 			private function dragEnterListener(e:DragEvent):void {
 				DragManager.acceptDragDrop(DataGrid(e.currentTarget));
@@ -50,18 +54,20 @@
 						return;
 					}
 				}
-				order.addItem(item);
+				order.addOrderItem(item);
 				orderItemList.verticalScrollPosition = 
-						orderItemList.maxVerticalScrollPosition;
+                    orderItemList.maxVerticalScrollPosition;
 			}
 			
 			private function clearListener(e:MouseEvent):void {
-				order.clearItems();
+				order.clearOrderItems();
 			}
 			
 			private function removeListener(e:MouseEvent):void {
 				var item:OrderItem = OrderItem(orderItemList.selectedItem);
-				order.removeItem(item);
+				if (item != null) {
+				    order.removeOrderItem(item);
+				}
 			}
 			
 			private function processListener(e:MouseEvent):void {
@@ -87,13 +93,10 @@
 			private function formatNumber(item:Object,
             							  column:DataGridColumn):String {
             							  	
-            	return numberFormatter.format(item.total);
+            	return utils.formatPrice(item[column.dataField]);
             }
 		]]>
 	</mx:Script>
-	
-	<mx:NumberFormatter id="numberFormatter"
-    	precision="2"/>
 	
 	<mx:HBox width="100%" verticalAlign="middle">
 		
@@ -101,7 +104,7 @@
 		
 		<adobe:AutoComplete id="personFiled" 
 			labelField="name" 
-			dataProvider="{model.people.source}"
+			dataProvider="{model.people}"
 			typedText="{customer.name}"
 			width="100%"/>
 	</mx:HBox>
@@ -176,8 +179,8 @@
 	</mx:DataGrid>
 	
 	<mx:Text id="totalTxt" 
-		text="{resourceManager.getString('MakeOrder', 'Total')} 
-				{numberFormatter.format(order.total)}" 
+		text="{resourceManager.getString('MakeOrder', 'Summary',
+		              [utils.formatPrice(order.total)])}" 
 		textAlign="right" 
 		paddingRight="10"
 		width="100%" height="30"/>
@@ -188,6 +191,7 @@
 		<mx:Button label="{resourceManager.getString('MakeOrder', 'Clear')}"
 			click="clearListener(event)"/>
 		<mx:Button label="{resourceManager.getString('MakeOrder', 'Remove')}"
+			enabled="{orderItemList.selectedItem != null}"
 			click="removeListener(event)"/>
 		<mx:Button label="{resourceManager.getString('MakeOrder', 'Process')}"
 			click="processListener(event)"/>

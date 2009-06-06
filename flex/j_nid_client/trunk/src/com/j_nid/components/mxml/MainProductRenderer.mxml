@@ -35,7 +35,7 @@
 	<mx:Fade id="fadeIn" alphaFrom="0" alphaTo="0.8"/>
 	<mx:Fade id="fadeOut" alphaFrom="0.8" alphaTo="0"/>
 	
-	<mx:Label text="{data.name}" color="{data.type.color}" 
+	<mx:Label text="{data.name}" color="{data.productType.color}" 
 		width="100%" textAlign="left"/>
 	<mx:Label id="costLbl" text="{data.costPerUnit}" textAlign="right" 
 		alpha="0" rollOverEffect="{fadeIn}" rollOutEffect="{fadeOut}"/>

@@ -9,16 +9,31 @@
 	
 	<mx:Script>
 		<![CDATA[
+			import com.j_nid.events.JNidEvent;
+			import com.j_nid.utils.CairngormUtils;
+			import com.j_nid.models.JNidModelLocator;
+			import flash.utils.describeType;
 			import mx.core.Application;
 			import mx.resources.ResourceBundle;
 			
+			[Bindable]
+			private var model:JNidModelLocator = JNidModelLocator.getInstance();
+			
 			private function loginBtnClick(e:MouseEvent):void {
-				Application.application.currentState = "main";
-			}
+                var obj:Object = {username: usernameField.text,
+                                  password: passwordField.text};
+                CairngormUtils.dispatchEvent(JNidEvent.LOG_IN, obj);
+                clearForm();
+            }
+            
+            private function clearForm():void {
+            	usernameField.text = "";
+                passwordField.text = "";
+            }
 		]]>
 	</mx:Script>
 	
-	<mx:Panel title="{resourceManager.getString('LoginPage', 'Login')}">
+	<mx:Panel title="{resourceManager.getString('LoginPage', 'LogIn')}">
 		
 		<mx:Form>
 			<mx:FormItem
@@ -26,6 +41,7 @@
 				width="100%">
 				
 				<mx:TextInput id="usernameField"
+					text="admin"
 					width="100%"/>
 			</mx:FormItem>
 			
@@ -34,6 +50,8 @@
 				width="100%">
 				
 				<mx:TextInput id="passwordField"
+					text="123456"
+					displayAsPassword="true"
 					width="100%"/>
 			</mx:FormItem>
 			
@@ -43,7 +61,7 @@
 			<mx:Spacer width="100%"/>
 			<mx:Button
 				label="{resourceManager.getString(
-											'LoginPage', 'Submit')}"
+									'LoginPage', 'Submit')}"
 				click="loginBtnClick(event)"/>
 		</mx:ControlBar>
 	</mx:Panel>

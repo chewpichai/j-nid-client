@@ -2,6 +2,7 @@
 <mx:VBox
 	xmlns:mx="http://www.adobe.com/2006/mxml"
 	xmlns:jn="com.j_nid.validators.*"
+	show="showHandler(event)"
 	creationComplete="init(event)"
 	width="100%" height="100%">
 	
@@ -11,10 +12,10 @@
 	
 	<mx:Script>
 		<![CDATA[
+			import com.j_nid.events.JNidEvent;
 			import com.j_nid.components.mxml.forms.PersonForm;
 			import mx.core.Application;
 			import mx.managers.PopUpManager;
-			import com.j_nid.controls.EventNames;
 			import com.j_nid.utils.CairngormUtils;
 			import com.j_nid.models.JNidModelLocator;
 			import mx.collections.SortField;
@@ -29,53 +30,65 @@
 			private var errorMessage:String;
 			[Bindable]
 			public var model:JNidModelLocator = JNidModelLocator.getInstance();
+			[Bindable]
+            private var people:ArrayCollection;
 			private var personForm:PersonForm;
 			
 			private function init(e:FlexEvent):void {
-				
+				people = new ArrayCollection(model.people);
+                var sort:Sort = new Sort();
+                sort.fields = [new SortField("name")];
+                people.sort = sort;
+                personList.dataProvider = people;
+                // Add event listeners.
+                model.addEventListener(JNidEvent.PERSON_CREATED, personCreated);
 			}
 			
-			private function getPeople(personArray:Array):ArrayCollection {
-				var people:ArrayCollection = new ArrayCollection(personArray);
-				var sort:Sort = new Sort();
-				sort.fields = [new SortField("name")];
-				people.sort = sort;
+			private function showHandler(e:FlexEvent):void {
 				people.refresh();
-				return people;
+			}
+			
+			private function personCreated(e:JNidEvent):void {
+				closeForm();
+				var person:Person = Person(e.data);
+				personList.selectedItem = person;
 			}
 			
 			private function searchFieldChangeListener(e:Event):void {
-				personList.dataProvider.filterFunction = function(item:Object):Boolean {
-					var person:Person = Person(item);
-					person.sortIndex = person.name.indexOf(searchField.text);
-					return person.sortIndex != -1;
-				};
 				var sort:Sort = new Sort();
 				sort.fields = [new SortField("sortIndex"), new SortField("name")];
-				personList.dataProvider.sort = sort;
-				personList.dataProvider.refresh();
+				people.sort;
+				people.filterFunction =
+				    function(item:Object):Boolean {
+                        var person:Person = Person(item);
+                        person.sortIndex = person.name.indexOf(searchField.text);
+                        return person.sortIndex != -1;
+                    };
+               people.refresh();
 			}
 			
 			internal function updatePerson(person:Person):void {
-				CairngormUtils.dispatchEvent(EventNames.UPDATE_PERSON, person);
+				CairngormUtils.dispatchEvent(JNidEvent.UPDATE_PERSON, person);
 			}
 			
 			private function newClickListener(e:MouseEvent):void {
 				personForm = PersonForm(PopUpManager.createPopUp(
-					Application(Application.application),
-					PersonForm, true));
+					                           Application(
+					                               Application.application),
+					                           PersonForm, true));
 				personForm.person = new Person();
 			}
 			
 			public function closeForm():void {
 				personForm.close();
-				personList.dataProvider.refresh();
+				people.refresh();
 			}
 			
 			public function personListDoubleClick(e:MouseEvent):void {
 				personForm = PersonForm(PopUpManager.createPopUp(
-					Application(Application.application),
-					PersonForm, true));
+					                           Application(
+					                               Application.application),
+					                           PersonForm, true));
 				personForm.person = Person(personList.selectedItem);
 			}
 		]]>
@@ -96,8 +109,7 @@
 			click="newClickListener(event)"/>
 	</mx:HBox>
 	
-	<mx:DataGrid id="personList" 
-		dataProvider="{getPeople(model.people.source)}"
+	<mx:DataGrid id="personList"
 		doubleClickEnabled="true"
 		doubleClick="personListDoubleClick(event)"
 		width="100%" height="100%">

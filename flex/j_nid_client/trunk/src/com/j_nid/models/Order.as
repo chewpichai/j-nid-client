@@ -1,8 +1,6 @@
 package com.j_nid.models {
-	
-	import com.j_nid.utils.DateUtils;
-	
-	import mx.collections.ArrayCollection;
+
+    import mx.collections.ArrayCollection;
 	import mx.collections.IViewCursor;
 	import mx.events.CollectionEvent;
 	
@@ -11,11 +9,11 @@ package com.j_nid.models {
 		
 		private var _person:Person;
 		private var _personID:int;
-		private var _notation:String;
-		private var _paidTotal:Number;
-		private var _created:Date;
-		private var _total:Number;
-		private var _orderItems:ArrayCollection;
+		public var notation:String;
+		public var paidTotal:Number;
+		public var created:Date;
+		public var total:Number;
+		public var orderItems:ArrayCollection;
 		
 		public static function fromXML(obj:XML):Order {
     		var order:Order = new Order();
@@ -35,7 +33,7 @@ package com.j_nid.models {
 			created = new Date();
 			orderItems = new ArrayCollection();
 			orderItems.addEventListener(
-					CollectionEvent.COLLECTION_CHANGE, itemChangeListener);
+                CollectionEvent.COLLECTION_CHANGE, itemChangeListener);
 		}
 		
 		private function itemChangeListener(evt:CollectionEvent):void {
@@ -47,21 +45,21 @@ package com.j_nid.models {
 			}
 		}
 		
-		public function addItem(item:OrderItem):void {
+		public function addOrderItem(item:OrderItem):void {
 			item.order = this;
 			orderItems.addItem(item);
 		}
 		
-		public function removeItem(item:OrderItem):void {
+		public function removeOrderItem(item:OrderItem):void {
 			item.order = null;
 			orderItems.removeItemAt(orderItems.getItemIndex(item));
 		}
 		
-		public function clearItems():void {
+		public function clearOrderItems():void {
 			orderItems.removeAll();
 		}
 		
-		public function getItemAt(obj:int):OrderItem {
+		public function getOrderItemAt(obj:int):OrderItem {
 			return OrderItem(orderItems.getItemAt(obj));
 		}
 		
@@ -70,14 +68,13 @@ package com.j_nid.models {
 			xml.person_id = person.id;
 			xml.notation = notation;
 			xml.paid_total = paidTotal;
-			xml.created = DateUtils.format(created);
+			xml.created = utils.formatDate(created);
 			return xml;
 		}
 		
 		override public function toString():String {
 			return person.name + " [" + 
-				DateUtils.format(created, "DD MMM YYYY") +
-				"]";
+				   utils.formatDate(created, "DD MMM YYYY") + "]";
 		}
 		
 /* ----- get-set function. ------------------------------------------------- */
@@ -103,45 +100,9 @@ package com.j_nid.models {
 			_personID = obj;
 		}
 		
-		public function get notation():String {
-			return _notation;
-		}
-
-		public function set notation(obj:String):void {
-			_notation = obj;
-		}
-		
-		public function get paidTotal():Number {
-			return _paidTotal;
-		}
-		
-		public function set paidTotal(obj:Number):void {
-			_paidTotal = obj;
-		}
-				
-		public function get created():Date {
-			return _created;
-		}
-
-		public function set created(obj:Date):void {
-			_created = obj;
-		}
-		
-		public function get total():Number {
-			return _total;
-		}
-		
-		public function set total(obj:Number):void {
-			_total = obj;
-		}
-		
-		public function set orderItems(obj:ArrayCollection):void {
-			_orderItems = obj;
-		}
-		
-		public function get orderItems():ArrayCollection {
-			return _orderItems;
-		}
+		public function set isPaid(obj:Boolean):void {
+            
+        }
 		
 		public function get isPaid():Boolean {
 			return total <= paidTotal;

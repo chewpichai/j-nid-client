@@ -2,6 +2,7 @@ package com.j_nid.controls {
 	
 	import com.adobe.cairngorm.control.FrontController;
 	import com.j_nid.commands.*;
+	import com.j_nid.events.JNidEvent;
 
 	public class JNidController extends FrontController	{
 		
@@ -10,49 +11,53 @@ package com.j_nid.controls {
 		}
 		
 		private function initializeCommands():void {
+			// Log in and log out commands.
+			addCommand(JNidEvent.LOG_IN, LogInCommand);
+			addCommand(JNidEvent.LOG_OUT, LogOutCommand);
 			// ProductType commands.
-			addCommand(EventNames.LIST_PRODUCT_TYPE, ListProductTypeCommand);
-			addCommand(EventNames.CREATE_PRODUCT_TYPE, CreateProductTypeCommand);
-			addCommand(EventNames.UPDATE_PRODUCT_TYPE, UpdateProductTypeCommand);
-//			addCommand(EventNames.DELETE_PRODUCT_TYPE, DeleteProductTypeCommand);
+			addCommand(JNidEvent.LIST_PRODUCT_TYPE, ListProductTypeCommand);
+			addCommand(JNidEvent.CREATE_PRODUCT_TYPE, CreateProductTypeCommand);
+			addCommand(JNidEvent.UPDATE_PRODUCT_TYPE, UpdateProductTypeCommand);
+//			addCommand(JNidEvent.DELETE_PRODUCT_TYPE, DeleteProductTypeCommand);
 			// Product commands.
-			addCommand(EventNames.LIST_PRODUCT, ListProductCommand);
-			addCommand(EventNames.CREATE_PRODUCT, CreateProductCommand);
-			addCommand(EventNames.UPDATE_PRODUCT, UpdateProductCommand);
-//			addCommand(EventNames.DELETE_PRODUCT, DeleteProductCommand);
+			addCommand(JNidEvent.LIST_PRODUCT, ListProductCommand);
+			addCommand(JNidEvent.CREATE_PRODUCT, CreateProductCommand);
+			addCommand(JNidEvent.UPDATE_PRODUCT, UpdateProductCommand);
+//			addCommand(JNidEvent.DELETE_PRODUCT, DeleteProductCommand);
 			// Person commands.
-			addCommand(EventNames.LIST_PERSON, ListPersonCommand);
-			addCommand(EventNames.CREATE_PERSON, CreatePersonCommand);
-			addCommand(EventNames.UPDATE_PERSON, UpdatePersonCommand);
+			addCommand(JNidEvent.LIST_PERSON, ListPersonCommand);
+			addCommand(JNidEvent.CREATE_PERSON, CreatePersonCommand);
+			addCommand(JNidEvent.UPDATE_PERSON, UpdatePersonCommand);
 			// BankAccount commands.
-			addCommand(EventNames.LIST_BANK_NAME, ListBankNameCommand);
-			addCommand(EventNames.LIST_BANK_ACCOUNT, ListBankAccountCommand);
-			addCommand(EventNames.CREATE_BANK_ACCOUNT, CreateBankAccountCommand);
+			addCommand(JNidEvent.LIST_BANK_NAME, ListBankNameCommand);
+			addCommand(JNidEvent.LIST_BANK_ACCOUNT, ListBankAccountCommand);
+			addCommand(JNidEvent.CREATE_BANK_ACCOUNT, CreateBankAccountCommand);
 			// PhoneNumber commands.
-			addCommand(EventNames.LIST_PHONE_TYPE, ListPhoneTypeCommand);
-			addCommand(EventNames.LIST_PHONE_NUMBER, ListPhoneNumberCommand);
-			addCommand(EventNames.CREATE_PHONE_NUMBER, CreatePhoneNumberCommand);
+			addCommand(JNidEvent.LIST_PHONE_TYPE, ListPhoneTypeCommand);
+			addCommand(JNidEvent.LIST_PHONE_NUMBER, ListPhoneNumberCommand);
+			addCommand(JNidEvent.CREATE_PHONE_NUMBER, CreatePhoneNumberCommand);
 			// Order commands.
-			addCommand(EventNames.LIST_ORDER, ListOrderCommand);
-			addCommand(EventNames.CREATE_ORDER, CreateOrderCommand);
-			addCommand(EventNames.UPDATE_ORDER, UpdateOrderCommand);
-			addCommand(EventNames.DELETE_ORDER, DeleteOrderCommand);
+			addCommand(JNidEvent.LIST_ORDER, ListOrderCommand);
+			addCommand(JNidEvent.CREATE_ORDER, CreateOrderCommand);
+			addCommand(JNidEvent.UPDATE_ORDER, UpdateOrderCommand);
+			addCommand(JNidEvent.DELETE_ORDER, DeleteOrderCommand);
+			addCommand(JNidEvent.ORDER_CREATED, OrderCreatedCommand);
 			// OrderItem commands.
-			addCommand(EventNames.LIST_ORDER_ITEM, ListOrderItemCommand);
-			addCommand(EventNames.CREATE_ORDER_ITEM, CreateOrderItemCommand);
-			addCommand(EventNames.DELETE_ORDER_ITEM, DeleteOrderItemCommand);
+			addCommand(JNidEvent.LIST_ORDER_ITEM, ListOrderItemCommand);
+			addCommand(JNidEvent.CREATE_ORDER_ITEM, CreateOrderItemCommand);
+			addCommand(JNidEvent.DELETE_ORDER_ITEM, DeleteOrderItemCommand);
 			// Payment commands.
-			addCommand(EventNames.LIST_PAYMENT, ListPaymentCommand);
-			addCommand(EventNames.CREATE_PAYMENT, CreatePaymentCommand);
+			addCommand(JNidEvent.LIST_PAYMENT, ListPaymentCommand);
+			addCommand(JNidEvent.CREATE_PAYMENT, CreatePaymentCommand);
 			// Supply commands.
-			addCommand(EventNames.LIST_SUPPLY, ListSupplyCommand);
-			addCommand(EventNames.CREATE_SUPPLY, CreateSupplyCommand);
-			addCommand(EventNames.UPDATE_SUPPLY, UpdateSupplyCommand);
-			addCommand(EventNames.DELETE_SUPPLY, DeleteSupplyCommand);
+			addCommand(JNidEvent.LIST_SUPPLY, ListSupplyCommand);
+			addCommand(JNidEvent.CREATE_SUPPLY, CreateSupplyCommand);
+			addCommand(JNidEvent.UPDATE_SUPPLY, UpdateSupplyCommand);
+			addCommand(JNidEvent.DELETE_SUPPLY, DeleteSupplyCommand);
 			// SupplyItem commands.
-			addCommand(EventNames.LIST_SUPPLY_ITEM, ListSupplyItemCommand);
-			addCommand(EventNames.CREATE_SUPPLY_ITEM, CreateSupplyItemCommand);
-			addCommand(EventNames.DELETE_SUPPLY_ITEM, DeleteSupplyItemCommand);
+			addCommand(JNidEvent.LIST_SUPPLY_ITEM, ListSupplyItemCommand);
+			addCommand(JNidEvent.CREATE_SUPPLY_ITEM, CreateSupplyItemCommand);
+			addCommand(JNidEvent.DELETE_SUPPLY_ITEM, DeleteSupplyItemCommand);
 		}
 	}
 }

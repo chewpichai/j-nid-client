@@ -11,7 +11,7 @@
 	
 	<mx:Script>
 		<![CDATA[
-			import com.j_nid.controls.EventNames;
+			import com.j_nid.events.JNidEvent;
 			import com.j_nid.models.JNidModelLocator;
 			import com.j_nid.models.ProductType;
 			import com.j_nid.utils.CairngormUtils;
@@ -57,10 +57,10 @@
 					productType.color = colorField.selectedColor;
 					if (productType.id) {
 						CairngormUtils.dispatchEvent(
-							EventNames.UPDATE_PRODUCT_TYPE, productType);
+							JNidEvent.UPDATE_PRODUCT_TYPE, productType);
 					} else {
 						CairngormUtils.dispatchEvent(
-							EventNames.CREATE_PRODUCT_TYPE, productType);
+							JNidEvent.CREATE_PRODUCT_TYPE, productType);
 					}
 					close();
 				}

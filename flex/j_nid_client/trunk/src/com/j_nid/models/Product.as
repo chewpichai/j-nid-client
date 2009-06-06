@@ -4,8 +4,8 @@ package com.j_nid.models {
 	public class Product extends Model {
 		
 		private var _name:String;
-    	private var _type:ProductType;
-    	private var _typeID:int;
+    	private var _productType:ProductType;
+    	private var _productTypeID:int;
     	private var _unit:uint;
     	private var _pricePerUnit:Number;
     	private var _costPerUnit:Number;
@@ -14,7 +14,7 @@ package com.j_nid.models {
     	public static function fromXML(obj:XML):Product {
     		var product:Product = new Product();
     		product.id = obj.id;
-    		product.typeID = obj.type_id;
+    		product.productTypeID = obj.type_id;
 			product.name = obj.name;
 			product.unit = obj.unit;
 			product.costPerUnit = obj.cost_per_unit;
@@ -30,7 +30,7 @@ package com.j_nid.models {
 		public function toXML():XML {
 			var xml:XML = <product/>
 			xml.name = name;
-			xml.type_id = typeID;
+			xml.type_id = productTypeID;
 			xml.unit = unit;
 			xml.price_per_unit = pricePerUnit;
 			xml.cost_per_unit = costPerUnit;
@@ -52,26 +52,26 @@ package com.j_nid.models {
 			return _name;
 		}
 		
-		public function set type(obj:ProductType):void {
-			if (_type != obj) {
-				if (_type != null) {
-					_type.removeProduct(this);
+		public function set productType(obj:ProductType):void {
+			if (_productType != obj) {
+				if (_productType != null) {
+					_productType.removeProduct(this);
 				}
-				_type = obj;
-				_typeID = obj.id;
+				_productType = obj;
+				_productTypeID = obj.id;
 			}
 		}
 		
-		public function get type():ProductType {
-			return _type;
+		public function get productType():ProductType {
+			return _productType;
 		}
 		
-		public function set typeID(obj:int):void {
-			_typeID = obj;
+		public function set productTypeID(obj:int):void {
+			_productTypeID = obj;
 		}
 		
-		public function get typeID():int {
-			return _typeID;
+		public function get productTypeID():int {
+			return _productTypeID;
 		}
 		
 		public function set unit(obj:uint):void {
