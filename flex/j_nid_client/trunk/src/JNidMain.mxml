@@ -1,106 +1,124 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:WindowedApplication
-	xmlns:mx="http://www.adobe.com/2006/mxml"
-	xmlns:jn="com.j_nid.components.mxml.*" 
-	xmlns:control="com.j_nid.controls.*"
-	layout="vertical" 
-	initialize="init(event)"
-	applicationComplete="applicationComplete(event)"
-	paddingBottom="0"
-	verticalScrollPolicy="off"
-	horizontalScrollPolicy="off">
-	
-	<mx:Style source="css/styles.css"/>
-	
-	<mx:Metadata>
-		[ResourceBundle("MainMenu")]
-	</mx:Metadata>
-	
-	<mx:Script>
-		<![CDATA[
-			import com.j_nid.events.JNidEvent;
-			import com.j_nid.utils.CairngormUtils;
-			import mx.events.FlexEvent;
-			import mx.resources.ResourceBundle;
-			
-			[Bindable]
-			private var currentYear:Number = new Date().fullYear;
-			
-			private function init(e:FlexEvent):void {
-				CairngormUtils.dispatchEvent(JNidEvent.LIST_PRODUCT_TYPE);
-				CairngormUtils.dispatchEvent(JNidEvent.LIST_PRODUCT);
-				CairngormUtils.dispatchEvent(JNidEvent.LIST_PERSON);
-				CairngormUtils.dispatchEvent(JNidEvent.LIST_BANK_ACCOUNT);
-				CairngormUtils.dispatchEvent(JNidEvent.LIST_ORDER);
-				CairngormUtils.dispatchEvent(JNidEvent.LIST_ORDER_ITEM);
-				CairngormUtils.dispatchEvent(JNidEvent.LIST_SUPPLY);
-				CairngormUtils.dispatchEvent(JNidEvent.LIST_SUPPLY_ITEM);
-				CairngormUtils.dispatchEvent(JNidEvent.LIST_PHONE_NUMBER);
-				CairngormUtils.dispatchEvent(JNidEvent.LIST_PAYMENT);
-				CairngormUtils.dispatchEvent(JNidEvent.LIST_BANK_NAME);
-				CairngormUtils.dispatchEvent(JNidEvent.LIST_PHONE_TYPE);
-			}
-			
-			private function applicationComplete(e:FlexEvent):void {
-				stage.nativeWindow.maximize();
-			}
-		]]>
-	</mx:Script>
-	
-	<mx:states>
-		<mx:State name="main">
-			
-			<mx:RemoveChild target="{loginPage}"/>
-			
-			<mx:AddChild relativeTo="{footer}" position="before">
-				<mx:target>
-					<mx:ViewStack id="mainView"
-						creationPolicy="all"
-						width="100%" height="100%">
-						
-						<jn:MainPage id="mainPage"
-							label="{resourceManager.getString(
-							             'MainMenu', 'Main')}"/>
-						<jn:MakeOrderPage id="sellPage"
-							label="{resourceManager.getString(
-							             'MainMenu', 'MakeOrder')}"/>
-						<jn:MakeSupplyPage id="buyPage"
-							label="{resourceManager.getString(
-							             'MainMenu', 'MakeSupply')}"/>
-						<jn:ProductPage id="productPage"
-							label="{resourceManager.getString(
-							             'MainMenu', 'Product')}"/>
-						<jn:PersonPage id="personPage"
-							label="{resourceManager.getString(
-							             'MainMenu', 'Person')}"/>
-						<jn:OrderPage id="orderPage"
-							label="{resourceManager.getString(
-							             'MainMenu', 'Order')}"/>
-						<jn:SupplyPage id="supplyPage"
-							label="{resourceManager.getString(
-							             'MainMenu', 'Supply')}"/>
-						<jn:PaymentPage id="paymentPage"
-							label="{resourceManager.getString(
-							             'MainMenu', 'Payment')}"/>
-					</mx:ViewStack>
-				</mx:target>
-			</mx:AddChild>
-			
-            <mx:SetProperty target="{mainMenu}"
-            	name="visible" value="true"/>
+    xmlns:mx="http://www.adobe.com/2006/mxml"
+    xmlns:jn="com.j_nid.components.mxml.*" 
+    xmlns:control="com.j_nid.controls.*"
+    layout="vertical" 
+    initialize="init(event)"
+    applicationComplete="applicationComplete(event)"
+    paddingBottom="0"
+    verticalScrollPolicy="off"
+    horizontalScrollPolicy="off">
+    
+    <mx:Style source="css/styles.css"/>
+    
+    <mx:Metadata>
+        [ResourceBundle("MainMenu")]
+    </mx:Metadata>
+    
+    <mx:Script>
+        <![CDATA[
+            import com.j_nid.events.JNidEvent;
+            import com.j_nid.utils.CairngormUtils;
+            import mx.events.FlexEvent;
+            import mx.resources.ResourceBundle;
             
-            <mx:SetProperty target="{mainMenu}"
-            	name="includeInLayout" value="true"/>
-		</mx:State>
-		
-		<mx:State name="loading">
-			<mx:RemoveChild target="{loginPage}"/>
-		</mx:State>
-	</mx:states>
-	
-	<control:JNidController/>
-	
-	<mx:ApplicationControlBar id="mainMenu"
+            [Bindable]
+            private var currentYear:Number = new Date().fullYear;
+            
+            private function init(e:FlexEvent):void {
+                CairngormUtils.dispatchEvent(JNidEvent.LIST_PRODUCT_TYPE);
+                CairngormUtils.dispatchEvent(JNidEvent.LIST_PRODUCT);
+                CairngormUtils.dispatchEvent(JNidEvent.LIST_PERSON);
+                CairngormUtils.dispatchEvent(JNidEvent.LIST_BANK_ACCOUNT);
+                CairngormUtils.dispatchEvent(JNidEvent.LIST_ORDER);
+                CairngormUtils.dispatchEvent(JNidEvent.LIST_ORDER_ITEM);
+                CairngormUtils.dispatchEvent(JNidEvent.LIST_SUPPLY);
+                CairngormUtils.dispatchEvent(JNidEvent.LIST_SUPPLY_ITEM);
+                CairngormUtils.dispatchEvent(JNidEvent.LIST_PHONE_NUMBER);
+                CairngormUtils.dispatchEvent(JNidEvent.LIST_PAYMENT);
+                CairngormUtils.dispatchEvent(JNidEvent.LIST_BANK_NAME);
+                CairngormUtils.dispatchEvent(JNidEvent.LIST_PHONE_TYPE);
+                
+                /*var timer:Timer = new Timer(1000);
+                timer.addEventListener(TimerEvent.TIMER, function(e:TimerEvent):void {
+                	status = Math.ceil(System.totalMemory / 1000000) + "M";
+                });
+                timer.start();*/
+            }
+            
+            private function applicationComplete(e:FlexEvent):void {
+                stage.nativeWindow.maximize();
+            }
+        ]]>
+    </mx:Script>
+    
+    <mx:states>
+        <mx:State name="main">
+            
+            <mx:RemoveChild target="{loginPage}"/>
+            
+            <mx:AddChild relativeTo="{footer}" position="before">
+                <mx:target>
+                    <mx:ViewStack id="mainView"
+                        creationPolicy="all"
+                        width="100%"
+                        height="100%">
+                        
+                        <jn:MainPage id="mainPage"
+                            label="{resourceManager.getString(
+                                        'MainMenu', 'Main')}"/>
+                        
+                        <jn:MakeOrderPage id="sellPage"
+                            label="{resourceManager.getString(
+                                        'MainMenu', 'MakeOrder')}"/>
+                        
+                        <jn:MakeSupplyPage id="buyPage"
+                            label="{resourceManager.getString(
+                                        'MainMenu', 'MakeSupply')}"/>
+                        
+                        <jn:ProductPage id="productPage"
+                            label="{resourceManager.getString(
+                                        'MainMenu', 'Product')}"/>
+                        
+                        <jn:PersonPage id="personPage"
+                            label="{resourceManager.getString(
+                                        'MainMenu', 'Person')}"/>
+                        
+                        <jn:OrderPage id="orderPage"
+                            label="{resourceManager.getString(
+                                        'MainMenu', 'Order')}"/>
+                        
+                        <jn:SupplyPage id="supplyPage"
+                            label="{resourceManager.getString(
+                                        'MainMenu', 'Supply')}"/>
+                        
+                        <jn:PaymentPage id="paymentPage"
+                            label="{resourceManager.getString(
+                                        'MainMenu', 'Payment')}"/>
+                    </mx:ViewStack>
+                </mx:target>
+            </mx:AddChild>
+            
+            <mx:SetProperty
+            	target="{mainMenu}"
+                name="visible"
+                value="true"/>
+            
+            <mx:SetProperty
+            	target="{mainMenu}"
+                name="includeInLayout"
+                value="true"/>
+        </mx:State>
+        
+        <mx:State name="loading">
+            <mx:RemoveChild target="{loginPage}"/>
+        </mx:State>
+    </mx:states>
+    
+    <control:JNidController/>
+    
+    <mx:ApplicationControlBar id="mainMenu"
         dock="true"
         paddingTop="0" paddingBottom="0"
         paddingLeft="0"
@@ -116,14 +134,15 @@
         
         <mx:LinkButton
            label="{resourceManager.getString(
-                       'MainMenu', 'LogOut')}"
+                        'MainMenu', 'LogOut')}"
            click="currentState=null"/>
     </mx:ApplicationControlBar>
-	
-	<jn:LoginPage id="loginPage" 
-		width="100%" height="100%"/>
-	
-	<mx:Label id="footer"
-		text="Copyright (c) 2008-{currentYear} ChewLab. All rights reserved."
-		styleName="copyright"/>
+    
+    <jn:LoginPage id="loginPage" 
+        width="100%"
+        height="100%"/>
+    
+    <mx:Label id="footer"
+        text="Copyright (c) 2008-{currentYear} ChewLab. All rights reserved."
+        styleName="copyright"/>
 </mx:WindowedApplication>

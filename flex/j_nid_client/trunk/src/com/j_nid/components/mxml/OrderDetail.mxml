@@ -1,199 +1,247 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:Panel title="{resourceManager.getString('MakeOrder', 'Order')}"
-	xmlns:mx="http://www.adobe.com/2006/mxml" 
-	xmlns:jn="com.j_nid.components.mxml.*"
-	xmlns:adobe="http://www.adobe.com/2006/fc"
-	layout="vertical" 
-	paddingLeft="5" paddingRight="5"
-	paddingTop="5">
-	
-	<mx:Metadata>
-		[ResourceBundle("MakeOrder")]
-	</mx:Metadata>
-	
-	<mx:Script>
-		<![CDATA[
-			import com.j_nid.utils.Utils;
-			import mx.collections.ArrayCollection;
-			import com.j_nid.models.Person;
-			import mx.resources.ResourceBundle;
-			import mx.managers.PopUpManager;
-			import mx.managers.DragManager;
-			import mx.core.Application;
-			import mx.controls.Alert;
-			import com.j_nid.components.mxml.forms.OrderProcessForm;
-			import com.j_nid.models.Product;
-			import com.j_nid.models.Order;
-			import com.j_nid.models.JNidModelLocator;
-			import com.j_nid.models.OrderItem;
-			import mx.events.DragEvent;
-			
-			[Bindable]
-			public var order:Order;
-			[Bindable]
-			public var customer:Person;
-			[Bindable]
-			public var model:JNidModelLocator = JNidModelLocator.getInstance();
-			[Bindable]
-			private var utils:Utils = Utils.getInstance();
-			
-			private function dragEnterListener(e:DragEvent):void {
-				DragManager.acceptDragDrop(DataGrid(e.currentTarget));
-			}
-			
-			private function dragDropListener(e:DragEvent):void {
-				var product:Product = e.dragSource.dataForFormat("items")[0];
-				var orderItem:OrderItem = new OrderItem(product);
-				addOrderItem(orderItem);
-			}
-			
-			public function addOrderItem(item:OrderItem):void {
-				for each (var obj:OrderItem in order.orderItems) {
-					if (item.product.id == obj.product.id) {
-						obj.unit += item.unit;
-						return;
-					}
-				}
-				order.addOrderItem(item);
-				orderItemList.verticalScrollPosition = 
-                    orderItemList.maxVerticalScrollPosition;
-			}
-			
-			private function clearListener(e:MouseEvent):void {
-				order.clearOrderItems();
-			}
-			
-			private function removeListener(e:MouseEvent):void {
-				var item:OrderItem = OrderItem(orderItemList.selectedItem);
-				if (item != null) {
-				    order.removeOrderItem(item);
-				}
-			}
-			
-			private function processListener(e:MouseEvent):void {
-				if (isValid()) {
-					order.person = model.getPersonByName(personFiled.text);
-					order.notation = notationField.text;
-					var orderProcessForm:OrderProcessForm = OrderProcessForm(
-						PopUpManager.createPopUp(
-							Application(Application.application), 
-							OrderProcessForm, true)
-					);
-					orderProcessForm.order = order;
-				} else {
-					Alert.show(
-						"Your order must contain at least 1 item.", "Error");
-				}
-			}
-			
-			private function isValid():Boolean {
-				return order.orderItems.length > 0;
-			}
-			
-			private function formatNumber(item:Object,
-            							  column:DataGridColumn):String {
-            							  	
-            	return utils.formatPrice(item[column.dataField]);
+    xmlns:mx="http://www.adobe.com/2006/mxml" 
+    xmlns:jn="com.j_nid.components.mxml.*"
+    xmlns:adobe="http://www.adobe.com/2006/fc"
+    layout="vertical" 
+    paddingLeft="5" paddingRight="5"
+    paddingTop="5">
+    
+    <mx:Metadata>
+        [ResourceBundle("MakeOrder")]
+    </mx:Metadata>
+    
+    <mx:Script>
+        <![CDATA[
+            import com.j_nid.controls.ApplicationManager;
+            import mx.events.CollectionEvent;
+            import mx.collections.ListCollectionView;
+            import com.j_nid.utils.Utils;
+            import mx.collections.ArrayCollection;
+            import com.j_nid.models.Person;
+            import mx.resources.ResourceBundle;
+            import mx.managers.PopUpManager;
+            import mx.managers.DragManager;
+            import mx.core.Application;
+            import com.j_nid.components.mxml.forms.OrderProcessForm;
+            import com.j_nid.models.Product;
+            import com.j_nid.models.Order;
+            import com.j_nid.utils.ModelUtils;
+            import com.j_nid.models.OrderItem;
+            import mx.events.DragEvent;
+            
+            [Bindable]
+            public var order:Order;
+            [Bindable]
+            public var model:ModelUtils = ModelUtils.getInstance();
+            private var appMgr:ApplicationManager =
+                ApplicationManager.getInstance();
+            [Bindable]
+            public var customers:Array;
+            [Bindable]
+            private var utils:Utils = Utils.getInstance();
+            [Bindable]
+            private var total:Number;
+            private var errMsg:String;
+            
+            public function set orderItems(obj:ArrayCollection):void {
+                orderItemList.dataProvider = obj;
+                obj.addEventListener(CollectionEvent.COLLECTION_CHANGE,
+                    orderItemsChange);
             }
-		]]>
-	</mx:Script>
-	
-	<mx:HBox width="100%" verticalAlign="middle">
-		
-		<mx:Label text="{resourceManager.getString('MakeOrder', 'CustomerName')}:"/>
-		
-		<adobe:AutoComplete id="personFiled" 
-			labelField="name" 
-			dataProvider="{model.people}"
-			typedText="{customer.name}"
-			width="100%"/>
-	</mx:HBox>
-	
-	<mx:DataGrid id="orderItemList"
-		dataProvider="{order.orderItems}"
-		dragDrop="dragDropListener(event)" dragEnter="dragEnterListener(event)"
-		itemEditEnd="event.preventDefault()" editable="true" 
-		wordWrap="true" variableRowHeight="true" 
-		width="100%" height="100%"
-		styleName="cartItemList">
-		<mx:columns>
-			<mx:DataGridColumn 
-				headerText="{resourceManager.getString('MakeOrder', 'Quantity')}" 
-				dataField="quantity" 
-				editorDataField="value"
-				rendererIsEditor="true" 
-				headerStyleName="dgHeader"
-				width="70">
-				<mx:itemRenderer>
-					<mx:Component>
+            
+            private function orderItemsChange(e:CollectionEvent):void {
+                total = utils.sum(e.currentTarget, "total");
+            }
+            
+            private function dragEnterListener(e:DragEvent):void {
+                DragManager.acceptDragDrop(DataGrid(e.currentTarget));
+            }
+            
+            private function dragDropListener(e:DragEvent):void {
+                var product:Product = e.dragSource.dataForFormat("items")[0];
+                var orderItem:OrderItem = new OrderItem();
+                orderItem.productID = product.id;
+                orderItem.unit = product.unit;
+                orderItem.pricePerUnit = product.pricePerUnit;
+                orderItem.costPerUnit = product.costPerUnit;
+                addOrderItem(orderItem);
+            }
+            
+            public function set customer(obj:Person):void {
+                customerFiled.selectedItem = obj;
+            }
+            
+            public function addOrderItem(item:OrderItem):void {
+                for each (var obj:OrderItem in orderItemList.dataProvider) {
+                    if (item.productID == obj.productID) {
+                        obj.unit += item.unit;
+                        return;
+                    }
+                }
+                orderItemList.dataProvider.addItem(item);
+                orderItemList.verticalScrollPosition = 
+                    orderItemList.maxVerticalScrollPosition;
+            }
+            
+            private function clearListener(e:MouseEvent):void {
+                orderItemList.dataProvider.removeAll();
+            }
+            
+            private function removeListener(e:MouseEvent):void {
+                var item:OrderItem = OrderItem(orderItemList.selectedItem);
+                if (item != null) {
+                    var i:int = orderItemList.dataProvider.getItemIndex(item);
+                    orderItemList.dataProvider.removeItemAt(i);
+                }
+            }
+            
+            private function processListener(e:MouseEvent):void {
+                if (isValid()) {
+                    order.personID = model.getPersonByName(customerFiled.text).id;
+                    order.notation = notationField.text;
+                    order.orderItems = orderItemList.dataProvider.source;
+                    var orderProcessForm:OrderProcessForm = OrderProcessForm(
+                        PopUpManager.createPopUp(
+                            Application(Application.application), 
+                            OrderProcessForm, true));
+                    orderProcessForm.order = order;
+                } else {
+                    appMgr.showMessage(errMsg,
+                        resourceManager.getString("MakeOrder", "ErrorTitle"));
+                }
+            }
+            
+            private function isValid():Boolean {
+            	errMsg = "";
+            	if (orderItemList.dataProvider.length == 0) {
+            		errMsg += resourceManager.getString("MakeOrder",
+            		              "ItemLengthError");
+            	}
+            	if (model.getPersonByName(customerFiled.text) == null) {
+            		errMsg += resourceManager.getString("MakeOrder",
+            		              "CustomerError");
+            	}
+                return errMsg.length == 0;
+            }
+            
+            private function formatPrice(item:Object,
+                                         column:DataGridColumn):String {
+                                              
+                return utils.formatPrice(item[column.dataField]);
+            }
+        ]]>
+    </mx:Script>
+    
+    <mx:HBox
+    	verticalAlign="middle"
+    	width="100%">
+        
+        <mx:Label text="{resourceManager.getString('MakeOrder', 'CustomerName')}:"/>
+        
+        <adobe:AutoComplete id="customerFiled" 
+            labelField="name" 
+            dataProvider="{customers}"
+            width="100%"/>
+    </mx:HBox>
+    
+    <mx:DataGrid id="orderItemList"
+        dataProvider="{order.orderItems}"
+        dragDrop="dragDropListener(event)"
+        dragEnter="dragEnterListener(event)"
+        itemEditEnd="event.preventDefault()"
+        wordWrap="true"
+        variableRowHeight="true" 
+        width="100%"
+        height="100%"
+        styleName="cartItemList">
+        
+        <mx:columns>
+            <mx:DataGridColumn 
+                headerText="{resourceManager.getString('MakeOrder', 'Quantity')}" 
+                dataField="quantity" 
+                editorDataField="value" 
+                headerStyleName="dgHeader"
+                width="70">
+                <mx:itemRenderer>
+                    <mx:Component>
 <mx:NumericStepper minimum="1" maximum="1000" 
-	change="{data.quantity = value}"/>
-					</mx:Component>
-				</mx:itemRenderer>
-			</mx:DataGridColumn>
-			
-			<mx:DataGridColumn
-				headerText="{resourceManager.getString('MakeOrder', 'Name')}"
-				dataField="name" 
-				editable="false"
-				headerStyleName="dgHeader"
-				width="150"/>
-				
-			<mx:DataGridColumn
-				headerText="{resourceManager.getString('MakeOrder', 'Unit')}"
-				dataField="unit" 
-				editorDataField="value"
-				rendererIsEditor="true" 
-				headerStyleName="dgHeader"
-				width="70">
-				<mx:itemRenderer>
-					<mx:Component>
+    change="{data.quantity = value}"/>
+                    </mx:Component>
+                </mx:itemRenderer>
+            </mx:DataGridColumn>
+            
+            <mx:DataGridColumn
+                headerText="{resourceManager.getString('MakeOrder', 'Name')}"
+                dataField="name" 
+                editable="false"
+                headerStyleName="dgHeader"
+                width="150"/>
+                
+            <mx:DataGridColumn
+                headerText="{resourceManager.getString('MakeOrder', 'Unit')}"
+                dataField="unit" 
+                editorDataField="value"
+                rendererIsEditor="true" 
+                headerStyleName="dgHeader"
+                width="70">
+                <mx:itemRenderer>
+                    <mx:Component>
 <mx:NumericStepper minimum="1" maximum="100000" 
-	change="{data.unit = value}"/>
-					</mx:Component>
-				</mx:itemRenderer>
-			</mx:DataGridColumn>
-			<mx:DataGridColumn
-				headerText="{resourceManager.getString('MakeOrder', 'PricePerUnit')}"
-				dataField="pricePerUnit" 
-				editorDataField="value"
-				rendererIsEditor="true"
-				headerStyleName="dgHeader"
-				width="85">
-				<mx:itemRenderer>
-					<mx:Component>
+    change="{data.unit = value}"/>
+                    </mx:Component>
+                </mx:itemRenderer>
+            </mx:DataGridColumn>
+            
+            <mx:DataGridColumn
+                headerText="{resourceManager.getString('MakeOrder', 'PricePerUnit')}"
+                dataField="pricePerUnit" 
+                editorDataField="value"
+                rendererIsEditor="true"
+                headerStyleName="dgHeader"
+                width="85">
+                <mx:itemRenderer>
+                    <mx:Component>
 <mx:NumericStepper minimum="1" maximum="10000" stepSize="0.25" 
-	change="{data.pricePerUnit = value}"/>
-					</mx:Component>
-				</mx:itemRenderer>
-			</mx:DataGridColumn>
-			<mx:DataGridColumn
-				headerText="{resourceManager.getString('MakeOrder', 'Total')}"
-				dataField="total"
-				textAlign="right"
-				labelFunction="formatNumber"
-				editable="false"
-				headerStyleName="dgHeader"
-				width="85"/>
-		</mx:columns>
-	</mx:DataGrid>
-	
-	<mx:Text id="totalTxt" 
-		text="{resourceManager.getString('MakeOrder', 'Summary',
-		              [utils.formatPrice(order.total)])}" 
-		textAlign="right" 
-		paddingRight="10"
-		width="100%" height="30"/>
-	
-	<mx:ControlBar>
-		<mx:TextArea id="notationField"
-			width="100%" height="60"/>
-		<mx:Button label="{resourceManager.getString('MakeOrder', 'Clear')}"
-			click="clearListener(event)"/>
-		<mx:Button label="{resourceManager.getString('MakeOrder', 'Remove')}"
-			enabled="{orderItemList.selectedItem != null}"
-			click="removeListener(event)"/>
-		<mx:Button label="{resourceManager.getString('MakeOrder', 'Process')}"
-			click="processListener(event)"/>
-	</mx:ControlBar>
+    change="{data.pricePerUnit = value}"/>
+                    </mx:Component>
+                </mx:itemRenderer>
+            </mx:DataGridColumn>
+            
+            <mx:DataGridColumn
+                headerText="{resourceManager.getString('MakeOrder', 'Total')}"
+                dataField="total"
+                textAlign="right"
+                labelFunction="formatPrice"
+                editable="false"
+                headerStyleName="dgHeader"
+                width="85"/>
+        </mx:columns>
+    </mx:DataGrid>
+    
+    <mx:Text id="totalTxt" 
+        text="{resourceManager.getString('MakeOrder', 'Summary',
+                      [utils.formatPrice(total)])}" 
+        textAlign="right" 
+        paddingRight="10"
+        width="100%" height="30"/>
+    
+    <mx:ControlBar>
+        <mx:TextArea id="notationField"
+            width="100%"
+            height="60"/>
+        
+        <mx:Button
+        	label="{resourceManager.getString('MakeOrder', 'Clear')}"
+            click="clearListener(event)"/>
+        
+        <mx:Button
+        	label="{resourceManager.getString('MakeOrder', 'Remove')}"
+            enabled="{orderItemList.selectedItem != null}"
+            click="removeListener(event)"/>
+        
+        <mx:Button
+        	label="{resourceManager.getString('MakeOrder', 'Process')}"
+            click="processListener(event)"/>
+    </mx:ControlBar>
 </mx:Panel>

@@ -1,15 +1,16 @@
 package com.j_nid.models {
 	
+	import com.j_nid.utils.ModelUtils;
+	
 	[Bindable]
 	public class Product extends Model {
 		
-		private var _name:String;
-    	private var _productType:ProductType;
-    	private var _productTypeID:int;
-    	private var _unit:uint;
-    	private var _pricePerUnit:Number;
-    	private var _costPerUnit:Number;
-    	private var _isSale:Boolean;
+		public var name:String;
+    	public var productTypeID:uint;
+    	public var unit:uint;
+    	public var pricePerUnit:Number;
+    	public var costPerUnit:Number;
+    	public var isSale:Boolean;
     	
     	public static function fromXML(obj:XML):Product {
     		var product:Product = new Product();
@@ -25,6 +26,12 @@ package com.j_nid.models {
 		
 		public function Product() {
 			super();
+			productTypeID = 0;
+            name = "";
+            unit = 0;
+            costPerUnit = 0;
+            pricePerUnit = 0;
+            isSale = false;
 		}
 		
 		public function toXML():XML {
@@ -42,68 +49,14 @@ package com.j_nid.models {
 			return name;
 		}
 
-/* ----- get-set function. --------------------------------------------------------------------- */
+/* ----- get-set function. ------------------------------------------------- */
 		
-		public function set name(obj:String):void {
-			_name = obj;
-		}
-		
-		public function get name():String {
-			return _name;
+		public function get productType():ProductType {
+			return ModelUtils.getInstance().getProductType(productTypeID);
 		}
 		
 		public function set productType(obj:ProductType):void {
-			if (_productType != obj) {
-				if (_productType != null) {
-					_productType.removeProduct(this);
-				}
-				_productType = obj;
-				_productTypeID = obj.id;
-			}
-		}
-		
-		public function get productType():ProductType {
-			return _productType;
-		}
-		
-		public function set productTypeID(obj:int):void {
-			_productTypeID = obj;
-		}
-		
-		public function get productTypeID():int {
-			return _productTypeID;
-		}
-		
-		public function set unit(obj:uint):void {
-			_unit = obj;
-		}
-		
-		public function get unit():uint {
-			return _unit;
-		}
-		
-		public function set costPerUnit(obj:Number):void {
-			_costPerUnit = obj;
-		}
-		
-		public function get costPerUnit():Number {
-			return _costPerUnit;
-		}
-		
-		public function set pricePerUnit(obj:Number):void {
-			_pricePerUnit = obj;
-		}
-		
-		public function get pricePerUnit():Number {
-			return _pricePerUnit;
-		}
-		
-		public function set isSale(obj:Boolean):void {
-			_isSale = obj;
-		}
-		
-		public function get isSale():Boolean {
-			return _isSale;
+			productTypeID = obj.id;
 		}
 	}
 }

@@ -49,6 +49,7 @@ package com.j_nid.controls {
 			// Payment commands.
 			addCommand(JNidEvent.LIST_PAYMENT, ListPaymentCommand);
 			addCommand(JNidEvent.CREATE_PAYMENT, CreatePaymentCommand);
+			addCommand(JNidEvent.DELETE_PAYMENT, DeletePaymentCommand);
 			// Supply commands.
 			addCommand(JNidEvent.LIST_SUPPLY, ListSupplyCommand);
 			addCommand(JNidEvent.CREATE_SUPPLY, CreateSupplyCommand);

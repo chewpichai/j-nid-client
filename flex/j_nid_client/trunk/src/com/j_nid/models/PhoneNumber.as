@@ -1,12 +1,13 @@
 package com.j_nid.models {
+	import com.j_nid.utils.ModelUtils;
+	
 	
 	[Bindable]
 	public class PhoneNumber extends Model {
 		
-		private var _person:Person;
-		private var _personID:int;
-		private var _number:String;
-		private var _type:String;
+		public var personID:uint;
+		public var number:String;
+		public var type:String;
 		
 		public static function fromXML(obj:XML):PhoneNumber {
 			var phoneNumber:PhoneNumber = new PhoneNumber();
@@ -19,6 +20,7 @@ package com.j_nid.models {
 		
 		public function PhoneNumber() {
 			super();
+			personID = 0;
 			number = "";
 			type = "";
 		}
@@ -31,43 +33,10 @@ package com.j_nid.models {
 			return xml;
 		}
 		
-/* ----- get-set function. --------------------------------------------------------------------- */
-		
-		public function set person(obj:Person):void {
-			if (obj != null) {
-				personID = obj.id;
-			} else {
-				personID = 0;
-			}
-			_person = obj;
-		}
+/* ----- get-set function. ------------------------------------------------- */
 		
 		public function get person():Person {
-			return _person;
-		}
-		
-		public function set personID(obj:int):void {
-			_personID = obj;
-		}
-		
-		public function get personID():int {
-			return _personID;
-		}
-		
-		public function set number(obj:String):void {
-			_number = obj;
-		}
-		
-		public function get number():String {
-			return _number;
-		}
-		
-		public function set type(obj:String):void {
-			_type = obj;
-		}
-		
-		public function get type():String {
-			return _type;
+			return ModelUtils.getInstance().getPerson(personID);
 		}
 	}
 }

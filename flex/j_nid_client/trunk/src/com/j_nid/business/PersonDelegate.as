@@ -1,9 +1,7 @@
 package com.j_nid.business {
 	
-	import com.j_nid.models.JNidModelLocator;
 	import com.j_nid.models.Person;
 	import com.j_nid.utils.ServiceUtils;
-	
 	import mx.rpc.IResponder;
 	
 	public class PersonDelegate	{

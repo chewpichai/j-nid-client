@@ -16,11 +16,13 @@
 	
 	<mx:Script>
 		<![CDATA[
+			import com.j_nid.utils.Utils;
+			import flash.sampler.getInvocationCount;
 			import mx.resources.ResourceBundle;
 			import com.j_nid.models.Supply;
 			import com.j_nid.events.JNidEvent;
 			import com.j_nid.utils.CairngormUtils;
-			import com.j_nid.models.JNidModelLocator;
+			import com.j_nid.utils.ModelUtils;
 			import mx.rpc.events.ResultEvent;
 			import com.j_nid.models.Person;
 			import mx.collections.ArrayCollection;
@@ -31,14 +33,15 @@
 			[Bindable]
 			public var supply:Supply;
 			[Bindable]
-			private var model:JNidModelLocator = JNidModelLocator.getInstance();
+			private var model:ModelUtils = ModelUtils.getInstance();
+			[Bindable]
+			private var utils:Utils = Utils.getInstance();
 			
 			private function init(e:FlexEvent):void {
 				PopUpManager.centerPopUp(this);
 			}
 			
 			private function submitBtnClickListener(e:MouseEvent):void {
-				model.supplyToCreate = supply;
 				CairngormUtils.dispatchEvent(JNidEvent.CREATE_SUPPLY, supply);
 				PopUpManager.removePopUp(this);
 			}
@@ -46,29 +49,49 @@
 			private function cancelBtnClickListener(e:MouseEvent):void {
 				PopUpManager.removePopUp(this);
 			}
+			
+			private function formatPrice(item:Object,
+                                         column:DataGridColumn):String {
+                                            
+                return utils.formatPrice(item[column.dataField]);
+            }
 		]]>
 	</mx:Script>
 	
 	<mx:DateFormatter id="dateFormatter"
     	formatString="DD-MM-YYYY JJ:NN:SS"/>
 	
-	<mx:HBox width="100%">
-		<mx:Label text="{resourceManager.getString('SupplyPage', 'Suppiler')}:"/>
-		<mx:Label text="{supply.person.name}"/>
+	<mx:HBox
+		width="100%">
+		
+		<mx:Label
+			text="{resourceManager.getString('SupplyPage', 'Suppiler')}:"/>
+		
+		<mx:Label
+			text="{supply.person.name}"/>
+		
 		<mx:Spacer width="100%"/>
-		<mx:Label text="{resourceManager.getString('SupplyPage', 'Date')}:"/>
-		<mx:Label text="{dateFormatter.format(supply.created)}"/>
+		
+		<mx:Label
+			text="{resourceManager.getString('SupplyPage', 'Date')}:"/>
+		
+		<mx:Label
+			text="{dateFormatter.format(supply.created)}"/>
 	</mx:HBox>
 	
-	<mx:DataGrid id="orderItemList" 
+	<mx:DataGrid id="supplyItemList" 
 		dataProvider="{supply.supplyItems}"
-		wordWrap="true" variableRowHeight="true" 
-		width="100%" height="100%">
+		wordWrap="true"
+		variableRowHeight="true" 
+		width="100%"
+		height="100%">
+		
 		<mx:columns>
 			<mx:DataGridColumn
 				headerText="{resourceManager.getString('SupplyPage', 'Quantity')}" 
 				headerStyleName="dgHeader"
 				dataField="quantity"/>
+			
 			<mx:DataGridColumn
 				headerText="{resourceManager.getString('SupplyPage', 'Name')}" 
 				dataField="name"
@@ -79,14 +102,20 @@
 				dataField="unit"
 				headerStyleName="dgHeader"
 				width="70"/>
+			
 			<mx:DataGridColumn
-				headerText="{resourceManager.getString('SupplyPage', 'PricePerUnit')}" 
+				headerText="{resourceManager.getString('SupplyPage',
+				                'PricePerUnit')}" 
 				dataField="pricePerUnit"
+				labelFunction="formatPrice"
 				headerStyleName="dgHeader"
 				width="85"/>
+			
 			<mx:DataGridColumn
-				headerText="{resourceManager.getString('SupplyPage', 'Total')}" 
-				dataField="total" width="85"/>
+				headerText="{resourceManager.getString('SupplyPage', 'Total')}"
+				labelFunction="formatPrice"
+				dataField="total"
+				width="85"/>
 		</mx:columns>
 	</mx:DataGrid>
 	
@@ -98,7 +127,9 @@
 			width="100%"/>
 	</mx:HBox>
 	
-	<mx:Label text="{resourceManager.getString('SupplyPage', 'Total')}: {supply.total}" 
+	<mx:Label
+		text="{resourceManager.getString('SupplyPage', 'Summary',
+		              [utils.formatPrice(supply.total)])}" 
 		textAlign="right" width="100%"/>
 	
 	<mx:ControlBar id="mainControlBar" 

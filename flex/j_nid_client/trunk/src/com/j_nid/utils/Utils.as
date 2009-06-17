@@ -1,12 +1,13 @@
 package com.j_nid.utils {
 	
+	import mx.effects.Fade;
 	import mx.formatters.DateFormatter;
 	import mx.formatters.NumberFormatter;
 	
 	[Bindable]
 	public class Utils {
 		
-		private static var _instance:Utils;
+		private static var instance:Utils;
 		private static var dateFormat:DateFormatter;
 		private static var numberFormat:NumberFormatter;
 		
@@ -16,14 +17,15 @@ package com.j_nid.utils {
 		}
 		
 		public static function getInstance():Utils {
-			if (_instance == null) {
-				_instance = new Utils();
+			if (instance == null) {
+				instance = new Utils();
 			}
-			return _instance;
+			return instance;
 		}
 		
+		// defalut format YYYY-MM-DD JJ:NN:SS for use with Django.
 		public function formatDate(date:Date, 
-			formatString:String="DD-MM-YYYY JJ:NN:SS"):String {
+			formatString:String="YYYY-MM-DD JJ:NN:SS"):String {
 			
 			dateFormat.formatString = formatString;
 			return dateFormat.format(date);
@@ -38,6 +40,14 @@ package com.j_nid.utils {
 		public function formatPrice(num:Number):String {
 			numberFormat.precision = 2;
 			return numberFormat.format(num);
+		}
+		
+		public function sum(obj:Object, field:String):Number {
+			var sum:Number = 0;
+			for each (var item:* in obj) {
+                sum += item[field];
+            }
+			return sum;
 		}
 	}
 }

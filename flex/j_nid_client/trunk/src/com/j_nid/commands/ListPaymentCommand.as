@@ -3,8 +3,7 @@ package com.j_nid.commands {
 	import com.adobe.cairngorm.commands.ICommand;
 	import com.adobe.cairngorm.control.CairngormEvent;
 	import com.j_nid.business.PaymentDelegate;
-	import com.j_nid.models.JNidModelLocator;
-	
+	import com.j_nid.utils.ModelUtils;
 	import mx.rpc.IResponder;
 
 	public class ListPaymentCommand implements ICommand, IResponder {
@@ -15,7 +14,7 @@ package com.j_nid.commands {
 		}
 		
 		public function result(event:Object):void {
-			var model:JNidModelLocator = JNidModelLocator.getInstance();
+			var model:ModelUtils = ModelUtils.getInstance();
 			model.setPayments(event.result);
 		}
 		

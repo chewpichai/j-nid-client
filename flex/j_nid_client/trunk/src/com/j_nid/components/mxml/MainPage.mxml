@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml"
 	show="showHandler(event)"
+	showEffect="{wipeIn}"
+    hideEffect="{wipeOut}"
 	creationComplete="init(event)"
-	width="100%" height="100%">
+	width="100%"
+	height="100%">
 	
 	<mx:Script>
 		<![CDATA[
@@ -10,11 +13,11 @@
 			import mx.collections.Sort;
 			import mx.collections.ArrayCollection;
 			import com.j_nid.models.Product;
-			import com.j_nid.models.JNidModelLocator;
+			import com.j_nid.utils.ModelUtils;
 			import mx.events.FlexEvent;
 			
 			[Bindable]
-			private var model:JNidModelLocator = JNidModelLocator.getInstance();
+			private var model:ModelUtils = ModelUtils.getInstance();
 			[Bindable]
 			private var products:ArrayCollection;
 			
@@ -36,11 +39,15 @@
 		]]>
 	</mx:Script>
 	
+	<mx:WipeDown id="wipeOut" duration="1000"/>
+    <mx:WipeDown id="wipeIn" duration="1000"/>
+	
 	<mx:TileList id="productList"
 		columnWidth="245"
 		rowHeight="40"
 		selectable="false"
 		direction="vertical" 
 		itemRenderer="com.j_nid.components.mxml.MainProductRenderer"
-		width="100%" height="100%"/>
+		width="100%"
+		height="100%"/>
 </mx:VBox>

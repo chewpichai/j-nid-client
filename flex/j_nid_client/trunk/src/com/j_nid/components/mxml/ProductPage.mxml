@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
 	show="showHandler(event)"
+	showEffect="{wipeIn}"
+    hideEffect="{wipeOut}"
 	creationComplete="init(event)"
-	width="100%" height="100%">
+	width="100%"
+	height="100%">
 	
 	<mx:Metadata>
 		[ResourceBundle("ProductPage")]
@@ -17,7 +20,7 @@
 			import com.j_nid.components.mxml.forms.ProductForm;
 			import com.j_nid.components.mxml.forms.ProductTypeForm;
 			import com.j_nid.events.JNidEvent;
-			import com.j_nid.models.JNidModelLocator;
+			import com.j_nid.utils.ModelUtils;
 			import com.j_nid.models.Product;
 			import com.j_nid.models.ProductType;
 			import com.j_nid.utils.CairngormUtils;
@@ -28,7 +31,7 @@
 			import mx.resources.ResourceBundle;
 			
 			[Bindable]
-			private var model:JNidModelLocator = JNidModelLocator.getInstance();
+			private var model:ModelUtils = ModelUtils.getInstance();
 			[Bindable]
 			private var products:ArrayCollection;
 			[Bindable]
@@ -51,7 +54,7 @@
 				model.addEventListener(JNidEvent.PRODUCT_TYPE_CREATED,
                     productTypeCreated);
 				// init selected product.
-				selectedProductType = JNidModelLocator.ALL_TYPE;
+				selectedProductType = ProductType.ALL;
 			}
 			
 			private function showHandler(e:FlexEvent):void {
@@ -81,7 +84,7 @@
 			}
 			
 			private function filterProduct():void {
-				if (selectedProductType == JNidModelLocator.ALL_TYPE) {
+				if (selectedProductType == ProductType.ALL) {
 					products.filterFunction = null;
 				} else {
 					products.filterFunction =
@@ -129,6 +132,9 @@
 			}
 		]]>
 	</mx:Script>
+	
+	<mx:WipeDown id="wipeOut" duration="1000"/>
+    <mx:WipeDown id="wipeIn" duration="1000"/>
 	
 	<mx:TabNavigator 
 		paddingLeft="5" paddingRight="5"

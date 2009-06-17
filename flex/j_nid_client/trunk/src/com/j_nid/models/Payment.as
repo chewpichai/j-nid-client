@@ -1,13 +1,16 @@
 package com.j_nid.models {
 	
+	import com.j_nid.events.JNidEvent;
+	import com.j_nid.utils.ModelUtils;
+	import com.j_nid.utils.Utils;
+	
 	[Bindable]
 	public class Payment extends Model {
 		
-		private var _person:Person;
-		private var _personID:int;
-		private var _amount:Number;
-		private var _notation:String;
-		private var _created:Date;
+		public var personID:uint;
+		public var amount:Number;
+		public var notation:String;
+		public var created:Date;
 		
 		public static function fromXML(obj:XML):Payment {
     		var payment:Payment = new Payment();
@@ -21,9 +24,14 @@ package com.j_nid.models {
 		
 		public function Payment() {
 			super();
+			personID = 0;
 			amount = 0;
 			notation = "";
 			created = new Date();
+			//
+			createEvent = JNidEvent.CREATE_PAYMENT;
+			updateEvent = JNidEvent.UPDATE_PAYMENT;
+			deleteEvent = JNidEvent.DELETE_PAYMENT;
 		}
 		
 		public function toXML():XML {
@@ -31,51 +39,14 @@ package com.j_nid.models {
 			xml.person_id = personID;
 			xml.amount = amount;
 			xml.notation = notation;
-			xml.created = created;
+			xml.created = Utils.getInstance().formatDate(created);
 			return xml;
 		}
 		
-/* ----- get-set function. --------------------------------------------------------------------- */
+/* ----- get-set function. ------------------------------------------------- */
 
-		public function set person(obj:Person):void {
-			_person = obj;
-			_personID = obj.id;
-		}
-		
 		public function get person():Person {
-			return _person;
-		}
-		
-		public function set personID(obj:int):void {
-			_personID = obj;
-		}
-		
-		public function get personID():int {
-			return _personID;
-		}
-		
-		public function set amount(obj:Number):void {
-			_amount = obj;
-		}
-		
-		public function get amount():Number {
-			return _amount;
-		}
-		
-		public function set notation(obj:String):void {
-			_notation = obj;
-		}
-		
-		public function get notation():String {
-			return _notation;
-		}
-		
-		public function set created(obj:Date):void {
-			_created = obj;
-		}
-		
-		public function get created():Date {
-			return _created;
+			return ModelUtils.getInstance().getPerson(personID);
 		}
 	}
 }

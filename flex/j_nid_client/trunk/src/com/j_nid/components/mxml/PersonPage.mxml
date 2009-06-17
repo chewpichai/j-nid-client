@@ -3,8 +3,11 @@
 	xmlns:mx="http://www.adobe.com/2006/mxml"
 	xmlns:jn="com.j_nid.validators.*"
 	show="showHandler(event)"
+	showEffect="{wipeIn}"
+    hideEffect="{wipeOut}"
 	creationComplete="init(event)"
-	width="100%" height="100%">
+	width="100%"
+	height="100%">
 	
 	<mx:Metadata>
 		[ResourceBundle("PersonPage")]
@@ -17,7 +20,7 @@
 			import mx.core.Application;
 			import mx.managers.PopUpManager;
 			import com.j_nid.utils.CairngormUtils;
-			import com.j_nid.models.JNidModelLocator;
+			import com.j_nid.utils.ModelUtils;
 			import mx.collections.SortField;
 			import mx.collections.Sort;
 			import com.j_nid.models.Person;
@@ -29,7 +32,7 @@
 			private var personSelectedIndex:int = -1;
 			private var errorMessage:String;
 			[Bindable]
-			public var model:JNidModelLocator = JNidModelLocator.getInstance();
+			public var model:ModelUtils = ModelUtils.getInstance();
 			[Bindable]
             private var people:ArrayCollection;
 			private var personForm:PersonForm;
@@ -41,14 +44,15 @@
                 people.sort = sort;
                 personList.dataProvider = people;
                 // Add event listeners.
-                model.addEventListener(JNidEvent.PERSON_CREATED, personCreated);
+                model.addEventListener(JNidEvent.PERSON_CREATED, personSaved);
+                model.addEventListener(JNidEvent.PERSON_UPDATED, personSaved);
 			}
 			
 			private function showHandler(e:FlexEvent):void {
 				people.refresh();
 			}
 			
-			private function personCreated(e:JNidEvent):void {
+			private function personSaved(e:JNidEvent):void {
 				closeForm();
 				var person:Person = Person(e.data);
 				personList.selectedItem = person;
@@ -61,8 +65,7 @@
 				people.filterFunction =
 				    function(item:Object):Boolean {
                         var person:Person = Person(item);
-                        person.sortIndex = person.name.indexOf(searchField.text);
-                        return person.sortIndex != -1;
+                        return person.name.indexOf(searchField.text) != -1;
                     };
                people.refresh();
 			}
@@ -80,7 +83,9 @@
 			}
 			
 			public function closeForm():void {
-				personForm.close();
+				if (personForm != null) {
+				    personForm.close();
+				}
 				people.refresh();
 			}
 			
@@ -93,6 +98,9 @@
 			}
 		]]>
 	</mx:Script>
+	
+	<mx:WipeDown id="wipeOut" duration="1000"/>
+    <mx:WipeDown id="wipeIn" duration="1000"/>
 		
 	<mx:HBox
 		verticalAlign="middle"
@@ -112,13 +120,15 @@
 	<mx:DataGrid id="personList"
 		doubleClickEnabled="true"
 		doubleClick="personListDoubleClick(event)"
-		width="100%" height="100%">
+		width="100%"
+		height="100%">
 		
 		<mx:columns>
 			<mx:DataGridColumn
 				headerText="{resourceManager.getString('PersonPage', 'Name')}"
 				headerStyleName="dgHeader"
 				dataField="name"/>
+			
 			<mx:DataGridColumn
 				headerText="{resourceManager.getString('PersonPage', 'Customer')}" 
 				textAlign="center"
@@ -141,6 +151,7 @@
 					</mx:Component>
 				</mx:itemRenderer>
 			</mx:DataGridColumn>
+			
 			<mx:DataGridColumn
 				headerText="{resourceManager.getString('PersonPage', 'Supplier')}"
 				textAlign="center"
@@ -163,6 +174,7 @@
 					</mx:Component>
 				</mx:itemRenderer>
 			</mx:DataGridColumn>
+			
 			<mx:DataGridColumn
 				headerText="{resourceManager.getString('PersonPage', 'General')}"
 				textAlign="center"

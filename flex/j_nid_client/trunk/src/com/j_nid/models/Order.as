@@ -1,19 +1,18 @@
 package com.j_nid.models {
 
-    import mx.collections.ArrayCollection;
-	import mx.collections.IViewCursor;
-	import mx.events.CollectionEvent;
+    import com.j_nid.events.JNidEvent;
+    import com.j_nid.utils.ModelUtils;
+    import com.j_nid.utils.Utils;
 	
 	[Bindable]
 	public class Order extends Model {
 		
-		private var _person:Person;
-		private var _personID:int;
+		public var personID:uint;
 		public var notation:String;
 		public var paidTotal:Number;
 		public var created:Date;
-		public var total:Number;
-		public var orderItems:ArrayCollection;
+		// Temporary for create order.
+		private var _orderItems:Array;
 		
 		public static function fromXML(obj:XML):Order {
     		var order:Order = new Order();
@@ -25,42 +24,16 @@ package com.j_nid.models {
 			return order;
     	}
 		
-		public function Order()	{
+		public function Order()  {
 			super();
 			notation = "";
-			total = 0;
+			personID = 0;
 			paidTotal = 0;
 			created = new Date();
-			orderItems = new ArrayCollection();
-			orderItems.addEventListener(
-                CollectionEvent.COLLECTION_CHANGE, itemChangeListener);
-		}
-		
-		private function itemChangeListener(evt:CollectionEvent):void {
-			total = 0;
-			var cursor:IViewCursor = orderItems.createCursor();
-			while (!cursor.afterLast) {
-				total += OrderItem(cursor.current).total;
-				cursor.moveNext();
-			}
-		}
-		
-		public function addOrderItem(item:OrderItem):void {
-			item.order = this;
-			orderItems.addItem(item);
-		}
-		
-		public function removeOrderItem(item:OrderItem):void {
-			item.order = null;
-			orderItems.removeItemAt(orderItems.getItemIndex(item));
-		}
-		
-		public function clearOrderItems():void {
-			orderItems.removeAll();
-		}
-		
-		public function getOrderItemAt(obj:int):OrderItem {
-			return OrderItem(orderItems.getItemAt(obj));
+			//
+			createEvent = JNidEvent.CREATE_ORDER;
+			updateEvent = JNidEvent.UPDATE_ORDER;
+			deleteEvent = JNidEvent.DELETE_ORDER;
 		}
 		
 		public function toXML():XML {
@@ -68,45 +41,62 @@ package com.j_nid.models {
 			xml.person_id = person.id;
 			xml.notation = notation;
 			xml.paid_total = paidTotal;
-			xml.created = utils.formatDate(created);
+			xml.created = Utils.getInstance().formatDate(created);
+			if (_orderItems != null) {
+				xml.order_items = <order_items/>
+				for each (var item:OrderItem in _orderItems) {
+					xml.order_items.appendChild(item.toXML());
+				}
+			}
 			return xml;
 		}
 		
 		override public function toString():String {
 			return person.name + " [" + 
-				   utils.formatDate(created, "DD MMM YYYY") + "]";
+				   Utils.getInstance().formatDate(created, "DD MMM YYYY") + "]";
 		}
 		
 /* ----- get-set function. ------------------------------------------------- */
 		
 		public function set person(obj:Person):void {
-			if (obj != null) {
-				personID = obj.id;
-			} else {
-				personID = 0;
-			}
-			_person = obj;
+			personID = obj.id;
 		}
 		
 		public function get person():Person {
-			return _person;
+			return ModelUtils.getInstance().getPerson(personID);
 		}
 		
-		public function get personID():int {
-			return _personID;
+		public function set orderItems(obj:Array):void {
+			_orderItems = obj;
 		}
-
-		public function set personID(obj:int):void {
-			_personID = obj;
+				
+		public function get orderItems():Array {
+			// if order does not created.
+			if (id == 0) {
+				return _orderItems;
+			}
+			return ModelUtils.getInstance().getOrderItemsByOrder(id);
 		}
 		
-		public function set isPaid(obj:Boolean):void {
+		public function set total(obj:Number):void {
             
         }
+		
+		public function get total():Number {
+			var sum:Number = 0;
+			for each (var orderItem:OrderItem in orderItems) {
+				sum += orderItem.total;
+			}
+			return sum;
+		}
 		
 		public function get isPaid():Boolean {
 			return total <= paidTotal;
 		}
+		
+		public function set isPaid(obj:Boolean):void {
+            paidTotal = total;
+        }
 		
 		public function get isOutstanding():Boolean {
 			return total > paidTotal;

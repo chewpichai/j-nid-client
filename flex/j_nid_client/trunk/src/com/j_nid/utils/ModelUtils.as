@@ -1,33 +1,35 @@
-package com.j_nid.models {
+package com.j_nid.utils {
     
-    import com.adobe.cairngorm.model.IModelLocator;
+    import com.j_nid.controls.ApplicationManager;
     import com.j_nid.events.JNidEvent;
-    import com.j_nid.utils.CairngormUtils;
-    
+    import com.j_nid.models.BankAccount;
+    import com.j_nid.models.Order;
+    import com.j_nid.models.OrderItem;
+    import com.j_nid.models.Payment;
+    import com.j_nid.models.Person;
+    import com.j_nid.models.PhoneNumber;
+    import com.j_nid.models.Product;
+    import com.j_nid.models.ProductType;
+    import com.j_nid.models.Supply;
+    import com.j_nid.models.SupplyItem;
     import flash.events.EventDispatcher;
-    
-    import mx.core.Application;
-    import mx.resources.IResourceManager;
-    import mx.resources.ResourceManager;
     
     [Event(name="personCreated", type="com.j_nid.events.JNidEvent")]
     [Event(name="paymentCreated", type="com.j_nid.events.JNidEvent")]
+    [Event(name="paymentDeleted", type="com.j_nid.events.JNidEvent")]
     [Event(name="orderCreated", type="com.j_nid.events.JNidEvent")]
+    [Event(name="orderDeleted", type="com.j_nid.events.JNidEvent")]
+    [Event(name="orderItemDeleted", type="com.j_nid.events.JNidEvent")]
+    [Event(name="supplyDeleted", type="com.j_nid.events.JNidEvent")]
+    [Event(name="supplyItemDeleted", type="com.j_nid.events.JNidEvent")]
     [Event(name="productCreated", type="com.j_nid.events.JNidEvent")]
     [Event(name="productTypeCreated", type="com.j_nid.events.JNidEvent")]
     
-    [ResourceBundle("ProductPage")]
-    
     [Bindable]
-    public class JNidModelLocator extends EventDispatcher
-                                  implements IModelLocator {
+    public class ModelUtils extends EventDispatcher {
         
-        private static var resourceManager:IResourceManager = 
-            ResourceManager.getInstance();
-        private static var modelLocator:JNidModelLocator;
-        public static const ALL_TYPE:ProductType = 
-            new ProductType(0, resourceManager.getString(
-                                     'ProductPage', 'All'));
+        private static var instance:ModelUtils;
+        
         private var _bankNames:XMLList;
         private var _phoneTypes:XMLList;
         // Array Collection for models.
@@ -44,9 +46,12 @@ package com.j_nid.models {
         public var payments:Array;
         // Map for get object by key.
         private var _productIDMap:Object;
+        private var _productNameMap:Object;
         private var _productTypeIDMap:Object;
+        private var _productTypeNameMap:Object;
         private var _personIDMap:Object;
         private var _personNameMap:Object;
+        private var _paymentIDMap:Object;
         private var _orderIDMap:Object;
         private var _orderItemIDMap:Object;
         private var _bankAccountIDMap:Object;
@@ -66,14 +71,10 @@ package com.j_nid.models {
         private var _loadedBankName:Boolean = false;
         private var _loadedSupply:Boolean = false;
         private var _loadedSupplyItem:Boolean = false;
-        // Temporary create object.
-        public var orderToCreate:Order;
-        public var supplyToCreate:Supply;
-        public var personToCreate:Person;
         // flag for make sure all data were loaded.
         public var isLoadComplete:Boolean = false;
         
-        public function JNidModelLocator() {
+        public function ModelUtils() {
             productTypesWithAll = new Array();
             productTypes = new Array();
             products = new Array();
@@ -86,9 +87,12 @@ package com.j_nid.models {
             supplyItems = new Array();
             payments = new Array();
             _productIDMap = new Object();
+            _productNameMap = new Object();
             _productTypeIDMap = new Object();
+            _productTypeNameMap = new Object();
             _personIDMap = new Object();
             _personNameMap = new Object();
+            _paymentIDMap = new Object();
             _orderIDMap = new Object();
             _orderItemIDMap = new Object();
             _bankAccountIDMap = new Object();
@@ -97,16 +101,16 @@ package com.j_nid.models {
             _supplyItemIDMap = new Object();
         }
         
-        public static function getInstance():JNidModelLocator {
-            if (modelLocator == null) {
-                modelLocator = new JNidModelLocator();
+        public static function getInstance():ModelUtils {
+            if (instance == null) {
+                instance = new ModelUtils();
             }
-            return modelLocator;
+            return instance;
         }
         
         public function createproductTypesWithAll():void {
             productTypesWithAll = productTypes.slice();
-            productTypesWithAll.unshift(ALL_TYPE);
+            productTypesWithAll.unshift(ProductType.ALL);
         }
         
         public function setProductTypes(obj:XML):void {
@@ -114,6 +118,7 @@ package com.j_nid.models {
                 var productType:ProductType = ProductType.fromXML(xml);
                 productTypes.push(productType);
                 _productTypeIDMap[productType.id] = productType;
+                _productTypeNameMap[productType.name] = productType;
             }
             createproductTypesWithAll();
             _loadedProductType = true;
@@ -125,6 +130,7 @@ package com.j_nid.models {
                 var product:Product = Product.fromXML(xml);
                 products.push(product);
                 _productIDMap[product.id] = product;
+                _productNameMap[product.name] = product;
             }
             _loadedProduct = true;
             setRelateModels();
@@ -185,6 +191,7 @@ package com.j_nid.models {
             for each (var xml:XML in obj.children()) {
                 var payment:Payment = Payment.fromXML(xml);
                 payments.push(payment);
+                _paymentIDMap[payment.id] = payment;
             }
             _loadedPayment = true;
             setRelateModels();
@@ -215,47 +222,8 @@ package com.j_nid.models {
                 _loadedPerson && _loadedPhoneNumber && _loadedProduct &&
                 _loadedProductType && _loadedPayment && _loadedSupply &&
                 _loadedSupplyItem) {
-                // Set relate for payments.
-                for each (var obj:Object in payments) {
-                    var payment:Payment = Payment(obj);
-                    getPerson(payment.personID).addPayment(payment);
-                }
-                // Set relate for order items.
-                for each (obj in orderItems) {
-                    var item:OrderItem = OrderItem(obj);
-                    getOrder(item.orderID).addOrderItem(item);
-                    item.product = getProduct(item.productID);
-                }
-                // Set relate for orders.
-                for each (obj in orders) {
-                    var order:Order = Order(obj);
-                    getPerson(order.personID).addOrder(order);
-                }
-                // Set relate for products.
-                for each (obj in products) {
-                    var product:Product = Product(obj);
-                    getProductType(product.productTypeID).addProduct(product);
-                }
-                // Set relate for bank accounts.
-                for each (obj in bankAccounts) {
-                    var bankAccount:BankAccount = BankAccount(obj);
-                    getPerson(bankAccount.personID).addBankAccount(bankAccount);
-                }
-                // Set relate for bank accounts.
-                for each (obj in phoneNumbers) {
-                    var phoneNumber:PhoneNumber = PhoneNumber(obj);
-                    getPerson(phoneNumber.personID).addPhoneNumber(phoneNumber);
-                }
-                for each (obj in supplyItems) {
-                    var supplyItem:SupplyItem = SupplyItem(obj);
-                    getSupply(supplyItem.supplyID).addSupplyItem(supplyItem);
-                    supplyItem.product = getProduct(supplyItem.productID);
-                }
-                // Set relate for orders.
-                for each (obj in supplies) {
-                    var supply:Supply = Supply(obj);
-                    getPerson(supply.personID).addSupply(supply);
-                }
+                
+                // Use for change application state to main.
                 isLoadComplete = true;
             }
         }
@@ -263,74 +231,55 @@ package com.j_nid.models {
         public function createOrder(obj:XML):void {
             var order:Order = Order.fromXML(obj);
             _orderIDMap[order.id] = order;
-            var person:Person = getPerson(order.personID);
-            person.addOrder(order);
-            for each (var item:OrderItem in orderToCreate.orderItems) {
-                item.orderID = order.id;
-                CairngormUtils.dispatchEvent(JNidEvent.CREATE_ORDER_ITEM, item);
+            for each (var item:XML in obj.order_items.order_item) {
+                createOrderItem(item);
             }
             orders.push(order);
+            // For cash customer create payment.
+            if (order.personID <= 24) {
+                var payment:Payment = new Payment();
+                payment.amount = order.total;
+                payment.personID = order.personID;
+                CairngormUtils.dispatchEvent(JNidEvent.CREATE_PAYMENT,
+                    payment);
+            }
+            CairngormUtils.dispatchEvent(JNidEvent.ORDER_CREATED, order);
+            var event:JNidEvent = new JNidEvent(JNidEvent.ORDER_CREATED,
+                                                order);
+            dispatchEvent(event);
         }
         
         public function createOrderItem(obj:XML):void {
             var item:OrderItem = OrderItem.fromXML(obj);
             _orderItemIDMap[item.id] = item;
-            item.product = getProduct(item.productID);
-            var order:Order = getOrder(item.orderID);
-            order.addOrderItem(item);
             orderItems.push(item);
-            if (order.orderItems.length == orderToCreate.orderItems.length) {
-                // For cash customer create payment.
-                if (order.personID <= 24) {
-                    var payment:Payment = new Payment();
-                    payment.amount = order.total;
-                    payment.person = order.person;
-                    CairngormUtils.dispatchEvent(JNidEvent.CREATE_PAYMENT,
-                                       payment);
-                }
-                CairngormUtils.dispatchEvent(JNidEvent.ORDER_CREATED, order);
-                var event:JNidEvent = new JNidEvent(JNidEvent.ORDER_CREATED,
-                                                    order);
-                dispatchEvent(event);
-            }
         }
         
         public function createSupply(obj:XML):void {
             var supply:Supply = Supply.fromXML(obj);
             _supplyIDMap[supply.id] = supply;
-            var person:Person = getPerson(supply.personID);
-            person.addSupply(supply);
-            for each (var item:SupplyItem in supplyToCreate.supplyItems) {
-                item.supplyID = supply.id;
-                CairngormUtils.dispatchEvent(JNidEvent.CREATE_SUPPLY_ITEM, item);
+            for each (var item:XML in obj.supply_items.supply_item) {
+                createSupplyItem(item);
             }
             supplies.push(supply);
+            ApplicationManager.getInstance().setState("mainPage");
         }
         
         public function createSupplyItem(obj:XML):void {
             var item:SupplyItem = SupplyItem.fromXML(obj);
             _supplyItemIDMap[item.id] = item;
-            item.product = getProduct(item.productID);
-            getSupply(item.supplyID).addSupplyItem(item);
             supplyItems.push(item);
-            if (item.supply.supplyItems.length == supplyToCreate.supplyItems.length) {
-                Application.application.setPage("mainPage");
-            }
         }
         
         public function createPerson(obj:XML):void {
             var person:Person = Person.fromXML(obj);
             _personIDMap[person.id] = person;
             _personNameMap[person.name] = person;
-            for each (var bankAccount:BankAccount in personToCreate.bankAccounts) {
-                bankAccount.personID = person.id;
-                CairngormUtils.dispatchEvent(JNidEvent.CREATE_BANK_ACCOUNT,
-                    bankAccount);
+            for each (var account:XML in obj.bank_accounts.bank_account) {
+                createBankAccount(account);
             }
-            for each (var phoneNumber:PhoneNumber in personToCreate.phoneNumbers) {
-                phoneNumber.personID = person.id;
-                CairngormUtils.dispatchEvent(JNidEvent.CREATE_PHONE_NUMBER,
-                    phoneNumber);
+            for each (var number:XML in obj.phone_numbers.phone_number) {
+                createPhoneNumber(number);
             }
             people.push(person);
             var event:JNidEvent = new JNidEvent(JNidEvent.PERSON_CREATED,
@@ -341,20 +290,19 @@ package com.j_nid.models {
         public function createBankAccount(obj:XML):void {
             var bankAccount:BankAccount = BankAccount.fromXML(obj);
             _bankAccountIDMap[bankAccount.id] = bankAccount;
-            getPerson(bankAccount.personID).addBankAccount(bankAccount);
             bankAccounts.push(bankAccount);
         }
         
         public function createPhoneNumber(obj:XML):void {
             var phoneNumber:PhoneNumber = PhoneNumber.fromXML(obj);
             _phoneNumberIDMap[phoneNumber.id] = phoneNumber;
-            getPerson(phoneNumber.personID).addPhoneNumber(phoneNumber);
             phoneNumbers.push(phoneNumber);
         }
         
         public function createProductType(obj:XML):void {
             var productType:ProductType = ProductType.fromXML(obj);
             _productTypeIDMap[productType.id] = productType;
+            _productTypeNameMap[productType.name] = productType;
             productTypes.push(productType);
             createproductTypesWithAll();
             var event:JNidEvent = new JNidEvent(JNidEvent.PRODUCT_TYPE_CREATED,
@@ -365,7 +313,7 @@ package com.j_nid.models {
         public function createProduct(obj:XML):void {
             var product:Product = Product.fromXML(obj);
             _productIDMap[product.id] = product;
-            getProductType(product.productTypeID).addProduct(product);
+            _productNameMap[product.name] = product; 
             products.push(product);
             var event:JNidEvent = new JNidEvent(JNidEvent.PRODUCT_CREATED,
                                                 product);
@@ -374,10 +322,10 @@ package com.j_nid.models {
         
         public function createPayment(obj:XML):void {
             var payment:Payment = Payment.fromXML(obj);
-            getPerson(payment.personID).addPayment(payment);
             payments.push(payment);
-            var outStandingOrders:Array = payment.person.orders.source.filter(
-                function (order:*, index:int, array:Array):Boolean {
+            _paymentIDMap[payment.id] = payment;
+            var outStandingOrders:Array = payment.person.orders.filter(
+                function (order:Order, index:int, array:Array):Boolean {
                     return order.isOutstanding;
                 }
             );
@@ -400,113 +348,169 @@ package com.j_nid.models {
             dispatchEvent(event);
         }
         
-        public function getProductType(id:int):ProductType {
-            if (_productTypeIDMap == null) {
-                return null
-            }
+        public function getProductType(id:uint):ProductType {
             return _productTypeIDMap[id];
         }
         
-        public function getPerson(id:int):Person {
-            if (_personIDMap == null) {
-                return null
-            }
+        public function getProductTypeByName(name:String):ProductType {
+            return _productTypeNameMap[name];
+        }
+        
+        public function getPerson(id:uint):Person {
             return _personIDMap[id];
         }
         
-        public function getSupply(id:int):Supply {
-            if (_supplyIDMap == null) {
-                return null
-            }
+        public function getSupply(id:uint):Supply {
             return _supplyIDMap[id];
         }
         
-        public function updateProduct(xml:XML):void {
+        public function getProductsByProductType(productTypeID:uint):Array {
+            return products.filter(
+                        function(product:Product, index:int, arr:Array):Boolean {
+                            return product.productTypeID == productTypeID;
+                        });
+        }
+        
+        public function getPaymentsByPerson(personID:uint):Array {
+            return payments.filter(
+                        function(payment:Payment, index:int, arr:Array):Boolean {
+                            return payment.personID == personID;
+                        });
+        }
+        
+        public function getOrdersByPerson(personID:uint):Array {
+            return orders.filter(
+                        function(order:Order, index:int, arr:Array):Boolean {
+                            return order.personID == personID;
+                        });
+        }
+        
+        public function getSuppliesByPerson(personID:uint):Array {
+            return supplies.filter(
+                        function(supply:Supply, index:int, arr:Array):Boolean {
+                            return supply.personID == personID;
+                        });
+        }
+        
+        public function getBankAccountsByPerson(personID:uint):Array {
+            return bankAccounts.filter(
+                        function(bankAccount:BankAccount, index:int, arr:Array):Boolean {
+                            return bankAccount.personID == personID;
+                        });
+        }
+        
+        public function getPhoneNumbersByPerson(personID:uint):Array {
+            return phoneNumbers.filter(
+                        function(phoneNumber:PhoneNumber, index:int, arr:Array):Boolean {
+                            return phoneNumber.personID == personID;
+                        });
+        }
+        
+        public function getOrderItemsByOrder(orderID:uint):Array {
+            return orderItems.filter(
+                        function(orderItem:OrderItem, index:int, arr:Array):Boolean {
+                            return orderItem.orderID == orderID;
+                        });
+        }
+        
+        public function getSupplyItemsBySupply(supplyID:uint):Array {
+            return supplyItems.filter(
+                        function(supplyItem:SupplyItem, index:int, arr:Array):Boolean {
+                            return supplyItem.supplyID == supplyID;
+                        });
+        }
+        
+        public function updateProduct(obj:XML):void {
             
         }
         
-        public function updateProductType(xml:XML):void {
+        public function updateProductType(obj:XML):void {
             
         }
         
-        public function updateOrder(xml:XML):void {
+        public function updatePerson(obj:XML):void {
+        	var event:JNidEvent = new JNidEvent(JNidEvent.PERSON_UPDATED,
+        	                                    getPerson(obj.id));
+            dispatchEvent(event);
+        }
+        
+        public function updateOrder(obj:XML):void {
             
         }
         
-        public function deleteOrder(xml:XML):void {
-            
-        }
-        
-        public function deleteOrderItem(xml:XML):void {
-            
-        }
-        
-        public function updateSupply(xml:XML):void {
-            
-        }
-        
-        public function deleteSupply(xml:XML):void {
-            
-        }
-        
-        public function deleteSupplyItem(xml:XML):void {
-            
-        }
-        
-        public function removeOrder(order:Order):void {
-            order.person.removeOrder(order);
-            orders.removeItemAt(orders.getItemIndex(order));
+        public function deleteOrder(obj:XML):void {
+            var order:Order = _orderIDMap[obj];
             for each (var item:OrderItem in order.orderItems) {
-                removeOrderItem(item);
+                orderItems.splice(orderItems.indexOf(item), 1);
+                delete _orderItemIDMap[item.id];
             }
+            orders.splice(orders.indexOf(order), 1);
             delete _orderIDMap[order.id];
+            var event:JNidEvent = new JNidEvent(JNidEvent.ORDER_DELETED, order);
+            dispatchEvent(event);
         }
         
-        public function removeOrderItem(item:OrderItem):void {
-            orderItems.removeItemAt(orderItems.getItemIndex(item));
-            delete _orderItemIDMap[item.id];
+        public function deletePayment(obj:XML):void {
+            var payment:Payment = _paymentIDMap[obj];
+            payments.splice(payments.indexOf(payment), 1);
+            delete _paymentIDMap[payment.id];
+            var event:JNidEvent = new JNidEvent(JNidEvent.PAYMENT_DELETED,
+                                                payment);
+            dispatchEvent(event);
         }
         
-        public function removeSupply(supply:Supply):void {
-            supply.person.removeSupply(supply);
-            supplies.removeItemAt(supplies.getItemIndex(supply));
+        public function deleteOrderItem(obj:XML):void {
+            var orderItem:OrderItem = _orderItemIDMap[obj];
+            orderItems.splice(orderItems.indexOf(orderItem), 1);
+            delete _orderItemIDMap[orderItem.id];
+            var event:JNidEvent = new JNidEvent(JNidEvent.ORDER_ITEM_DELETED,
+                                                orderItem);
+            dispatchEvent(event);
+        }
+        
+        public function updateSupply(obj:XML):void {
+            
+        }
+        
+        public function deleteSupply(obj:XML):void {
+            var supply:Supply = _supplyIDMap[obj];
             for each (var item:SupplyItem in supply.supplyItems) {
-                removeSupplyItem(item);
+                supplyItems.splice(supplyItems.indexOf(item), 1);
+                delete _supplyItemIDMap[item.id];
             }
+            supplies.splice(supplies.indexOf(supply), 1);
             delete _supplyIDMap[supply.id];
+            var event:JNidEvent = new JNidEvent(JNidEvent.SUPPLY_DELETED, supply);
+            dispatchEvent(event);
         }
         
-        public function removeSupplyItem(item:SupplyItem):void {
-            supplyItems.removeItemAt(supplyItems.getItemIndex(item));
-            delete _supplyItemIDMap[item.id];
+        public function deleteSupplyItem(obj:XML):void {
+            var supplyItem:SupplyItem = _supplyItemIDMap[obj];
+            supplyItems.splice(supplyItems.indexOf(supplyItem), 1);
+            delete _supplyItemIDMap[supplyItem.id];
+            var event:JNidEvent = new JNidEvent(JNidEvent.SUPPLY_ITEM_DELETED,
+                                                supplyItem);
+            dispatchEvent(event);
         }
         
         public function getPersonByName(name:String):Person {
-            if (_personNameMap == null) {
-                return null;
-            }
             return _personNameMap[name];
         }
         
-        public function getOrder(id:int):Order {
-            if (_orderIDMap == null) {
-                return null;
-            }
+        public function getOrder(id:uint):Order {
             return _orderIDMap[id];
         }
         
-        public function getOrderItem(id:int):OrderItem {
-            if (_orderItemIDMap == null) {
-                return null;
-            }
+        public function getOrderItem(id:uint):OrderItem {
             return _orderItemIDMap[id];
         }
         
-        public function getProduct(id:int):Product {
-            if (_productIDMap == null) {
-                return null;
-            }
+        public function getProduct(id:uint):Product {
             return _productIDMap[id];
+        }
+        
+        public function getProductByName(name:String):Product {
+            return _productNameMap[name];
         }
         
 /* ----- get-set function. ------------------------------------------------- */

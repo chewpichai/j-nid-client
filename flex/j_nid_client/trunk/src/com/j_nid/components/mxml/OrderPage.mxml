@@ -1,46 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" 
-	creationComplete="creationComplete(event)"
-	show="showHandler(event)"
-	width="100%" height="100%">
-	
-	<mx:Metadata>
-		[ResourceBundle("OrderPage")]
-	</mx:Metadata>
+    creationComplete="creationComplete(event)"
+    show="showHandler(event)"
+    showEffect="{wipeIn}"
+    hideEffect="{wipeOut}"
+    width="100%"
+    height="100%">
+    
+    <mx:Metadata>
+        [ResourceBundle("OrderPage")]
+    </mx:Metadata>
 
-	<mx:Script>
-		<![CDATA[
-			import mx.resources.ResourceBundle;
-			import mx.collections.SortField;
-			import mx.collections.Sort;
-			import mx.collections.ArrayCollection;
-			import com.j_nid.utils.Utils;
-			import com.j_nid.models.Person;
-			import mx.binding.utils.ChangeWatcher;
-			import com.j_nid.events.JNidEvent;
-			import com.j_nid.utils.CairngormUtils;
-			import mx.events.FlexEvent;
-			import mx.collections.ListCollectionView;
-			import mx.events.ListEvent;
-			import mx.events.CalendarLayoutChangeEvent;
-			import com.j_nid.utils.PrintUtils;
-			import com.j_nid.models.Order;
-			import com.j_nid.models.OrderItem;
-			import com.j_nid.models.JNidModelLocator;
-			
-			[Bindable]
-			private var model:JNidModelLocator = JNidModelLocator.getInstance();
-			[Bindable]
-			private var people:ArrayCollection;
-			[Bindable]
+    <mx:Script>
+        <![CDATA[
+        	import com.j_nid.controls.ApplicationManager;
+        	import mx.controls.Alert;
+        	import mx.events.CloseEvent;
+            import mx.resources.ResourceBundle;
+            import mx.collections.SortField;
+            import mx.collections.Sort;
+            import mx.collections.ArrayCollection;
+            import com.j_nid.utils.Utils;
+            import com.j_nid.models.Person;
+            import mx.binding.utils.ChangeWatcher;
+            import com.j_nid.events.JNidEvent;
+            import com.j_nid.utils.CairngormUtils;
+            import mx.events.FlexEvent;
+            import mx.collections.ListCollectionView;
+            import mx.events.ListEvent;
+            import mx.events.CalendarLayoutChangeEvent;
+            import com.j_nid.utils.PrintUtils;
+            import com.j_nid.models.Order;
+            import com.j_nid.models.OrderItem;
+            import com.j_nid.utils.ModelUtils;
+            
+            [Bindable]
+            private var model:ModelUtils = ModelUtils.getInstance();
+            [Bindable]
+            private var people:ArrayCollection;
+            [Bindable]
             private var orders:ArrayCollection;
             [Bindable]
             private var utils:Utils = Utils.getInstance();
-			
-			private function creationComplete(e:FlexEvent):void {
-				// Create people.
-				people = new ArrayCollection(model.people);
-				var sort:Sort = new Sort();
+            [Bindable]
+            private var selectedOrder:Order;
+            [Bindable]
+            private var appMgr:ApplicationManager =
+                ApplicationManager.getInstance();
+            
+            private function creationComplete(e:FlexEvent):void {
+                // Create people.
+                people = new ArrayCollection(model.people);
+                var sort:Sort = new Sort();
                 sort.fields = [new SortField("name")];
                 people.sort = sort;
                 people.filterFunction =
@@ -62,243 +73,304 @@
                     };
                 orderList.dataProvider = orders;
                 // Add change watchers.
-				ChangeWatcher.watch(personField, "selectedIndex", filterOrder);
-				ChangeWatcher.watch(dateField, "selectedRanges", filterOrder);
-				ChangeWatcher.watch(outstandingField, "selected", filterOrder);
-				ChangeWatcher.watch(paidField, "selected", filterOrder);
-			}
-			
-			private function showHandler(e:FlexEvent):void {
-				people.refresh();
-				initData();
-			}
-			
-			private function initData():void {
-				outstandingField.selected = true;
-				var today:Date = new Date();
-				var rangeEnd:Date = new Date(today.fullYear, today.month, today.date);
-				var rangeStart:Date = utils.moveDateByDay(rangeEnd, -365);
-				dateField.selectedRanges = [{rangeStart: rangeStart, rangeEnd: rangeEnd}];
-			}
-			
-			private function filterOrder(e:Event):void {
-				orders.refresh();
-			}
-			
-			private function checkPerson(person:Person):Boolean {
-				if (personField.selectedItem == null) {
-					return true;
-				}
-				return person == personField.selectedItem;
-			}
-			
-			private function checkDate(date:Date):Boolean {
-				if (dateField.selectedRanges.length == 0) {
-					return true;
-				}
-				for each (var obj:Object in dateField.selectedRanges) {
-					var start:Date = new Date(obj.rangeStart.time);
-					var end:Date = new Date(obj.rangeEnd.time);
-					// Move end date to the midnight of the next day.
-					end = utils.moveDateByDay(end, 1);
-					if (date >= start && date < end) {
-						return true;
-					}
-				}
-				return false;
-			}
-			
-			private function checkStatus(order:Order):Boolean {
-				var statusArray:Array = new Array();
-				if (outstandingField.selected && order.isOutstanding) {
-					return true;
-				}
-				if (paidField.selected && order.isPaid) {
-					return true;
-				}
-				return false;
-			}
-			
-			internal function removeOrderItem(item:OrderItem):void {
-				item.order.removeOrderItem(item);
-				model.removeOrderItem(item);
-				CairngormUtils.dispatchEvent(JNidEvent.DELETE_ORDER_ITEM, item);
-			}
-			
-			private function printOrder(e:MouseEvent):void {
-				var order:Order = Order(orderList.selectedItem);
-				PrintUtils.printOrder(order);
-			}
-			
-			private function deleteOrderClick(e:MouseEvent):void {
-				var order:Order = Order(orderList.selectedItem);
-				model.removeOrder(order);
-				CairngormUtils.dispatchEvent(JNidEvent.DELETE_ORDER, order);
-			}
-			
-			private function searchChange(e:Event):void {
-				var sort:Sort = new Sort();
-				sort.fields = [new SortField("sortIndex"), new SortField("name")];
-				people.sort = sort;
-				people.filterFunction = 
-					function(obj:Object):Boolean {
-						var person:Person = Person(obj);
-						person.sortIndex = 
-						     person.name.indexOf(personSearchField.text);
-						return person.sortIndex != -1 && Person(obj).isCustomer;
-					};
-				people.refresh();
-			}
-			
-			private function itemListKeyDown(e:KeyboardEvent):void {
-				var item:OrderItem = OrderItem(orderItemList.selectedItem);
-				if (e.keyCode == Keyboard.DELETE && item != null) {
-					removeOrderItem(item);
-				}
-			}
-			
-			private function formatPrice(item:Object,
-                                          column:DataGridColumn):String {
-                                          	
-            	return utils.formatPrice(item[column.dataField]);
+                ChangeWatcher.watch(personField, "selectedIndex", filterOrder);
+                ChangeWatcher.watch(dateField, "selectedRanges", filterOrder);
+                ChangeWatcher.watch(outstandingField, "selected", filterOrder);
+                ChangeWatcher.watch(paidField, "selected", filterOrder);
+                //
+                model.addEventListener(JNidEvent.ORDER_DELETED, orderDeleted);
+                model.addEventListener(JNidEvent.ORDER_ITEM_DELETED,
+                    orderItemDeleted);
             }
-		]]>
-	</mx:Script>
-	
-	<mx:DateFormatter id="dateFormatter" formatString="DD/MM/YY J:NN:SS"/>
-	
-	<mx:Panel title="{resourceManager.getString('OrderPage', 'Filter')}"
-		verticalGap="5"
-		paddingTop="5" paddingBottom="5"
-		width="220" height="100%">
-		
-		<mx:HBox
-			paddingLeft="5" paddingRight="5"
-			verticalAlign="middle"
-			width="100%">
-			
-			<mx:Label
-				text="{resourceManager.getString('OrderPage', 'SearchCustomer')}:"/>
-		
-			<mx:TextInput id="personSearchField"
-				change="searchChange(event)"
-				width="100%"/>
-		</mx:HBox>
-		
-		<mx:List id="personField"
-			labelField="name"
-			borderThickness="0"
-			width="100%" height="100%"/>
-			
-		<mx:DateChooser id="dateField"
-			allowMultipleSelection="true"
-			borderThickness="0"
-			cornerRadius="0"
-			width="100%"/>
-			
-		<mx:VBox
-			paddingLeft="5" paddingRight="5"
-			paddingBottom="5"
-			width="100%">
-			
-			<mx:CheckBox id="outstandingField"
-				label="{resourceManager.getString('OrderPage', 'Outstanding')}"/>
-			
-			<mx:CheckBox id="paidField"
-				label="{resourceManager.getString('OrderPage', 'Paid')}"/>
-		</mx:VBox>
-	</mx:Panel>
-	
-	<mx:Panel title="{resourceManager.getString('OrderPage', 'Order')}" 
-		layout="absolute"
-		width="250" height="100%">
-		
-		<mx:List id="orderList" 
-			width="100%" height="100%">
-			
-			<mx:itemRenderer>
-				<mx:Component>
+            
+            private function orderDeleted(e:JNidEvent):void {
+                orders.refresh();
+                selectedOrder = null;
+            }
+            
+            private function orderItemDeleted(e:JNidEvent):void {
+                // set null first for invoke data binding.
+                selectedOrder = null;
+                selectedOrder = e.data.order;
+            }
+            
+            private function showHandler(e:FlexEvent):void {
+                people.refresh();
+                initData();
+            }
+            
+            private function initData():void {
+                outstandingField.selected = true;
+                var today:Date = new Date();
+                var rangeEnd:Date = new Date(today.fullYear, today.month, today.date);
+                var rangeStart:Date = utils.moveDateByDay(rangeEnd, -365);
+                dateField.selectedRanges = [{rangeStart: rangeStart, rangeEnd: rangeEnd}];
+            }
+            
+            private function filterOrder(e:Event):void {
+                orders.refresh();
+            }
+            
+            private function checkPerson(person:Person):Boolean {
+                if (personField.selectedItem == null) {
+                    return true;
+                }
+                return person == personField.selectedItem;
+            }
+            
+            private function checkDate(date:Date):Boolean {
+                if (dateField.selectedRanges.length == 0) {
+                    return true;
+                }
+                for each (var obj:Object in dateField.selectedRanges) {
+                    var start:Date = new Date(obj.rangeStart.time);
+                    var end:Date = new Date(obj.rangeEnd.time);
+                    // Move end date to the midnight of the next day.
+                    end = utils.moveDateByDay(end, 1);
+                    if (date >= start && date < end) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            
+            private function checkStatus(order:Order):Boolean {
+                var statusArray:Array = new Array();
+                if (outstandingField.selected && order.isOutstanding) {
+                    return true;
+                }
+                if (paidField.selected && order.isPaid) {
+                    return true;
+                }
+                return false;
+            }
+            
+            private function printOrder(e:MouseEvent):void {
+                var order:Order = Order(orderList.selectedItem);
+                PrintUtils.printOrder(order);
+            }
+            
+            private function deleteOrderClick(e:MouseEvent):void {
+                var order:Order = Order(orderList.selectedItem);
+                appMgr.showConfirm(
+                    resourceManager.getString('SupplyPage',
+                        'ConfirmMessage'),
+                    resourceManager.getString('SupplyPage',
+                        'ConfirmTitle'),
+                    function(e:CloseEvent):void {
+                        if (e.detail == Alert.OK) {
+                            order.remove();
+                        }
+                    });
+            }
+            
+            private function searchChange(e:Event):void {
+                var sort:Sort = new Sort();
+                sort.fields = [new SortField("sortIndex"), new SortField("name")];
+                people.sort = sort;
+                people.filterFunction = 
+                    function(obj:Object):Boolean {
+                        var person:Person = Person(obj);
+                        return person.isCustomer &&
+                               person.name.indexOf(personSearchField.text) != -1;
+                    };
+                people.refresh();
+            }
+            
+            private function itemListKeyDown(e:KeyboardEvent):void {
+                var item:OrderItem = OrderItem(orderItemList.selectedItem);
+                if (e.keyCode == Keyboard.DELETE && item != null) {
+                    appMgr.showConfirm(
+                        resourceManager.getString('OrderPage',
+                            'ConfirmMessage'),
+                        resourceManager.getString('OrderPage',
+                            'ConfirmTitle'),
+                        closeHandler);
+                }
+            }
+            
+            private function closeHandler(e:CloseEvent):void {
+            	var item:OrderItem = OrderItem(orderItemList.selectedItem);
+                if (e.detail == Alert.OK) {
+                    if (item.order.orderItems.length > 1) {
+                        item.remove();
+                    } else {
+                        item.order.remove();
+                    }
+                }
+            }
+            
+            private function formatPrice(item:Object,
+                                         column:DataGridColumn):String {
+                                              
+                return utils.formatPrice(item[column.dataField]);
+            }
+        ]]>
+    </mx:Script>
+    
+    <mx:WipeDown id="wipeOut" duration="1000"/>
+    <mx:WipeDown id="wipeIn" duration="1000"/>
+    
+    <mx:DateFormatter id="dateFormatter" formatString="DD/MM/YY J:NN:SS"/>
+    
+    <mx:Panel title="{resourceManager.getString('OrderPage', 'Filter')}"
+        verticalGap="5"
+        paddingTop="5"
+        paddingBottom="5"
+        width="220"
+        height="100%">
+        
+        <mx:HBox
+            paddingLeft="5"
+            paddingRight="5"
+            verticalAlign="middle"
+            width="100%">
+            
+            <mx:Label
+                text="{resourceManager.getString('OrderPage', 'SearchCustomer')}:"/>
+        
+            <mx:TextInput id="personSearchField"
+                change="searchChange(event)"
+                width="100%"/>
+        </mx:HBox>
+        
+        <mx:List id="personField"
+            labelField="name"
+            borderThickness="0"
+            width="100%"
+            height="100%"/>
+            
+        <mx:DateChooser id="dateField"
+            allowMultipleSelection="true"
+            borderThickness="0"
+            cornerRadius="0"
+            width="100%"/>
+            
+        <mx:VBox
+            paddingLeft="5"
+            paddingBottom="5"
+            paddingRight="5"
+            width="100%">
+            
+            <mx:CheckBox id="outstandingField"
+                label="{resourceManager.getString('OrderPage', 'Outstanding')}"/>
+            
+            <mx:CheckBox id="paidField"
+                label="{resourceManager.getString('OrderPage', 'Paid')}"/>
+        </mx:VBox>
+    </mx:Panel>
+    
+    <mx:Panel title="{resourceManager.getString('OrderPage', 'Order')}" 
+        layout="absolute"
+        width="250"
+        height="100%">
+        
+        <mx:List id="orderList"
+            change="selectedOrder=Order(orderList.selectedItem)"
+            width="100%"
+            height="100%">
+            
+            <mx:itemRenderer>
+                <mx:Component>
 <mx:Label text="{data}" color="{data.isPaid ? 0x0000FF:0xFF0000}"/>
-				</mx:Component>
-			</mx:itemRenderer>
-		</mx:List>
-	</mx:Panel>
-	
-	<mx:Panel title="{resourceManager.getString('OrderPage', 'Detail')}" 
-		layout="vertical"
-		paddingLeft="5" paddingRight="5" 
-		paddingTop="5"
-		width="100%" height="100%">
-		
-		<mx:HBox 
-			width="100%" height="35" 
-			paddingTop="5" paddingRight="5" 
-			horizontalAlign="right">
-			
-			<mx:Label text="{orderList.selectedItem.person.name}"/>
-			<mx:Label
-				text="{dateFormatter.format(orderList.selectedItem.created)}"/>
-		</mx:HBox>
-		
-		<mx:DataGrid id="orderItemList" 
-			dataProvider="{orderList.selectedItem.orderItems}"
-			textAlign="center"
-			keyDown="itemListKeyDown(event)"
-			width="100%" height="100%">
-			<mx:columns>
-				<mx:DataGridColumn
-					headerText="{resourceManager.getString(
-					                   'OrderPage', 'Quantity')}"
-					dataField="quantity"
-					headerStyleName="dgHeader"
-					width="50"/>
-				<mx:DataGridColumn
-					headerText="{resourceManager.getString('OrderPage', 'Name')}"
-					dataField="name"
-					headerStyleName="dgHeader"/>
-				<mx:DataGridColumn
-					headerText="{resourceManager.getString('OrderPage', 'Unit')}"
-					dataField="unit"
-					textAlign="right"
-					headerStyleName="dgHeader"
-					width="50"/>
-				<mx:DataGridColumn
-					headerText="{resourceManager.getString(
-					                   'OrderPage', 'PricePerUnit')}"
-					dataField="pricePerUnit"
-					labelFunction="formatPrice"
-					textAlign="right"
-					headerStyleName="dgHeader"
-					width="85"/>
-				<mx:DataGridColumn
-					headerText="{resourceManager.getString('OrderPage', 'Total')}"
-					dataField="total"
-					labelFunction="formatPrice"
-					textAlign="right"
-					headerStyleName="dgHeader"
-					width="85"/>
-			</mx:columns>
-		</mx:DataGrid>
-		
-		<mx:HBox horizontalAlign="right"
-			paddingRight="5"
-			width="100%" height="35">
-			
-			<mx:Label
-				text="{resourceManager.getString('OrderPage', 'Summary',
-				            [utils.formatPrice(
-				                orderList.selectedItem.total),
-				             utils.formatPrice(
-				                orderList.selectedItem.paidTotal)])}"/>
-		</mx:HBox>
-		
-		<mx:ControlBar horizontalAlign="right">
-		
-			<mx:Button label="{resourceManager.getString('OrderPage', 'Delete')}"
-				click="deleteOrderClick(event)"/>
-			
-			<mx:Button label="{resourceManager.getString('OrderPage', 'Print')}"
-				click="printOrder(event)"/>
-		</mx:ControlBar>
-	</mx:Panel>
+                </mx:Component>
+            </mx:itemRenderer>
+        </mx:List>
+    </mx:Panel>
+    
+    <mx:Panel title="{resourceManager.getString('OrderPage', 'Detail')}" 
+        layout="vertical"
+        paddingLeft="5"
+        paddingRight="5" 
+        paddingTop="5"
+        width="100%"
+        height="100%">
+        
+        <mx:HBox 
+            horizontalAlign="right"
+            paddingTop="5"
+            paddingRight="5" 
+            width="100%"
+            height="35">
+            
+            <mx:Label id="customerNameField"
+                text="{selectedOrder.person.name}"/>
+            
+            <mx:Label id="createdDateField"
+                text="{dateFormatter.format(selectedOrder.created)}"/>
+        </mx:HBox>
+        
+        <mx:DataGrid id="orderItemList" 
+            dataProvider="{selectedOrder.orderItems}"
+            textAlign="center"
+            keyDown="itemListKeyDown(event)"
+            width="100%"
+            height="100%">
+            
+            <mx:columns>
+                <mx:DataGridColumn
+                    headerText="{resourceManager.getString(
+                                       'OrderPage', 'Quantity')}"
+                    dataField="quantity"
+                    headerStyleName="dgHeader"
+                    width="50"/>
+                
+                <mx:DataGridColumn
+                    headerText="{resourceManager.getString('OrderPage', 'Name')}"
+                    dataField="name"
+                    headerStyleName="dgHeader"/>
+                
+                <mx:DataGridColumn
+                    headerText="{resourceManager.getString('OrderPage', 'Unit')}"
+                    dataField="unit"
+                    textAlign="right"
+                    headerStyleName="dgHeader"
+                    width="50"/>
+                
+                <mx:DataGridColumn
+                    headerText="{resourceManager.getString(
+                                       'OrderPage', 'PricePerUnit')}"
+                    dataField="pricePerUnit"
+                    labelFunction="formatPrice"
+                    textAlign="right"
+                    headerStyleName="dgHeader"
+                    width="85"/>
+                
+                <mx:DataGridColumn
+                    headerText="{resourceManager.getString('OrderPage', 'Total')}"
+                    dataField="total"
+                    labelFunction="formatPrice"
+                    textAlign="right"
+                    headerStyleName="dgHeader"
+                    width="85"/>
+            </mx:columns>
+        </mx:DataGrid>
+        
+        <mx:HBox
+            horizontalAlign="right"
+            paddingRight="5"
+            width="100%"
+            height="35">
+            
+            <mx:Label
+                id="summaryField"
+                text="{resourceManager.getString('OrderPage', 'Summary',
+                            [utils.formatPrice(selectedOrder.total),
+                             utils.formatPrice(selectedOrder.paidTotal)])}"/>
+        </mx:HBox>
+        
+        <mx:ControlBar
+        	horizontalAlign="right">
+        
+            <mx:Button
+            	label="{resourceManager.getString('OrderPage', 'Delete')}"
+            	enabled="{orderList.selectedItem != null}"
+                click="deleteOrderClick(event)"/>
+            
+            <mx:Button
+            	label="{resourceManager.getString('OrderPage', 'Print')}"
+                enabled="{orderList.selectedItem != null}"
+                click="printOrder(event)"/>
+        </mx:ControlBar>
+    </mx:Panel>
 </mx:HBox>

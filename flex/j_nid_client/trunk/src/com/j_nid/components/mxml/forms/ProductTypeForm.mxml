@@ -1,111 +1,130 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:TitleWindow
-	title="{resourceManager.getString('ProductPage', 'ProductTypeForm')}"
-	xmlns:mx="http://www.adobe.com/2006/mxml"
-	creationComplete="init(event)"
-	layout="absolute">
-	
-	<mx:Metadata>
-		[ResourceBundle("ProductPage")]
-	</mx:Metadata>
-	
-	<mx:Script>
-		<![CDATA[
-			import com.j_nid.events.JNidEvent;
-			import com.j_nid.models.JNidModelLocator;
-			import com.j_nid.models.ProductType;
-			import com.j_nid.utils.CairngormUtils;
-			import mx.controls.LinkButton;
-			import mx.events.FlexEvent;
-			import mx.events.ValidationResultEvent;
-			import mx.managers.PopUpManager;
-			import mx.resources.ResourceBundle;
-			
-			[Bindable]
-			private var model:JNidModelLocator = JNidModelLocator.getInstance();
-			[Bindable]
-			public var productType:ProductType;
-			private var closeBtn:LinkButton;
-			
-			private function init(e:FlexEvent):void {
-				PopUpManager.centerPopUp(this);
-			}
-			
-			override protected function createChildren():void {
-				super.createChildren();
-				closeBtn = new LinkButton();
-				closeBtn.label = "x";
-				closeBtn.addEventListener(MouseEvent.CLICK, closeBtnClick);
-				rawChildren.addChild(closeBtn);
-			}
-			
-			override protected function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void	{
-				super.updateDisplayList(unscaledWidth, unscaledHeight);	
-				var margin:int = 4;	
-				var pixelsFromTop:int = 5;
-				var pixelsFromRight:int = 10;
-				closeBtn.setActualSize(30 + margin, 20 + margin);
-				var buttonWidth:int = closeBtn.width;
-				var xPos:int = unscaledWidth - buttonWidth - pixelsFromRight;
-				var yPos:int = pixelsFromTop;
-				closeBtn.move(xPos, yPos);
-			}
-			
-			private function saveProductTypeListener(e:MouseEvent):void {
-				if (isProductTypeValid()) {
-					productType.name = nameField.text;
-					productType.color = colorField.selectedColor;
-					if (productType.id) {
-						CairngormUtils.dispatchEvent(
-							JNidEvent.UPDATE_PRODUCT_TYPE, productType);
-					} else {
-						CairngormUtils.dispatchEvent(
-							JNidEvent.CREATE_PRODUCT_TYPE, productType);
-					}
-					close();
-				}
-			}
-			
-			private function isProductTypeValid():Boolean {
-				var validationResult:ValidationResultEvent = nameValidator.validate();
-				return validationResult.type == ValidationResultEvent.VALID;
-			}
-			
-			private function closeBtnClick(e:MouseEvent):void {
-				close();
-			}
-			
-			private function close():void {
-				PopUpManager.removePopUp(this);
-			}
-		]]>
-	</mx:Script>
-	
-	<mx:Form
-		width="100%" height="100%">
-		
-		<mx:FormItem label="{resourceManager.getString('ProductPage', 'Name')}:"
-			required="true">
-			
-			<mx:TextInput id="nameField"
-				text="{productType.name}"
-				width="100%" height="30"/>
-		</mx:FormItem>
-		
-		<mx:FormItem label="{resourceManager.getString('ProductPage', 'Color')}:">
-			<mx:ColorPicker id="colorField"
-				selectedColor="{productType.color}"/>
-		</mx:FormItem>
-		
-		<mx:FormItem>
-			<mx:Button id="saveBtn"
-				label="{resourceManager.getString('ProductPage', 'Save')}"
-				click="saveProductTypeListener(event)"/>
-		</mx:FormItem>
-	</mx:Form>
-	
-	<mx:StringValidator id="nameValidator"
-		source="{nameField}" property="text"
-		trigger="{saveBtn}" triggerEvent="click"
-		required="true"/>
+    title="{resourceManager.getString('ProductPage', 'ProductTypeForm')}"
+    xmlns:mx="http://www.adobe.com/2006/mxml"
+    creationComplete="init(event)"
+    layout="absolute">
+    
+    <mx:Metadata>
+        [ResourceBundle("ProductPage")]
+    </mx:Metadata>
+    
+    <mx:Script>
+        <![CDATA[
+        	import mx.utils.StringUtil;
+        	import com.j_nid.controls.ApplicationManager;
+            import com.j_nid.events.JNidEvent;
+            import com.j_nid.utils.ModelUtils;
+            import com.j_nid.models.ProductType;
+            import com.j_nid.utils.CairngormUtils;
+            import mx.controls.LinkButton;
+            import mx.events.FlexEvent;
+            import mx.managers.PopUpManager;
+            import mx.resources.ResourceBundle;
+            
+            [Bindable]
+            private var model:ModelUtils = ModelUtils.getInstance();
+            [Bindable]
+            private var appMgr:ApplicationManager =
+                ApplicationManager.getInstance();
+            [Bindable]
+            public var productType:ProductType;
+            private var closeBtn:LinkButton;
+            private var errMsg:String;
+            
+            private function init(e:FlexEvent):void {
+                PopUpManager.centerPopUp(this);
+            }
+            
+            override protected function createChildren():void {
+                super.createChildren();
+                closeBtn = new LinkButton();
+                closeBtn.label = "x";
+                closeBtn.addEventListener(MouseEvent.CLICK, closeBtnClick);
+                rawChildren.addChild(closeBtn);
+            }
+            
+            override protected function updateDisplayList(unscaledWidth:Number,
+                                            unscaledHeight:Number):void    {
+                super.updateDisplayList(unscaledWidth, unscaledHeight);    
+                var margin:int = 4;    
+                var pixelsFromTop:int = 5;
+                var pixelsFromRight:int = 10;
+                closeBtn.setActualSize(30 + margin, 20 + margin);
+                var buttonWidth:int = closeBtn.width;
+                var xPos:int = unscaledWidth - buttonWidth - pixelsFromRight;
+                var yPos:int = pixelsFromTop;
+                closeBtn.move(xPos, yPos);
+            }
+            
+            private function saveProductTypeListener(e:MouseEvent):void {
+                if (isValid()) {
+                    productType.name = nameField.text;
+                    productType.color = colorField.selectedColor;
+                    if (productType.id > 0) {
+                        CairngormUtils.dispatchEvent(
+                            JNidEvent.UPDATE_PRODUCT_TYPE, productType);
+                    } else {
+                        CairngormUtils.dispatchEvent(
+                            JNidEvent.CREATE_PRODUCT_TYPE, productType);
+                    }
+                    close();
+                } else {
+                    appMgr.showMessage(errMsg,
+                        resourceManager.getString("ProductPage", "ErrorTitle"));
+                }
+            }
+            
+            private function isValid():Boolean {
+                errMsg = "";
+                var typeName:String = StringUtil.trim(nameField.text);
+                if (typeName.length < 1) {
+                    errMsg += resourceManager.getString("ProductPage",
+                                   "TypeNameLengthError");
+                } else {
+                    if (model.getProductTypeByName(typeName) != null) {
+                        errMsg += resourceManager.getString("ProductPage",
+                                       "TypeNameDuplicateError");
+                    }
+                }
+                return errMsg.length == 0;
+            }
+            
+            private function closeBtnClick(e:MouseEvent):void {
+                close();
+            }
+            
+            private function close():void {
+                PopUpManager.removePopUp(this);
+            }
+        ]]>
+    </mx:Script>
+    
+    <mx:Form
+        width="100%"
+        height="100%">
+        
+        <mx:FormItem
+        	label="{resourceManager.getString('ProductPage', 'Name')}:"
+            required="true">
+            
+            <mx:TextInput id="nameField"
+                text="{productType.name}"
+                width="100%"
+                height="30"/>
+        </mx:FormItem>
+        
+        <mx:FormItem
+        	label="{resourceManager.getString('ProductPage', 'Color')}:">
+            
+            <mx:ColorPicker id="colorField"
+                selectedColor="{productType.color}"/>
+        </mx:FormItem>
+        
+        <mx:FormItem>
+            <mx:Button id="saveBtn"
+                label="{resourceManager.getString('ProductPage', 'Save')}"
+                click="saveProductTypeListener(event)"/>
+        </mx:FormItem>
+    </mx:Form>
 </mx:TitleWindow>

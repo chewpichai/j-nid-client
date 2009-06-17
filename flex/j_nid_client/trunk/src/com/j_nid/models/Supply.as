@@ -1,18 +1,17 @@
 package com.j_nid.models {
 	
-	import mx.collections.ArrayCollection;
-	import mx.collections.IViewCursor;
-	import mx.events.CollectionEvent;
+	import com.j_nid.events.JNidEvent;
+	import com.j_nid.utils.ModelUtils;
+	import com.j_nid.utils.Utils;
 	
 	[Bindable]
 	public class Supply extends Model {
 		
-		private var _person:Person;
-		private var _personID:int;
-		private var _notation:String;
-		private var _created:Date;
-		private var _total:Number;
-		private var _supplyItems:ArrayCollection;
+		public var personID:uint;
+		public var notation:String;
+		public var created:Date;
+		// Temporary for create supply.
+        private var _supplyItems:Array;
 		
 		public static function fromXML(obj:XML):Supply {
     		var supply:Supply = new Supply();
@@ -27,100 +26,62 @@ package com.j_nid.models {
 			super();
 			notation = "";
 			created = new Date();
-			total = 0;
-			supplyItems = new ArrayCollection();
-			supplyItems.addEventListener(CollectionEvent.COLLECTION_CHANGE,
-			     itemChangeListener);
-		}
-		
-		private function itemChangeListener(evt:CollectionEvent):void {
-			total = 0;
-			var cursor:IViewCursor = supplyItems.createCursor();
-			while (!cursor.afterLast) {
-				total += SupplyItem(cursor.current).total;
-				cursor.moveNext();
-			}
-		}
-		
-		public function addSupplyItem(item:SupplyItem):void {
-			item.supply = this;
-			supplyItems.addItem(item);
-		}
-		
-		public function removeSupplyItem(item:SupplyItem):void {
-			item.supply = null;
-			supplyItems.removeItemAt(supplyItems.getItemIndex(item));
-		}
-		
-		public function clearSupplyItems():void {
-			supplyItems.removeAll();
-		}
-		
-		public function getSupplyItemAt(obj:int):SupplyItem {
-			return SupplyItem(supplyItems.getItemAt(obj));
+			//
+            createEvent = JNidEvent.CREATE_SUPPLY;
+            updateEvent = JNidEvent.UPDATE_SUPPLY;
+            deleteEvent = JNidEvent.DELETE_SUPPLY;
 		}
 		
 		public function toXML():XML {
 			var xml:XML = <supply/>
 			xml.person_id = person.id;
 			xml.notation = notation;
-			xml.created = utils.formatDate(created);
+			xml.created = Utils.getInstance().formatDate(created);
+			if (_supplyItems != null) {
+                xml.supply_items = <supply_items/>
+                for each (var item:SupplyItem in _supplyItems) {
+                    xml.supply_items.appendChild(item.toXML());
+                }
+            }
 			return xml;
 		}
 		
 		override public function toString():String {
 			return person.name + " [" + 
-				   utils.formatDate(created, "DD MMM YYYY") + "]";
+				   Utils.getInstance().formatDate(created, "DD MMM YYYY") + "]";
 		}
 		
-/* ----- get-set function. --------------------------------------------------------------------- */
+/* ----- get-set function. ------------------------------------------------- */
 		
 		public function set person(obj:Person):void {
-			_person = obj;
+			personID = obj.id;
 		}
 		
 		public function get person():Person {
-			return _person;
+			return ModelUtils.getInstance().getPerson(personID);
 		}
 		
-		public function get personID():int {
-			return _personID;
-		}
-
-		public function set personID(obj:int):void {
-			_personID = obj;
-		}
-		
-		public function get notation():String {
-			return _notation;
-		}
-
-		public function set notation(obj:String):void {
-			_notation = obj;
-		}
-		
-		public function get created():Date {
-			return _created;
-		}
-
-		public function set created(obj:Date):void {
-			_created = obj;
-		}
-		
-		public function get total():Number {
-			return _total;
-		}
-		
-		public function set total(obj:Number):void {
-			_total = obj;
-		}
-		
-		public function set supplyItems(obj:ArrayCollection):void {
+		public function set supplyItems(obj:Array):void {
 			_supplyItems = obj;
 		}
 		
-		public function get supplyItems():ArrayCollection {
-			return _supplyItems;
+		public function get supplyItems():Array {
+			if (id == 0) {
+				return _supplyItems;
+			}
+			return ModelUtils.getInstance().getSupplyItemsBySupply(id);
+		}
+		
+		public function set total(obj:Number):void {
+			
+		}
+		
+		public function get total():Number {
+			var sum:Number = 0;
+			for each (var supplyItem:SupplyItem in supplyItems) {
+				sum += supplyItem.total;
+			}
+			return sum;
 		}
 	}
 }

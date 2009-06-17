@@ -1,51 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml"
-	show="showHandler(event)"
-	creationComplete="init(event)"
-	width="100%" height="100%">
-	
-	<mx:Metadata>
-		[ResourceBundle("PaymentPage")]
-	</mx:Metadata>
+    show="showHandler(event)"
+    creationComplete="init(event)"
+    showEffect="{wipeIn}"
+    hideEffect="{wipeOut}"
+    width="100%"
+    height="100%">
+    
+    <mx:Metadata>
+        [ResourceBundle("PaymentPage")]
+    </mx:Metadata>
 
-	<mx:Script>
-		<![CDATA[
-			import com.j_nid.controls.ApplicationManager;
-			import mx.events.ValidationResultEvent;
-			import mx.validators.ValidationResult;
-			import mx.resources.ResourceBundle;
-			import com.j_nid.utils.PrintUtils;
-			import mx.binding.utils.ChangeWatcher;
-			import com.j_nid.utils.Utils;
-			import mx.events.CalendarLayoutChangeEvent;
-			import mx.events.FlexEvent;
-			import mx.controls.List;
-			import mx.collections.ListCollectionView;
-			import mx.collections.ICollectionView;
-			import com.j_nid.events.JNidEvent;
-			import com.j_nid.utils.CairngormUtils;
-			import mx.collections.SortField;
-			import mx.collections.Sort;
-			import com.j_nid.models.Payment;
-			import com.j_nid.models.Order;
-			import mx.collections.IViewCursor;
-			import mx.collections.ArrayCollection;
-			import com.j_nid.models.Person;
-			import com.j_nid.models.JNidModelLocator;
-			
-			[Bindable]
-			private var model:JNidModelLocator = JNidModelLocator.getInstance();
-			[Bindable]
-			private var appMgr:ApplicationManager = ApplicationManager.getInstance();
-			[Bindable]
-			private var people:ArrayCollection;
-			private var errMsg:String;
-			[Bindable]
-			internal var utils:Utils = Utils.getInstance();
-			
-			private function init(e:FlexEvent):void {
-				people = new ArrayCollection(model.people);
-				var sort:Sort = new Sort();
+    <mx:Script>
+        <![CDATA[
+        	import mx.controls.Alert;
+        	import mx.events.CloseEvent;
+            import com.j_nid.controls.ApplicationManager;
+            import mx.events.ValidationResultEvent;
+            import mx.validators.ValidationResult;
+            import mx.resources.ResourceBundle;
+            import com.j_nid.utils.PrintUtils;
+            import mx.binding.utils.ChangeWatcher;
+            import com.j_nid.utils.Utils;
+            import mx.events.CalendarLayoutChangeEvent;
+            import mx.events.FlexEvent;
+            import mx.controls.List;
+            import mx.collections.ListCollectionView;
+            import mx.collections.ICollectionView;
+            import com.j_nid.events.JNidEvent;
+            import com.j_nid.utils.CairngormUtils;
+            import mx.collections.SortField;
+            import mx.collections.Sort;
+            import com.j_nid.models.Payment;
+            import com.j_nid.models.Order;
+            import mx.collections.IViewCursor;
+            import mx.collections.ArrayCollection;
+            import com.j_nid.models.Person;
+            import com.j_nid.utils.ModelUtils;
+            
+            [Bindable]
+            private var model:ModelUtils = ModelUtils.getInstance();
+            [Bindable]
+            private var appMgr:ApplicationManager =
+                ApplicationManager.getInstance();
+            [Bindable]
+            private var people:ArrayCollection;
+            [Bindable]
+            public var utils:Utils = Utils.getInstance();
+            private var errMsg:String;
+            
+            private function init(e:FlexEvent):void {
+                people = new ArrayCollection(model.people);
+                var sort:Sort = new Sort();
                 sort.fields = [new SortField("name")];
                 people.sort = sort;
                 people.filterFunction = 
@@ -54,224 +60,275 @@
                     };
                 personList.dataProvider = people;
                 // Add event listeners.
-                model.addEventListener(JNidEvent.PAYMENT_CREATED, paymentCreated);
-			}
-			
-			private function showHandler(e:FlexEvent):void {
-				people.refresh();
-				if (model.orderToCreate) {
-					var person:Person = model.orderToCreate.person;
-				    personList.selectedItem = person;
-				    transactionList.dataProvider = person.transactions; 
-				}
-				initData();
-			}
-			
-			private function paymentCreated(e:JNidEvent):void {
-				clearPaymentForm();
-				people.refresh();
-			}
-			
-			private function clearPaymentForm():void {
-				amountField.value = 0;
-				notationField.text = "";
-			}
-			
-			private function initData():void {
-				startDateField.selectedDate = 
-				    utils.moveDateByDay(new Date(), -180);
-				var rangeStart:Date = utils.moveDateByDay(new Date(), 1);
-				startDateField.disabledRanges = [{rangeStart: rangeStart}];
-				endDateField.disabledRanges = 
-				    [{rangeStart: rangeStart}, {rangeEnd: rangeStart}];
-			}
-			
-			private function dateChange(e:CalendarLayoutChangeEvent):void {
-				var startDate:Date = new Date(startDateField.selectedDate.time);
-				var endDate:Date = new Date(endDateField.selectedDate.time);
-				var disabledRanges:Array = endDateField.disabledRanges;
-				disabledRanges[1] = {rangeEnd: startDate};
-				endDateField.disabledRanges = disabledRanges;
-				disabledRanges = startDateField.disabledRanges;
-				disabledRanges[0] = {rangeStart: endDate};
-				startDateField.disabledRanges = disabledRanges;
-				var transactions:ArrayCollection = 
-				        ArrayCollection(transactionList.dataProvider);
-				filterTransaction(transactions,	startDate, endDate);
-			}
-			
-			private function filterTransaction(transaction:ArrayCollection, 
-				                               start:Date, end:Date):void {
-				
-				if (transaction != null) {
-					end = utils.moveDateByDay(end, 1);
-					transaction.filterFunction = 
-						function(obj:Object):Boolean {
-							return obj.created > start && obj.created < end;
-						};
-					transaction.refresh();
-				}
-			}
-			
-			private function isValid():Boolean {
-				errMsg = "";
-				var event:ValidationResultEvent = numberValidator.validate();
-				if (event.type == ValidationResultEvent.INVALID) {
-					for each (var result:ValidationResult in event.results) {
-						errMsg += result.errorMessage + "\n";
-					}
-				}
-				if (personList.selectedItem == null) {
-					errMsg += "Please select person.";
-				}
-				return errMsg.length == 0;
-			}
-			
-			private function payBtnClickListener(evt:MouseEvent):void {
-				if (isValid()) {
-					var payment:Payment = new Payment();
-					payment.amount = amountField.value;
-					payment.notation = notationField.text;
-					payment.person = Person(personList.selectedItem);
-					CairngormUtils.dispatchEvent(JNidEvent.CREATE_PAYMENT, payment);
-				} else {
-					appMgr.showMessage(errMsg);
-				}
-			}
-			
-			public function setPerson(person:Person):void {
-				var people:ListCollectionView = 
-						ListCollectionView(personList.dataProvider);
-				var index:int = people.getItemIndex(person);
-				personList.selectedIndex = index;
-				personList.scrollToIndex(index);
-			}
-			
-			private function printBtnClick(e:MouseEvent):void {
-				PrintUtils.printTransaction(Person(personList.selectedItem),
-				    startDateField.selectedDate,
-				    endDateField.selectedDate);
-			}
-			
-			private function formatPrice(item:Object,
-                                          column:DataGridColumn):String {
+                model.addEventListener(JNidEvent.PAYMENT_CREATED,
+                    paymentCreated);
+                model.addEventListener(JNidEvent.PAYMENT_DELETED,
+                    transactionDeleted);
+                model.addEventListener(JNidEvent.ORDER_DELETED,
+                    transactionDeleted);
+            }
+            
+            private function transactionDeleted(e:JNidEvent):void {
+                people.refresh();
+                var person:Person = e.data.person;
+                if (people.getItemIndex(person) != -1) {
+                    transactionList.dataProvider = person.transactions;
+                }
+            }
+            
+            private function showHandler(e:FlexEvent):void {
+                people.refresh();
+                initData();
+            }
+            
+            private function paymentCreated(e:JNidEvent):void {
+                clearPaymentForm();
+                transactionList.dataProvider = null;
+                people.refresh();
+                var person:Person = Payment(e.data).person;
+                if (people.getItemIndex(person) != -1) {
+                    personList.selectedItem = person;
+                    transactionList.dataProvider = person.transactions;
+                }
+            }
+            
+            private function clearPaymentForm():void {
+                amountField.value = 0;
+                notationField.text = "";
+            }
+            
+            private function initData():void {
+                startDateField.selectedDate = 
+                    utils.moveDateByDay(new Date(), -180);
+                var rangeStart:Date = utils.moveDateByDay(new Date(), 1);
+                startDateField.disabledRanges = [{rangeStart: rangeStart}];
+                endDateField.disabledRanges = 
+                    [{rangeStart: rangeStart}, {rangeEnd: rangeStart}];
+            }
+            
+            private function dateChange(e:CalendarLayoutChangeEvent):void {
+                var startDate:Date = new Date(startDateField.selectedDate.time);
+                var endDate:Date = new Date(endDateField.selectedDate.time);
+                var disabledRanges:Array = endDateField.disabledRanges;
+                disabledRanges[1] = {rangeEnd: startDate};
+                endDateField.disabledRanges = disabledRanges;
+                disabledRanges = startDateField.disabledRanges;
+                disabledRanges[0] = {rangeStart: endDate};
+                startDateField.disabledRanges = disabledRanges;
+                var transactions:ArrayCollection = 
+                        ArrayCollection(transactionList.dataProvider);
+                filterTransaction(transactions, startDate, endDate);
+            }
+            
+            private function filterTransaction(transaction:ArrayCollection, 
+                                               start:Date, end:Date):void {
+                
+                if (transaction != null) {
+                    end = utils.moveDateByDay(end, 1);
+                    transaction.filterFunction = 
+                        function(obj:Object):Boolean {
+                            return obj.created > start && obj.created < end;
+                        };
+                    transaction.refresh();
+                }
+            }
+            
+            private function isValid():Boolean {
+                errMsg = "";
+                var event:ValidationResultEvent = numberValidator.validate();
+                if (event.type == ValidationResultEvent.INVALID) {
+                    for each (var result:ValidationResult in event.results) {
+                        errMsg += result.errorMessage + "\n";
+                    }
+                }
+                if (personList.selectedItem == null) {
+                    errMsg += "Please select person.";
+                }
+                return errMsg.length == 0;
+            }
+            
+            private function payBtnClickListener(evt:MouseEvent):void {
+                if (isValid()) {
+                    var payment:Payment = new Payment();
+                    payment.amount = amountField.value;
+                    payment.notation = notationField.text;
+                    payment.personID = Person(personList.selectedItem).id;
+                    CairngormUtils.dispatchEvent(JNidEvent.CREATE_PAYMENT, payment);
+                } else {
+                    appMgr.showMessage(errMsg);
+                }
+            }
+            
+            public function setPerson(person:Person):void {
+                var people:ListCollectionView = 
+                        ListCollectionView(personList.dataProvider);
+                var index:int = people.getItemIndex(person);
+                personList.selectedIndex = index;
+                personList.scrollToIndex(index);
+            }
+            
+            private function printBtnClick(e:MouseEvent):void {
+                PrintUtils.printTransaction(Person(personList.selectedItem),
+                    startDateField.selectedDate,
+                    endDateField.selectedDate);
+            }
+            
+            private function formatPrice(item:Object,
+                                         column:DataGridColumn):String {
                 
                 try {
                     return utils.formatPrice(item[column.dataField]);
                 } catch (err:ReferenceError) {
-                	
+                    
                 }
                 return "";
             }
-		]]>
-	</mx:Script>
+            
+            private function transactionListKeyDown(e:KeyboardEvent):void {
+                if (e.keyCode == Keyboard.DELETE &&
+                    transactionList.selectedItem != null) {
+                    
+                    appMgr.showConfirm(
+                        resourceManager.getString('PaymentPage',
+                            'ConfirmMessage'),
+                        resourceManager.getString('PaymentPage',
+                            'ConfirmTitle'),
+                        closeHandler);
+                }
+            }
+            
+            private function closeHandler(e:CloseEvent):void {
+            	if (e.detail == Alert.OK) {
+                    transactionList.selectedItem.remove();
+            	}
+            }
+        ]]>
+    </mx:Script>
+    
+    <mx:WipeDown id="wipeOut" duration="1000"/>
+    <mx:WipeDown id="wipeIn" duration="1000"/>
 
-	<mx:Panel title="{resourceManager.getString('PaymentPage', 'Customer')}"
-		layout="absolute"
-		width="380" height="100%" >
-		
-		<mx:DataGrid id="personList"
-			width="100%" height="100%">
-			<mx:columns>
-				<mx:DataGridColumn dataField="name"
-					headerText="{resourceManager.getString(
-					                   'PaymentPage', 'Name')}"
-					headerStyleName="dgHeader"/>
-				<mx:DataGridColumn dataField="outstandingTotal" 
-					headerText="{resourceManager.getString(
-					                   'PaymentPage', 'OutstandingTotal')}"
-					headerStyleName="dgHeader"/>
-			</mx:columns>
-		</mx:DataGrid>
-	</mx:Panel>
-	
-	<mx:Panel title="{resourceManager.getString('PaymentPage', 'Detail')}"
-		layout="vertical"
-		paddingLeft="5" paddingRight="5"
-		paddingTop="10" paddingBottom="10"
-		width="100%" height="100%">
-		
-		<mx:HBox verticalAlign="middle"
-			width="100%">
-			
-			<mx:Label
-				text="{resourceManager.getString('PaymentPage', 'PayAmount')}:"/>
-			
-			<mx:NumericStepper id="amountField" 
-				maximum="1000000" 
-				width="250"/>
-				
-			<mx:Label
-				text="{resourceManager.getString('PaymentPage', 'Note')}:"/>
-			
-			<mx:TextArea id="notationField"
-				width="100%"/>
-			
-			<mx:Button id="payBtn"
-				label="{resourceManager.getString('PaymentPage', 'Pay')}" 
-				click="payBtnClickListener(event)" 
-				width="100"/>
-		</mx:HBox>
-		
-		<mx:DataGrid id="transactionList"
-			dataProvider="{personList.selectedItem.transactions}"
-			width="100%" height="100%">
-			<mx:columns>
-				<mx:DataGridColumn 
-					headerText="{resourceManager.getString(
-					                   'PaymentPage', 'Date')}"
-					headerStyleName="dgHeader">
-					<mx:itemRenderer>
-						<mx:Component>
+    <mx:Panel
+        title="{resourceManager.getString('PaymentPage', 'Customer')}"
+        width="380"
+        height="100%">
+        
+        <mx:DataGrid id="personList"
+            width="100%"
+            height="100%">
+            
+            <mx:columns>
+                <mx:DataGridColumn dataField="name"
+                    headerText="{resourceManager.getString(
+                                       'PaymentPage', 'Name')}"
+                    headerStyleName="dgHeader"/>
+                
+                <mx:DataGridColumn dataField="outstandingTotal" 
+                    headerText="{resourceManager.getString(
+                                       'PaymentPage', 'OutstandingTotal')}"
+                    headerStyleName="dgHeader"/>
+            </mx:columns>
+        </mx:DataGrid>
+    </mx:Panel>
+    
+    <mx:Panel title="{resourceManager.getString('PaymentPage', 'Detail')}"
+        layout="vertical"
+        paddingTop="10"
+        paddingLeft="5"
+        paddingBottom="10"
+        paddingRight="5"
+        width="100%"
+        height="100%">
+        
+        <mx:HBox
+            verticalAlign="middle"
+            width="100%">
+            
+            <mx:Label
+                text="{resourceManager.getString('PaymentPage', 'PayAmount')}:"/>
+            
+            <mx:NumericStepper id="amountField" 
+                maximum="1000000" 
+                width="250"/>
+                
+            <mx:Label
+                text="{resourceManager.getString('PaymentPage', 'Note')}:"/>
+            
+            <mx:TextArea id="notationField"
+                width="100%"/>
+            
+            <mx:Button id="payBtn"
+                label="{resourceManager.getString('PaymentPage', 'Pay')}" 
+                enabled="{personList.selectedItem != null}"
+                click="payBtnClickListener(event)" 
+                width="100"/>
+        </mx:HBox>
+        
+        <mx:DataGrid id="transactionList"
+            dataProvider="{personList.selectedItem.transactions}"
+            keyDown="transactionListKeyDown(event)"
+            width="100%"
+            height="100%">
+            
+            <mx:columns>
+                <mx:DataGridColumn 
+                    headerText="{resourceManager.getString(
+                                       'PaymentPage', 'Date')}"
+                    headerStyleName="dgHeader">
+                    <mx:itemRenderer>
+                        <mx:Component>
 <mx:Label text="{outerDocument.utils.formatDate(data.created,
                                         'DD-MM-YY J:NN:SS')}"/>
-						</mx:Component>
-					</mx:itemRenderer>
-				</mx:DataGridColumn>
-				<mx:DataGridColumn dataField="amount"
-					headerText="{resourceManager.getString(
-					                   'PaymentPage', 'Paid')}"
-					headerStyleName="dgHeader"
-					labelFunction="formatPrice"/>
-				<mx:DataGridColumn dataField="total"
-					headerText="{resourceManager.getString(
-					                   'PaymentPage', 'Outstanding')}"
-					headerStyleName="dgHeader"
-					labelFunction="formatPrice"/>
-				<mx:DataGridColumn dataField="notation"
-					headerText="{resourceManager.getString(
-					                   'PaymentPage', 'Note')}"
-					headerStyleName="dgHeader"/>
-			</mx:columns>
-		</mx:DataGrid>
-		
-		<mx:ControlBar>
-			<mx:Label
-				text="{resourceManager.getString('PaymentPage', 'StartDate')}:"/>
-			
-			<mx:DateField id="startDateField"
-				formatString="DD-MM-YYYY"
-				change="dateChange(event)"/>
-				
-			<mx:Label
-				text="{resourceManager.getString('PaymentPage', 'ToDate')}:"/>
-			
-			<mx:DateField id="endDateField"
-				selectedDate="{new Date()}"
-				formatString="DD-MM-YYYY"
-				change="dateChange(event)"/>
-				
-			<mx:Spacer width="100%"/>
-			
-			<mx:Button
-				label="{resourceManager.getString('PaymentPage', 'Print')}"
-				enabled="{personList.selectedItem != null}"
-				click="printBtnClick(event)"/>
-		</mx:ControlBar>
-	</mx:Panel>
-	
-	<mx:NumberValidator id="numberValidator" 
-		source="{amountField}" property="value"
-		trigger="{payBtn}" triggerEvent="click"
-		minValue="1"/>
+                        </mx:Component>
+                    </mx:itemRenderer>
+                </mx:DataGridColumn>
+                
+                <mx:DataGridColumn dataField="amount"
+                    headerText="{resourceManager.getString(
+                                       'PaymentPage', 'Paid')}"
+                    headerStyleName="dgHeader"
+                    labelFunction="formatPrice"/>
+                
+                <mx:DataGridColumn dataField="total"
+                    headerText="{resourceManager.getString(
+                                       'PaymentPage', 'Outstanding')}"
+                    headerStyleName="dgHeader"
+                    labelFunction="formatPrice"/>
+                
+                <mx:DataGridColumn dataField="notation"
+                    headerText="{resourceManager.getString(
+                                       'PaymentPage', 'Note')}"
+                    headerStyleName="dgHeader"/>
+            </mx:columns>
+        </mx:DataGrid>
+        
+        <mx:ControlBar>
+            <mx:Label
+                text="{resourceManager.getString('PaymentPage', 'StartDate')}:"/>
+            
+            <mx:DateField id="startDateField"
+                formatString="DD-MM-YYYY"
+                change="dateChange(event)"/>
+                
+            <mx:Label
+                text="{resourceManager.getString('PaymentPage', 'ToDate')}:"/>
+            
+            <mx:DateField id="endDateField"
+                selectedDate="{new Date()}"
+                formatString="DD-MM-YYYY"
+                change="dateChange(event)"/>
+                
+            <mx:Spacer width="100%"/>
+            
+            <mx:Button
+                label="{resourceManager.getString('PaymentPage', 'Print')}"
+                enabled="{personList.selectedItem != null}"
+                click="printBtnClick(event)"/>
+        </mx:ControlBar>
+    </mx:Panel>
+    
+    <mx:NumberValidator id="numberValidator" 
+        source="{amountField}" property="value"
+        trigger="{payBtn}" triggerEvent="click"
+        minValue="1"/>
 </mx:HBox>

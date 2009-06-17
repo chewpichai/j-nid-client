@@ -1,318 +1,384 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:TitleWindow 
-	title="{resourceManager.getString('PersonPage', 'PersonForm')}"
-	xmlns:mx="http://www.adobe.com/2006/mxml"
-	creationComplete="init(event)"
-	width="400" height="500">
-	
-	<mx:Metadata>
-		[ResourceBundle("PersonPage")]
-	</mx:Metadata>
-	
-	<mx:Script>
-		<![CDATA[
-			import mx.resources.ResourceBundle;
-			import com.j_nid.models.PhoneNumber;
-			import com.j_nid.models.BankAccount;
-			import mx.controls.LinkButton;
-			import mx.managers.PopUpManager;
-			import mx.events.FlexEvent;
-			import com.j_nid.models.JNidModelLocator;
-			import com.j_nid.models.Person;
-			import com.j_nid.events.JNidEvent;
-			import com.j_nid.utils.CairngormUtils;
-			import mx.controls.Alert;
-			import mx.events.ValidationResultEvent;
-			
-			[Bindable]
-			public var model:JNidModelLocator = JNidModelLocator.getInstance();
-			[Bindable]
-			public var person:Person;
-			private var errorMessage:String;
-			private var closeBtn:LinkButton;
-			
-			private function init(e:FlexEvent):void {
-				PopUpManager.centerPopUp(this);
-			}
-			
-			override protected function createChildren():void {
-				super.createChildren();
-				closeBtn = new LinkButton();
-				closeBtn.label = "x";
-				closeBtn.addEventListener(MouseEvent.CLICK, closeBtnClick);
-				rawChildren.addChild(closeBtn);
-			}
-			
-			override protected function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void	{
-				super.updateDisplayList(unscaledWidth, unscaledHeight);	
-				var margin:int = 4;	
-				var pixelsFromTop:int = 5;
-				var pixelsFromRight:int = 10;
-				closeBtn.setActualSize(30 + margin, 20 + margin);
-				var buttonWidth:int = closeBtn.width;
-				var xPos:int = unscaledWidth - buttonWidth - pixelsFromRight;
-				var yPos:int = pixelsFromTop;
-				closeBtn.move(xPos, yPos);
-			}
-			
-			public function close():void {
-				PopUpManager.removePopUp(this);
-			}
-			
-			private function closeBtnClick(e:MouseEvent):void {
-				close();
-			}
-			
-			private function saveClickListener(e:MouseEvent):void {
-				if (isValid()) {
-					person.name = nameField.text;
-					person.firstName = firstNameField.text;
-					person.lastName = lastNameField.text;
-					person.idCardNumber = idCardNumberFiled.text;
-					person.address = addressField.text;
-					person.detail1 = detail1Field.text;
-					person.detail2 = detail2Field.text;
-					model.personToCreate = person;
-					CairngormUtils.dispatchEvent(JNidEvent.CREATE_PERSON, person);
-				} else {
-					Alert.show(errorMessage, "Error");
-				}
-			}
-			
-			private function isValid():Boolean {
-				errorMessage = "";
-				var event:ValidationResultEvent = nameValidator.validate();
-				if (event.type == ValidationResultEvent.INVALID) {
-					errorMessage += "Check name.\n";
-				}
-				return errorMessage.length == 0;
-			}
-			
-			public function getPhoneType(item:Object, column:DataGridColumn):String {
-				for (var i:int = 0; i < model.phoneTypes.length(); i++) {
-					if (model.phoneTypes[i].data == item.type) {
-						return model.phoneTypes[i].label;
-					}
-				}
-				return "";
-			}
-			
-			public function getBankName(item:Object, column:DataGridColumn):String {
-				for (var i:int = 0; i < model.bankNames.length(); i++) {
-					if (model.bankNames[i].data == item.bank) {
-						return model.bankNames[i].label;
-					}
-				}
-				return "";
-			}
-			
-			private function phoneNumberAddBtnClick(e:MouseEvent):void {
-				var phoneNumber:PhoneNumber = new PhoneNumber();
-				phoneNumber.number = phoneNumberField.text;
-				phoneNumber.type = phoneTypeField.selectedItem.data;
-				person.addPhoneNumber(phoneNumber);
-				if (person.id != 0) {
-					CairngormUtils.dispatchEvent(JNidEvent.CREATE_PHONE_NUMBER, phoneNumber);
-				}
-				clearPhoneNumberForm();
-			}
-			
-			private function clearPhoneNumberForm():void {
-				phoneNumberField.text = "";
-				phoneTypeField.selectedIndex = 0;
-			}
-			
-			private function clearBankAccountForm():void {
-				bankNumberField.text = "";
-				bankNameField.selectedIndex = 0;
-			}
-			
-			private function bankAccountAddBtnClick(e:MouseEvent):void {
-				var bankAccount:BankAccount = new BankAccount();
-				bankAccount.number = bankNumberField.text;
-				bankAccount.bank = bankNameField.selectedItem.data;
-				person.addBankAccount(bankAccount);
-				if (person.id != 0) {
-					CairngormUtils.dispatchEvent(
-					   JNidEvent.CREATE_BANK_ACCOUNT, bankAccount);
-				}
-				clearBankAccountForm();
-			}
-		]]>
-	</mx:Script>
-	
-	<mx:Accordion creationPolicy="all"
-		width="100%" height="100%">
-		
-		<mx:Form 
-			label="{resourceManager.getString('PersonPage', 'Name')}"
-			paddingLeft="10" paddingRight="10"
-			paddingTop="10" paddingBottom="10"
-			width="100%" height="100%">
-			
-			<mx:FormItem label="{resourceManager.getString('PersonPage', 'Name')}:"
-				required="true"
-				width="100%">
-				
-				<mx:TextInput id="nameField" 
-					text="{person.name}"
-					width="100%"/>
-			</mx:FormItem>
-			
-			<mx:FormItem label="{resourceManager.getString('PersonPage', 'FirstName')}:"
-				width="100%">
-				
-				<mx:TextInput id="firstNameField" 
-					text="{person.firstName}"
-					width="100%"/>
-			</mx:FormItem>
-			
-			<mx:FormItem label="{resourceManager.getString('PersonPage', 'LastName')}:"
-				width="100%">
-				
-				<mx:TextInput id="lastNameField" 
-					text="{person.lastName}"
-					width="100%"/>
-			</mx:FormItem>
-			
-			<mx:FormItem label="{resourceManager.getString('PersonPage', 'IDCardNo')}:"
-				width="100%">
-				
-				<mx:TextInput id="idCardNumberFiled" 
-					text="{person.idCardNumber}"
-					width="100%"/>
-			</mx:FormItem>
-		</mx:Form>
-		
-		<mx:Form label="{resourceManager.getString('PersonPage', 'Address')}"
-			paddingTop="10" paddingBottom="10" 
-			paddingLeft="10" paddingRight="10"
-			width="100%" height="100%">
-			
-			<mx:FormItem label="{resourceManager.getString('PersonPage', 'Address')}:"
-				width="100%">
-				
-				<mx:TextArea id="addressField" 
-					text="{person.address}" width="100%"/>
-			</mx:FormItem>
-			
-			<mx:FormItem label="{resourceManager.getString('PersonPage', 'Detail')}1:"
-				width="100%">
-				
-				<mx:TextArea id="detail1Field" 
-					text="{person.detail1}"
-					width="100%"/>
-			</mx:FormItem>
-			
-			<mx:FormItem label="{resourceManager.getString('PersonPage', 'Detail')}2:"
-				width="100%">
-				
-				<mx:TextArea id="detail2Field" 
-					text="{person.detail2}"
-					width="100%"/>
-			</mx:FormItem>
-		</mx:Form>
-		
-		<mx:VBox label="{resourceManager.getString('PersonPage', 'PhoneNumber')}"
-			width="100%" height="100%">
-			
-			<mx:DataGrid id="phoneNumberList" 
-				dataProvider="{person.phoneNumbers}" 
-				width="100%">
-				<mx:columns>
-					<mx:DataGridColumn dataField="number"
-						headerText="{resourceManager.getString('PersonPage', 'PhoneNumber')}"
-						headerStyleName="dgHeader"/>
-					<mx:DataGridColumn dataField="type" 
-						headerText="{resourceManager.getString('PersonPage', 'PhoneNumberType')}"
-						labelFunction="getPhoneType"
-						headerStyleName="dgHeader"/>
-				</mx:columns>
-			</mx:DataGrid>
-			
-			<mx:Spacer height="100%"/>
-			
-			<mx:Form width="100%" 
-				paddingTop="10" paddingBottom="10" 
-				paddingLeft="10" paddingRight="10">
-				
-				<mx:FormItem label="{resourceManager.getString('PersonPage', 'PhoneNumber')}:"
-					width="100%">
-					
-					<mx:TextInput id="phoneNumberField"
-						width="100%"/>
-				</mx:FormItem>
-				
-				<mx:FormItem label="{resourceManager.getString('PersonPage', 'PhoneNumberType')}:"
-					width="100%">
-					
-					<mx:ComboBox id="phoneTypeField"
-						dataProvider="{model.phoneTypes}"
-						width="100%"/>
-				</mx:FormItem>
-				
-				<mx:FormItem>
-					<mx:Button label="{resourceManager.getString('PersonPage', 'Add')}"
-						click="phoneNumberAddBtnClick(event)"/>
-				</mx:FormItem>
-			</mx:Form>
-		</mx:VBox>
-		
-		<mx:VBox label="{resourceManager.getString('PersonPage', 'BankAccount')}"
-			width="100%" height="100%">
-			
-			<mx:DataGrid id="bankAccountList" 
-				dataProvider="{person.bankAccounts}"
-				width="100%">
-				<mx:columns>
-					<mx:DataGridColumn dataField="number"
-						headerText="{resourceManager.getString('PersonPage', 'AccountNo')}"
-						headerStyleName="dgHeader"/>
-					<mx:DataGridColumn dataField="bank"
-						headerText="{resourceManager.getString('PersonPage', 'Bank')}"
-						labelFunction="getBankName"
-						headerStyleName="dgHeader"/>
-				</mx:columns>
-			</mx:DataGrid>
-			
-			<mx:Spacer height="100%"/>
-			
-			<mx:Form 
-				paddingTop="10" paddingBottom="10" 
-				paddingLeft="10" paddingRight="10"
-				width="100%">
-				
-				<mx:FormItem label="{resourceManager.getString('PersonPage', 'AccountNo')}:"
-					width="100%">
-					
-					<mx:TextInput id="bankNumberField"
-						width="100%"/>
-				</mx:FormItem>
-				
-				<mx:FormItem label="{resourceManager.getString('PersonPage', 'Bank')}:"
-					width="100%">
-					
-					<mx:ComboBox id="bankNameField"
-						dataProvider="{model.bankNames}"
-						width="100%"/>
-				</mx:FormItem>
-				
-				<mx:FormItem>
-					<mx:Button label="{resourceManager.getString('PersonPage', 'Add')}"
-						click="bankAccountAddBtnClick(event)"/>
-				</mx:FormItem>
-			</mx:Form>
-		</mx:VBox>
-	</mx:Accordion>
-	
-	<mx:ControlBar horizontalAlign="right">
-				
-		<mx:Button id="saveBtn"
-			label="{resourceManager.getString('PersonPage', 'Save')}" 
-			click="saveClickListener(event)"/>
-	</mx:ControlBar>
-	
-	<mx:StringValidator id="nameValidator" 
-		source="{nameField}" property="text"
-		trigger="{saveBtn}" triggerEvent="click"/>
+    title="{resourceManager.getString('PersonPage', 'PersonForm')}"
+    xmlns:mx="http://www.adobe.com/2006/mxml"
+    creationComplete="init(event)"
+    width="400" height="500">
+    
+    <mx:Metadata>
+        [ResourceBundle("PersonPage")]
+    </mx:Metadata>
+    
+    <mx:Script>
+        <![CDATA[
+        	import mx.utils.StringUtil;
+        	import com.j_nid.controls.ApplicationManager;
+            import mx.collections.ArrayCollection;
+            import mx.resources.ResourceBundle;
+            import com.j_nid.models.PhoneNumber;
+            import com.j_nid.models.BankAccount;
+            import mx.controls.LinkButton;
+            import mx.managers.PopUpManager;
+            import mx.events.FlexEvent;
+            import com.j_nid.utils.ModelUtils;
+            import com.j_nid.models.Person;
+            import com.j_nid.events.JNidEvent;
+            import com.j_nid.utils.CairngormUtils;
+            
+            [Bindable]
+            public var model:ModelUtils = ModelUtils.getInstance();
+            [Bindable]
+            public var appMgr:ApplicationManager = 
+                ApplicationManager.getInstance();
+            [Bindable]
+            private var _person:Person;
+            [Bindable]
+            private var phoneNumbers:ArrayCollection;
+            [Bindable]
+            private var bankAccounts:ArrayCollection;
+            private var errMsg:String;
+            private var closeBtn:LinkButton;
+            
+            [Bindable]
+            public function set person(obj:Person):void {
+                _person = obj;
+                phoneNumbers = new ArrayCollection(_person.phoneNumbers);
+                bankAccounts = new ArrayCollection(_person.bankAccounts);
+            }
+            
+            public function get person():Person {
+                return _person;
+            }
+            
+            private function init(e:FlexEvent):void {
+                PopUpManager.centerPopUp(this);
+            }
+            
+            override protected function createChildren():void {
+                super.createChildren();
+                closeBtn = new LinkButton();
+                closeBtn.label = "x";
+                closeBtn.addEventListener(MouseEvent.CLICK, closeBtnClick);
+                rawChildren.addChild(closeBtn);
+            }
+            
+            override protected function updateDisplayList(unscaledWidth:Number,
+                                            unscaledHeight:Number):void {
+                
+                super.updateDisplayList(unscaledWidth, unscaledHeight);    
+                var margin:int = 4;    
+                var pixelsFromTop:int = 5;
+                var pixelsFromRight:int = 10;
+                closeBtn.setActualSize(30 + margin, 20 + margin);
+                var buttonWidth:int = closeBtn.width;
+                var xPos:int = unscaledWidth - buttonWidth - pixelsFromRight;
+                var yPos:int = pixelsFromTop;
+                closeBtn.move(xPos, yPos);
+            }
+            
+            public function close():void {
+                PopUpManager.removePopUp(this);
+            }
+            
+            private function closeBtnClick(e:MouseEvent):void {
+                close();
+            }
+            
+            private function saveClickListener(e:MouseEvent):void {
+                if (isValid()) {
+                    person.name = nameField.text;
+                    person.firstName = firstNameField.text;
+                    person.lastName = lastNameField.text;
+                    person.idCardNumber = idCardNumberFiled.text;
+                    person.address = addressField.text;
+                    person.detail1 = detail1Field.text;
+                    person.detail2 = detail2Field.text;
+                    if (person.id > 0) {
+                        CairngormUtils.dispatchEvent(JNidEvent.UPDATE_PERSON,
+                            person);
+                    } else {
+                        person.bankAccounts = bankAccounts.source;
+                        person.phoneNumbers = phoneNumbers.source;
+                        CairngormUtils.dispatchEvent(JNidEvent.CREATE_PERSON,
+                            person);
+                    }
+                } else {
+                    appMgr.showMessage(errMsg,
+                        resourceManager.getString("PersonPage", "ErrorTitle"));
+                }
+            }
+            
+            private function isValid():Boolean {
+                errMsg = "";
+                var personName:String = StringUtil.trim(nameField.text);
+                if (personName.length < 1) {
+                	errMsg += resourceManager.getString("PersonPage",
+                	                   "NameLengthError");
+                } else {
+                	if (model.getPersonByName(personName) != null) {
+                		errMsg += resourceManager.getString("PersonPage",
+                                            "NameDuplicateError");
+                	}
+                }
+                return errMsg.length == 0;
+            }
+            
+            public function getPhoneType(item:Object, column:DataGridColumn):String {
+                for (var i:int = 0; i < model.phoneTypes.length(); i++) {
+                    if (model.phoneTypes[i].data == item.type) {
+                        return model.phoneTypes[i].label;
+                    }
+                }
+                return "";
+            }
+            
+            public function getBankName(item:Object, column:DataGridColumn):String {
+                for (var i:int = 0; i < model.bankNames.length(); i++) {
+                    if (model.bankNames[i].data == item.bank) {
+                        return model.bankNames[i].label;
+                    }
+                }
+                return "";
+            }
+            
+            private function phoneNumberAddBtnClick(e:MouseEvent):void {
+                var phoneNumber:PhoneNumber = new PhoneNumber();
+                phoneNumber.number = phoneNumberField.text;
+                phoneNumber.type = phoneTypeField.selectedItem.data;
+                if (person.id > 0) {
+                	phoneNumber.personID = person.id;
+                    CairngormUtils.dispatchEvent(JNidEvent.CREATE_PHONE_NUMBER,
+                        phoneNumber);
+                }
+                phoneNumbers.addItem(phoneNumber);
+                clearPhoneNumberForm();
+            }
+            
+            private function clearPhoneNumberForm():void {
+                phoneNumberField.text = "";
+                phoneTypeField.selectedIndex = 0;
+            }
+            
+            private function clearBankAccountForm():void {
+                bankNumberField.text = "";
+                bankNameField.selectedIndex = 0;
+            }
+            
+            private function bankAccountAddBtnClick(e:MouseEvent):void {
+                var bankAccount:BankAccount = new BankAccount();
+                bankAccount.number = bankNumberField.text;
+                bankAccount.bank = bankNameField.selectedItem.data;
+                if (person.id > 0) {
+                	bankAccount.personID = person.id;
+                    CairngormUtils.dispatchEvent(JNidEvent.CREATE_BANK_ACCOUNT,
+                        bankAccount);
+                }
+                bankAccounts.addItem(bankAccount);
+                clearBankAccountForm();
+            }
+        ]]>
+    </mx:Script>
+    
+    <mx:Accordion
+        creationPolicy="all"
+        width="100%"
+        height="100%">
+        
+        <mx:Form 
+            label="{resourceManager.getString('PersonPage', 'Name')}"
+            paddingLeft="10" paddingRight="10"
+            paddingTop="10" paddingBottom="10"
+            width="100%" height="100%">
+            
+            <mx:FormItem
+                label="{resourceManager.getString('PersonPage', 'Name')}:"
+                required="true"
+                width="100%">
+                
+                <mx:TextInput id="nameField" 
+                    text="{person.name}"
+                    width="100%"/>
+            </mx:FormItem>
+            
+            <mx:FormItem label="{resourceManager.getString('PersonPage', 'FirstName')}:"
+                width="100%">
+                
+                <mx:TextInput id="firstNameField" 
+                    text="{person.firstName}"
+                    width="100%"/>
+            </mx:FormItem>
+            
+            <mx:FormItem label="{resourceManager.getString('PersonPage', 'LastName')}:"
+                width="100%">
+                
+                <mx:TextInput id="lastNameField" 
+                    text="{person.lastName}"
+                    width="100%"/>
+            </mx:FormItem>
+            
+            <mx:FormItem
+                label="{resourceManager.getString('PersonPage', 'IDCardNo')}:"
+                width="100%">
+                
+                <mx:TextInput id="idCardNumberFiled" 
+                    text="{person.idCardNumber}"
+                    width="100%"/>
+            </mx:FormItem>
+        </mx:Form>
+        
+        <mx:Form
+            label="{resourceManager.getString('PersonPage', 'Address')}"
+            paddingTop="10"
+            paddingRight="10"
+            paddingBottom="10" 
+            paddingLeft="10"
+            width="100%"
+            height="100%">
+            
+            <mx:FormItem
+                label="{resourceManager.getString('PersonPage', 'Address')}:"
+                width="100%">
+                
+                <mx:TextArea id="addressField" 
+                    text="{person.address}" width="100%"/>
+            </mx:FormItem>
+            
+            <mx:FormItem
+                label="{resourceManager.getString('PersonPage', 'Detail')}1:"
+                width="100%">
+                
+                <mx:TextArea id="detail1Field" 
+                    text="{person.detail1}"
+                    width="100%"/>
+            </mx:FormItem>
+            
+            <mx:FormItem
+                label="{resourceManager.getString('PersonPage', 'Detail')}2:"
+                width="100%">
+                
+                <mx:TextArea id="detail2Field" 
+                    text="{person.detail2}"
+                    width="100%"/>
+            </mx:FormItem>
+        </mx:Form>
+        
+        <mx:VBox
+            label="{resourceManager.getString('PersonPage', 'PhoneNumber')}"
+            width="100%"
+            height="100%">
+            
+            <mx:DataGrid id="phoneNumberList" 
+                dataProvider="{phoneNumbers}" 
+                width="100%">
+                
+                <mx:columns>
+                    <mx:DataGridColumn dataField="number"
+                        headerText="{resourceManager.getString('PersonPage',
+                                          'PhoneNumber')}"
+                        headerStyleName="dgHeader"/>
+                    <mx:DataGridColumn dataField="type" 
+                        headerText="{resourceManager.getString('PersonPage',
+                                          'PhoneNumberType')}"
+                        labelFunction="getPhoneType"
+                        headerStyleName="dgHeader"/>
+                </mx:columns>
+            </mx:DataGrid>
+            
+            <mx:Spacer height="100%"/>
+            
+            <mx:Form 
+                paddingTop="10"
+                paddingRight="10"
+                paddingBottom="10" 
+                paddingLeft="10"
+                width="100%">
+                
+                <mx:FormItem
+                    label="{resourceManager.getString('PersonPage',
+                               'PhoneNumber')}:"
+                    width="100%">
+                    
+                    <mx:TextInput id="phoneNumberField"
+                        width="100%"/>
+                </mx:FormItem>
+                
+                <mx:FormItem
+                    label="{resourceManager.getString('PersonPage',
+                                        'PhoneNumberType')}:"
+                    width="100%">
+                    
+                    <mx:ComboBox id="phoneTypeField"
+                        dataProvider="{model.phoneTypes}"
+                        width="100%"/>
+                </mx:FormItem>
+                
+                <mx:FormItem>
+                    <mx:Button
+                        label="{resourceManager.getString('PersonPage', 'Add')}"
+                        click="phoneNumberAddBtnClick(event)"/>
+                </mx:FormItem>
+            </mx:Form>
+        </mx:VBox>
+        
+        <mx:VBox
+            label="{resourceManager.getString('PersonPage', 'BankAccount')}"
+            width="100%"
+            height="100%">
+            
+            <mx:DataGrid id="bankAccountList" 
+                dataProvider="{bankAccounts}"
+                width="100%">
+                
+                <mx:columns>
+                    <mx:DataGridColumn dataField="number"
+                        headerText="{resourceManager.getString('PersonPage',
+                                          'AccountNo')}"
+                        headerStyleName="dgHeader"/>
+                    
+                    <mx:DataGridColumn dataField="bank"
+                        headerText="{resourceManager.getString('PersonPage',
+                                          'Bank')}"
+                        labelFunction="getBankName"
+                        headerStyleName="dgHeader"/>
+                </mx:columns>
+            </mx:DataGrid>
+            
+            <mx:Spacer height="100%"/>
+            
+            <mx:Form 
+                paddingTop="10"
+                paddingRight="10"
+                paddingBottom="10" 
+                paddingLeft="10"
+                width="100%">
+                
+                <mx:FormItem label="{resourceManager.getString('PersonPage', 'AccountNo')}:"
+                    width="100%">
+                    
+                    <mx:TextInput id="bankNumberField"
+                        width="100%"/>
+                </mx:FormItem>
+                
+                <mx:FormItem label="{resourceManager.getString('PersonPage', 'Bank')}:"
+                    width="100%">
+                    
+                    <mx:ComboBox id="bankNameField"
+                        dataProvider="{model.bankNames}"
+                        width="100%"/>
+                </mx:FormItem>
+                
+                <mx:FormItem>
+                    <mx:Button label="{resourceManager.getString('PersonPage', 'Add')}"
+                        click="bankAccountAddBtnClick(event)"/>
+                </mx:FormItem>
+            </mx:Form>
+        </mx:VBox>
+    </mx:Accordion>
+    
+    <mx:ControlBar horizontalAlign="right">
+                
+        <mx:Button id="saveBtn"
+            label="{resourceManager.getString('PersonPage', 'Save')}" 
+            click="saveClickListener(event)"/>
+    </mx:ControlBar>
 </mx:TitleWindow>

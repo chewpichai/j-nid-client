@@ -4,7 +4,8 @@
     xmlns:jn="com.j_nid.components.mxml.*"
     xmlns:adobe="http://www.adobe.com/2006/fc"
     layout="vertical" 
-    paddingLeft="5" paddingRight="5"
+    paddingLeft="5"
+    paddingRight="5"
     paddingTop="5">
     
     <mx:Metadata>
@@ -13,7 +14,10 @@
     
     <mx:Script>
         <![CDATA[
-            import mx.collections.ArrayCollection;
+        	import com.j_nid.controls.ApplicationManager;
+        	import mx.events.CollectionEvent;
+        	import com.j_nid.utils.Utils;
+        	import mx.collections.ArrayCollection;
             import com.j_nid.models.Person;
             import mx.resources.ResourceBundle;
             import mx.managers.PopUpManager;
@@ -23,18 +27,33 @@
             import com.j_nid.components.mxml.forms.SupplyProcessForm;
             import com.j_nid.models.Supply;
             import com.j_nid.models.Product;
-            import com.j_nid.models.JNidModelLocator;
+            import com.j_nid.utils.ModelUtils;
             import com.j_nid.models.SupplyItem;
             import mx.events.DragEvent;
             
             [Bindable]
             public var supply:Supply;
             [Bindable]
-            public var supplier:Person;
+            public var suppliers:Array;
             [Bindable]
-            public var people:ArrayCollection;
+            public var model:ModelUtils = ModelUtils.getInstance();
+            private var appMgr:ApplicationManager =
+                ApplicationManager.getInstance();
             [Bindable]
-            public var model:JNidModelLocator = JNidModelLocator.getInstance();
+            private var utils:Utils = Utils.getInstance();
+            [Bindable]
+            private var total:Number;
+            private var errMsg:String;
+            
+            public function set supplyItems(obj:ArrayCollection):void {
+            	supplyItemList.dataProvider = obj;
+                obj.addEventListener(CollectionEvent.COLLECTION_CHANGE,
+                    supplyItemsChange);
+            }
+            
+            private function supplyItemsChange(e:CollectionEvent):void {
+                total = utils.sum(e.currentTarget, "total");
+            }
             
             private function dragEnterListener(e:DragEvent):void {
                 DragManager.acceptDragDrop(DataGrid(e.currentTarget));
@@ -42,49 +61,64 @@
             
             private function dragDropListener(e:DragEvent):void {
                 var product:Product = e.dragSource.dataForFormat("items")[0];
-                var supplyItem:SupplyItem = new SupplyItem(product);
+                var supplyItem:SupplyItem = new SupplyItem();
+                supplyItem.productID = product.id;
+                supplyItem.pricePerUnit = product.costPerUnit;
+                supplyItem.unit = product.unit;
                 addSupplyItem(supplyItem);
             }
             
             public function addSupplyItem(item:SupplyItem):void {
-                for each (var obj:SupplyItem in supply.supplyItems) {
-                    if (item.product.id == obj.product.id) {
+                for each (var obj:SupplyItem in supplyItemList.dataProvider) {
+                    if (item.productID == obj.productID) {
                         obj.unit += item.unit;
                         return;
                     }
                 }
-                supply.addSupplyItem(item);
+                supplyItemList.dataProvider.addItem(item);
                 supplyItemList.verticalScrollPosition = 
                     supplyItemList.maxVerticalScrollPosition;
             }
-            
+                        
             private function clearListener(e:MouseEvent):void {
-                supply.clearSupplyItems();
+                supplyItemList.dataProvider.removeAll();
             }
             
             private function removeListener(e:MouseEvent):void {
                 var item:SupplyItem = SupplyItem(supplyItemList.selectedItem);
                 if (item != null) {
-                    supply.removeSupplyItem(item);
+                    var i:int = supplyItemList.dataProvider.getItemIndex(item);
+                    supplyItemList.dataProvider.removeItemAt(i);
                 }
             }
             
             private function processListener(e:MouseEvent):void {
                 if (isValid()) {
-                    supply.person = model.getPersonByName(personFiled.text);
+                    supply.personID = model.getPersonByName(supplierFiled.text).id;
                     supply.notation = notationField.text;
+                    supply.supplyItems = supplyItemList.dataProvider.source;
                     var processForm:SupplyProcessForm = SupplyProcessForm(
                         PopUpManager.createPopUp(
                             Application(Application.application),
                             SupplyProcessForm, true));
                     processForm.supply = supply;
                 } else {
-                    Alert.show("Your supply must contain at least 1 item.", "Error");
+                    appMgr.showMessage(errMsg,
+                        resourceManager.getString("MakeSupply", "ErrorTitle"));
                 }
             }
             
             private function isValid():Boolean {
-                return true;
+            	errMsg = "";
+                if (supplyItemList.dataProvider.length == 0) {
+                    errMsg += resourceManager.getString("MakeSupply",
+                                  "ItemLengthError");
+                }
+                if (model.getPersonByName(supplierFiled.text) == null) {
+                    errMsg += resourceManager.getString("MakeSupply",
+                                  "CustomerError");
+                }
+                return errMsg.length == 0;
             }
         ]]>
     </mx:Script>
@@ -94,9 +128,9 @@
         <mx:Label
             text="{resourceManager.getString('MakeSupply', 'SupplierName')}:"/>
         
-        <adobe:AutoComplete id="personFiled" 
-            labelField="name" 
-            dataProvider="{people}"
+        <adobe:AutoComplete id="supplierFiled"
+        	dataProvider="{suppliers}"
+            labelField="name"
             width="100%"/>
     </mx:HBox>
     
@@ -107,8 +141,10 @@
         itemEditEnd="event.preventDefault()" 
         editable="true" 
         wordWrap="true" variableRowHeight="true" 
-        width="100%" height="100%"
-        styleName="cartItemList">
+        styleName="cartItemList"
+        width="100%"
+        height="100%">
+        
         <mx:columns>
             <mx:DataGridColumn 
                 headerText="{resourceManager.getString(
@@ -125,12 +161,14 @@
                     </mx:Component>
                 </mx:itemRenderer>
             </mx:DataGridColumn>
+            
             <mx:DataGridColumn 
                 headerText="{resourceManager.getString('MakeSupply', 'Name')}" 
                 dataField="name" 
                 editable="false" 
                 headerStyleName="dgHeader"
                 width="150"/>
+            
             <mx:DataGridColumn 
                 headerText="{resourceManager.getString('MakeSupply', 'Unit')}"
                 dataField="unit" 
@@ -145,6 +183,7 @@
                     </mx:Component>
                 </mx:itemRenderer>
             </mx:DataGridColumn>
+            
             <mx:DataGridColumn 
                 headerText="{resourceManager.getString(
                                     'MakeSupply', 'PricePerUnit')}"
@@ -160,6 +199,7 @@
                     </mx:Component>
                 </mx:itemRenderer>
             </mx:DataGridColumn>
+            
             <mx:DataGridColumn 
                 headerText="{resourceManager.getString('MakeSupply', 'Total')}"
                 dataField="total" 
@@ -170,7 +210,8 @@
     </mx:DataGrid>
     
     <mx:Text id="totalTxt" 
-        text="{resourceManager.getString('MakeSupply', 'Total')}: {supply.total}" 
+        text="{resourceManager.getString('MakeSupply', 'Summary',
+                    [utils.formatPrice(total)])}" 
         textAlign="right" 
         paddingRight="10"
         width="100%" height="30"/>

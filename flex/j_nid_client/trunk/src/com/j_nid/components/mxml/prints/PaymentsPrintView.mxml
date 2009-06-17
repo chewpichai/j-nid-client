@@ -16,7 +16,7 @@
         	import mx.resources.ResourceBundle;
             // Declare and initialize the variables used in the component.
             // The application sets the actual prodTotal value.
-            public var _person:Person;
+            private var _person:Person;
             private var payments:Array;
             [Bindable]
             public var startDate:Date;

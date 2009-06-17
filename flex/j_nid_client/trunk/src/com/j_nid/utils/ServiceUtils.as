@@ -6,7 +6,7 @@ package com.j_nid.utils {
 	
 	public class ServiceUtils {
 		
-		public static const ROOT_URL:String = "http://127.0.0.1:8000/j-nid";
+		public static const ROOT_URL:String = "http://127.0.0.1/j-nid";
 		
 		public static function send(url:String, method:String,
 			                        responder:IResponder=null,
