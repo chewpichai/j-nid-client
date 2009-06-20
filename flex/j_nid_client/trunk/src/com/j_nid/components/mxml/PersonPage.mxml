@@ -127,12 +127,97 @@
 			<mx:DataGridColumn
 				headerText="{resourceManager.getString('PersonPage', 'Name')}"
 				headerStyleName="dgHeader"
-				dataField="name"/>
+				dataField="name"
+				width="250"/>
+				
+			<mx:DataGridColumn
+				headerText="{resourceManager.getString(
+				                    'PersonPage', 'PhoneNumberHeader', [1])}"
+				headerStyleName="dgHeader">
+				
+				<mx:itemRenderer>
+					<mx:Component>
+<mx:Label>
+<mx:Script>
+    <![CDATA[
+        override public function set data(obj:Object):void {
+        	super.data = obj;
+        	text = data.phoneNumbers[0];
+        }
+    ]]>
+</mx:Script>
+</mx:Label>
+					</mx:Component>
+				</mx:itemRenderer>
+			</mx:DataGridColumn>
+			
+			<mx:DataGridColumn
+                headerText="{resourceManager.getString(
+                                    'PersonPage', 'PhoneNumberHeader', [2])}"
+                headerStyleName="dgHeader">
+                
+                <mx:itemRenderer>
+                    <mx:Component>
+<mx:Label>
+<mx:Script>
+    <![CDATA[
+        override public function set data(obj:Object):void {
+            super.data = obj;
+            text = data.phoneNumbers[1];
+        }
+    ]]>
+</mx:Script>
+</mx:Label>
+                    </mx:Component>
+                </mx:itemRenderer>
+            </mx:DataGridColumn>
+            
+            <mx:DataGridColumn
+                headerText="{resourceManager.getString(
+                                    'PersonPage', 'PhoneNumberHeader', [3])}"
+                headerStyleName="dgHeader">
+                
+                <mx:itemRenderer>
+                    <mx:Component>
+<mx:Label>
+<mx:Script>
+    <![CDATA[
+        override public function set data(obj:Object):void {
+            super.data = obj;
+            text = data.phoneNumbers[2];
+        }
+    ]]>
+</mx:Script>
+</mx:Label>
+                    </mx:Component>
+                </mx:itemRenderer>
+            </mx:DataGridColumn>
+            
+            <mx:DataGridColumn
+                headerText="{resourceManager.getString(
+                                    'PersonPage', 'PhoneNumberHeader', [4])}"
+                headerStyleName="dgHeader">
+                
+                <mx:itemRenderer>
+                    <mx:Component>
+<mx:Label>
+<mx:Script>
+    <![CDATA[
+        override public function set data(obj:Object):void {
+            super.data = obj;
+            text = data.phoneNumbers[3];
+        }
+    ]]>
+</mx:Script>
+</mx:Label>
+                    </mx:Component>
+                </mx:itemRenderer>
+            </mx:DataGridColumn>
 			
 			<mx:DataGridColumn
 				headerText="{resourceManager.getString('PersonPage', 'Customer')}" 
-				textAlign="center"
-				width="75">
+				textAlign="center">
+				
 				<mx:itemRenderer>
 					<mx:Component>
 <mx:CheckBox selected="{data.isCustomer}" change="changeListener(event)">
@@ -154,8 +239,8 @@
 			
 			<mx:DataGridColumn
 				headerText="{resourceManager.getString('PersonPage', 'Supplier')}"
-				textAlign="center"
-				width="75">
+				textAlign="center">
+				
 				<mx:itemRenderer>
 					<mx:Component>
 <mx:CheckBox selected="{data.isSupplier}" change="changeListener(event)">
@@ -177,8 +262,8 @@
 			
 			<mx:DataGridColumn
 				headerText="{resourceManager.getString('PersonPage', 'General')}"
-				textAlign="center"
-				width="75">
+				textAlign="center">
+				
 				<mx:itemRenderer>
 					<mx:Component>
 <mx:CheckBox selected="{data.isGeneral}" change="changeListener(event)">

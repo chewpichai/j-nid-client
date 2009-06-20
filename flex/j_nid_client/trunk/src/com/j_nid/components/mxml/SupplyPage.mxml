@@ -161,18 +161,15 @@
                             'ConfirmMessage'),
                         resourceManager.getString('SupplyPage',
                             'ConfirmTitle'),
-                        closeHandler);
-                }
-            }
-            
-            private function closeHandler(e:CloseEvent):void {
-                var item:SupplyItem = SupplyItem(supplyItemList.selectedItem);
-                if (e.detail == Alert.OK) {
-                    if (item.supply.supplyItems.length > 1) {
-                        item.remove();
-                    } else {
-                        item.supply.remove();
-                    }
+                        function(e:CloseEvent):void {
+			                if (e.detail == Alert.OK) {
+			                    if (item.supply.supplyItems.length > 1) {
+			                        item.remove();
+			                    } else {
+			                        item.supply.remove();
+			                    }
+			                }
+                        });
                 }
             }
             

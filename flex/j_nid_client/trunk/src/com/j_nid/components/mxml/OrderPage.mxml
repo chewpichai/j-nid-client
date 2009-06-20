@@ -185,18 +185,15 @@
                             'ConfirmMessage'),
                         resourceManager.getString('OrderPage',
                             'ConfirmTitle'),
-                        closeHandler);
-                }
-            }
-            
-            private function closeHandler(e:CloseEvent):void {
-            	var item:OrderItem = OrderItem(orderItemList.selectedItem);
-                if (e.detail == Alert.OK) {
-                    if (item.order.orderItems.length > 1) {
-                        item.remove();
-                    } else {
-                        item.order.remove();
-                    }
+                        function(e:CloseEvent):void {
+                            if (e.detail == Alert.OK) {
+			                    if (item.order.orderItems.length > 1) {
+			                        item.remove();
+			                    } else {
+			                        item.order.remove();
+			                    }
+			                }
+                        });
                 }
             }
             

@@ -44,6 +44,9 @@
                 _person = obj;
                 phoneNumbers = new ArrayCollection(_person.phoneNumbers);
                 bankAccounts = new ArrayCollection(_person.bankAccounts);
+                if (obj.id > 0) {
+                	saveBtn.visible = false;
+                }
             }
             
             public function get person():Person {

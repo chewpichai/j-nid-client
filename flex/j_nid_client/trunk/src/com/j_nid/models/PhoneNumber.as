@@ -33,6 +33,10 @@ package com.j_nid.models {
 			return xml;
 		}
 		
+		override public function toString():String {
+			return number;
+		}
+		
 /* ----- get-set function. ------------------------------------------------- */
 		
 		public function get person():Person {
