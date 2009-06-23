@@ -23,9 +23,5 @@ package com.j_nid.business {
 		public function updatePerson(person:Person):void {
 			ServiceUtils.send("/people/" + person.id + "/", "PUT", _responder, person.toXML());
 		}
-		
-		public function createdPerson():void {
-			
-		}
 	}
 }

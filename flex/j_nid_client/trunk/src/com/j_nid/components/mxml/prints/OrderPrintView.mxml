@@ -52,8 +52,10 @@
     </mx:Script>
 
     <!-- The template for the printed page, with the contents for all pages. -->
-    <mx:VBox horizontalAlign="left" 
-        x="0" y="0"
+    <mx:VBox
+    	horizontalAlign="left" 
+        x="0"
+        y="0"
         width="100%">
         
         <mx:Label text="{resourceManager.getString('OrderPrint', 'OrderNo',
@@ -63,41 +65,49 @@
     <jn:OrderPrintHeader id="header" 
         personName="{order.person.name}"
         date="{order.created}"
-        top="30" horizontalCenter="0" 
+        horizontalCenter="0" 
+        top="30"
         width="100%"/>
+    
     <!-- The data grid. The sizeToPage property is true by default, so the last
         page has only as many grid rows as are needed for the data. -->
     <mx:PrintDataGrid id="orderItemList"
         dataProvider="{order.orderItems}"
-        top="60" horizontalCenter="0"
-        width="95%" height="100%">
-    <!-- Specify the columns to ensure that their order is correct. -->
+        styleName="printDataGrid"
+        top="60"
+        horizontalCenter="0"
+        width="95%"
+        height="100%">
+        
+        <!-- Specify the columns to ensure that their order is correct. -->
         <mx:columns>
             <mx:DataGridColumn
-                headerText="{resourceManager.getString('OrderPrint', 'Quantity')}"
+                headerText="{resourceManager.getString('OrderPrint',
+                                    'Quantity')}"
                 dataField="quantity"
-                headerStyleName="dgHeader"
                 width="50"/>
+            
             <mx:DataGridColumn
                 headerText="{resourceManager.getString('OrderPrint', 'Name')}"
-                dataField="name"
-                headerStyleName="dgHeader"/>
+                dataField="name"/>
+            
             <mx:DataGridColumn
                 headerText="{resourceManager.getString('OrderPrint', 'Unit')}"
                 dataField="unit"
-                headerStyleName="dgHeader"
                 width="50"/>
+            
             <mx:DataGridColumn
-                headerText="{resourceManager.getString('OrderPrint', 'PricePerUnit')}"
+                headerText="{resourceManager.getString('OrderPrint',
+                                    'PricePerUnit')}"
                 dataField="pricePerUnit"
                 labelFunction="formatPrice"
-                headerStyleName="dgHeader"
                 width="85"/>
+            
             <mx:DataGridColumn
-                headerText="{resourceManager.getString('OrderPrint', 'Subtotal')}"
+                headerText="{resourceManager.getString('OrderPrint',
+                                    'Subtotal')}"
                 dataField="total"
                 labelFunction="formatPrice"
-                headerStyleName="dgHeader"
                 width="85"/>
         </mx:columns>
     </mx:PrintDataGrid>

@@ -1,4 +1,5 @@
 package com.j_nid.models {
+	import com.j_nid.events.JNidEvent;
 	import com.j_nid.utils.ModelUtils;
 	
 	
@@ -23,6 +24,10 @@ package com.j_nid.models {
 			personID = 0;
 			number = "";
 			bank = "";
+			//
+            createEvent = JNidEvent.CREATE_BANK_ACCOUNT;
+            updateEvent = JNidEvent.UPDATE_BANK_ACCOUNT;
+            deleteEvent = JNidEvent.DELETE_BANK_ACCOUNT;
 		}
 		
 		public function toXML():XML {

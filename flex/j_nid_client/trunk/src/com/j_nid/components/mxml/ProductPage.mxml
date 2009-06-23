@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
 	show="showHandler(event)"
-	showEffect="{wipeIn}"
-    hideEffect="{wipeOut}"
 	creationComplete="init(event)"
 	width="100%"
 	height="100%">
@@ -133,9 +131,6 @@
 		]]>
 	</mx:Script>
 	
-	<mx:WipeDown id="wipeOut" duration="1000"/>
-    <mx:WipeDown id="wipeIn" duration="1000"/>
-	
 	<mx:TabNavigator 
 		paddingLeft="5" paddingRight="5"
 		width="100%" height="100%">
@@ -165,71 +160,77 @@
 			<mx:DataGrid id="productList"
 				doubleClickEnabled="true"
 				doubleClick="productDgDoubleClick(event)"
-				width="100%" height="100%">
+				headerStyleName="centerHeader"
+				width="100%"
+				height="100%">
+				
 				<mx:columns>
 					<mx:DataGridColumn 
 						headerText="{resourceManager.getString(
 						                  'ProductPage', 'Name')}" 
-						dataField="name"
-						headerStyleName="dgHeader"/>
+						dataField="name"/>
+						
 					<mx:DataGridColumn
 						headerText="{resourceManager.getString(
 						                  'ProductPage', 'ProductType')}"
-						dataField="productType"
-						headerStyleName="dgHeader"/>
+						dataField="productType"/>
+						
 					<mx:DataGridColumn
 						headerText="{resourceManager.getString(
 						                  'ProductPage', 'Unit')}"
-						dataField="unit"
-						headerStyleName="dgHeader"/>
+						dataField="unit"/>
+						
 					<mx:DataGridColumn
 						headerText="{resourceManager.getString(
 						                  'ProductPage', 'PricePerUnit')}"
-						dataField="pricePerUnit"
-						headerStyleName="dgHeader"/>
+						dataField="pricePerUnit"/>
+						
 					<mx:DataGridColumn
 						headerText="{resourceManager.getString(
 						                  'ProductPage', 'IsSale')}"
 						dataField="isSale"
-						headerStyleName="dgHeader"
 						itemRenderer="com.j_nid.components.mxml.ProductRenderer"/>
 				</mx:columns>
 			</mx:DataGrid>
 		</mx:VBox>
 		
-		<mx:VBox label="{resourceManager.getString(
-		                      'ProductPage', 'ProductType')}"
-			width="100%" height="100%">
+		<mx:VBox
+			label="{resourceManager.getString('ProductPage', 'ProductType')}"
+			width="100%"
+			height="100%">
 			
 			<mx:HBox
 				horizontalAlign="right"
 				width="100%">
 				
 				<mx:Button
-					label="{resourceManager.getString(
-					               'ProductPage', 'Add')}"
+					label="{resourceManager.getString('ProductPage', 'Add')}"
 					click="newProductTypeBtnClick(event)"/>
 			</mx:HBox>
 			
 			<mx:DataGrid id="productTypeList"
 				doubleClickEnabled="true"
 				doubleClick="productTypeDgDoubleClick(event)"
-				width="100%" height="100%">
+				headerStyleName="centerHeader"
+				width="100%"
+				height="100%">
+				
 				<mx:columns>
 					<mx:DataGridColumn
 						headerText="{resourceManager.getString(
-						                  'ProductPage', 'Name')}"
-						headerStyleName="dgHeader">
+						                  'ProductPage', 'Name')}">
+
 						<mx:itemRenderer>
 							<mx:Component>
 <mx:Label text="{data.name}" color="{data.color}"/>
 							</mx:Component>
 						</mx:itemRenderer>
 					</mx:DataGridColumn>
+					
 					<mx:DataGridColumn
 						headerText="{resourceManager.getString(
-						                  'ProductPage', 'Color')}"
-						headerStyleName="dgHeader">
+						                  'ProductPage', 'Color')}">
+						
 						<mx:itemRenderer>
 							<mx:Component>
 <mx:Canvas>

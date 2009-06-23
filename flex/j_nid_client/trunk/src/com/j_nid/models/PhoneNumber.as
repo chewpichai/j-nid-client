@@ -1,4 +1,5 @@
 package com.j_nid.models {
+	import com.j_nid.events.JNidEvent;
 	import com.j_nid.utils.ModelUtils;
 	
 	
@@ -23,6 +24,10 @@ package com.j_nid.models {
 			personID = 0;
 			number = "";
 			type = "";
+			//
+            createEvent = JNidEvent.CREATE_PHONE_NUMBER;
+            updateEvent = JNidEvent.UPDATE_PHONE_NUMBER;
+            deleteEvent = JNidEvent.DELETE_PHONE_NUMBER;
 		}
 		
 		public function toXML():XML {
@@ -38,6 +43,10 @@ package com.j_nid.models {
 		}
 		
 /* ----- get-set function. ------------------------------------------------- */
+		
+		public function set person(obj:Person):void {
+			personID = obj.id;
+		}
 		
 		public function get person():Person {
 			return ModelUtils.getInstance().getPerson(personID);

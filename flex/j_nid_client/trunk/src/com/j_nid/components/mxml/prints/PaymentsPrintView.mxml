@@ -24,6 +24,8 @@
             public var endDate:Date;
             [Bindable]
             public var total:Number;
+            [Bindable]
+            public var outstandingTotal:Number;
             private var utils:Utils = Utils.getInstance();
             
             public function set person(obj:Person):void {
@@ -75,7 +77,7 @@
             }
             
             private function formatDate(item:Object,
-                                          column:DataGridColumn):String {
+                                        column:DataGridColumn):String {
                                             
                 return utils.formatDate(item[column.dataField], "DD-MM-YYYY");
             }
@@ -85,34 +87,38 @@
     <print:PaymentsPrintHeader id="header" 
     	startDate="{startDate}"
     	endDate="{endDate}"
-    	top="30" horizontalCenter="0" 
+    	horizontalCenter="0" 
+    	top="30"
     	width="100%"/>
     
     <!-- The data grid. The sizeToPage property is true by default, so the last
-        page has only as many grid rows as are needed for the data. -->
+         page has only as many grid rows as are needed for the data. -->
     <mx:PrintDataGrid id="paymentList"
-    	width="95%" height="100%"
-    	top="60" horizontalCenter="0">
-    <!-- Specify the columns to ensure that their order is correct. -->
+    	styleName="printDataGrid"
+    	horizontalCenter="0"
+    	top="60"
+    	width="95%"
+    	height="100%">
+        
+        <!-- Specify the columns to ensure that their order is correct. -->
         <mx:columns>
 			<mx:DataGridColumn
 				headerText="{resourceManager.getString('PaymentsPrint',
 				                'Date')}"
 				dataField="created"
-				labelFunction="formatDate"
-				headerStyleName="dgHeader"/>
+				labelFunction="formatDate"/>
 			<mx:DataGridColumn
 				headerText="{resourceManager.getString('PaymentsPrint',
 				                'Amount')}"
 				dataField="amount"
-				labelFunction="formatPrice"
-				headerStyleName="dgHeader"/>
+				labelFunction="formatPrice"/>
 		</mx:columns>
     </mx:PrintDataGrid>
 
     <!-- Create a FormPrintFooter control and set its prodTotal variable. -->
     <print:PaymentsPrintFooter id="footer"
     	total="{total}"
+    	outstandingTotal="{outstandingTotal - total}"
     	width="100%" 
     	bottom="0"/>
 </mx:Canvas>

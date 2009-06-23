@@ -2,8 +2,6 @@
 <mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" 
     xmlns:jn="com.j_nid.components.mxml.*"
     show="showHandler(event)"
-    showEffect="{wipeIn}"
-    hideEffect="{wipeOut}"
     width="100%"
     height="100%">
     
@@ -65,9 +63,6 @@
         ]]>
     </mx:Script>
     
-    <mx:WipeDown id="wipeOut" duration="1000"/>
-    <mx:WipeDown id="wipeIn" duration="1000"/>
-    
     <mx:HBox height="100%">
         
         <mx:Panel
@@ -90,6 +85,7 @@
                 dragEnabled="true"
                 doubleClickEnabled="true"
                 doubleClick="productDoubleClick(event)"
+                headerStyleName="centerHeader"
                 width="100%"
                 height="100%">
                 
@@ -98,14 +94,12 @@
                         headerText="{resourceManager.getString(
                                           'MakeSupply', 'Name')}" 
                         dataField="name" 
-                        wordWrap="true"
-                        headerStyleName="dgHeader"/>
+                        wordWrap="true"/>
                     
                     <mx:DataGridColumn 
                         headerText="{resourceManager.getString(
                                           'MakeSupply', 'Unit')}" 
-                        dataField="unit" 
-                        headerStyleName="dgHeader"
+                        dataField="unit"
                         width="50"/>
                     
                     <mx:DataGridColumn 
@@ -113,7 +107,6 @@
                                           'MakeSupply', 'PricePerUnit')}" 
                         dataField="costPerUnit"
                         labelFunction="formatPrice"
-                        headerStyleName="dgHeader"
                         width="90"/>
                 </mx:columns>
             </mx:DataGrid>

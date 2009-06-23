@@ -21,7 +21,7 @@
             [Bindable]
             public var endDate:Date;
             [Bindable]
-            private var total:Number;
+            public var total:Number;
             private var utils:Utils = Utils.getInstance();
             
             public function set person(obj:Person):void {
@@ -31,7 +31,8 @@
                 total = 0;
                 for each (var order:* in person.orders) {
                     if (order.created > startDate &&
-                        order.created < lastDate) {
+                        order.created < lastDate &&
+                        order.totalToPaid > 0) {
                         
                         orders.push(order);
                         total += order.total;
@@ -89,22 +90,25 @@
     <!-- The data grid. The sizeToPage property is true by default, so the last
         page has only as many grid rows as are needed for the data. -->
     <mx:PrintDataGrid id="orderList"
-        width="95%" height="100%"
-        top="60" horizontalCenter="0">
-    <!-- Specify the columns to ensure that their order is correct. -->
+    	styleName="printDataGrid"
+        horizontalCenter="0"
+        top="60"
+        width="95%"
+        height="100%">
+        
+        <!-- Specify the columns to ensure that their order is correct. -->
         <mx:columns>
             <mx:DataGridColumn
                 headerText="{resourceManager.getString('OutstandingPrint',
                                     'Date')}"
                 dataField="created"
-                labelFunction="formatDate"
-                headerStyleName="dgHeader"/>
+                labelFunction="formatDate"/>
+            
             <mx:DataGridColumn
                 headerText="{resourceManager.getString('OutstandingPrint',
                                     'Total')}"
-                dataField="total"
-                labelFunction="formatPrice"
-                headerStyleName="dgHeader"/>
+                dataField="totalToPaid"
+                labelFunction="formatPrice"/>
         </mx:columns>
     </mx:PrintDataGrid>
 

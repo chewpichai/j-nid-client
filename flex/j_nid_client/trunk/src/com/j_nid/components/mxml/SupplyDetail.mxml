@@ -123,7 +123,9 @@
         ]]>
     </mx:Script>
     
-    <mx:HBox width="100%" verticalAlign="middle">
+    <mx:HBox
+    	verticalAlign="middle"
+    	width="100%">
         
         <mx:Label
             text="{resourceManager.getString('MakeSupply', 'SupplierName')}:"/>
@@ -140,8 +142,10 @@
         dragEnter="dragEnterListener(event)"
         itemEditEnd="event.preventDefault()" 
         editable="true" 
-        wordWrap="true" variableRowHeight="true" 
+        wordWrap="true"
+        variableRowHeight="true" 
         styleName="cartItemList"
+        headerStyleName="centerHeader"
         width="100%"
         height="100%">
         
@@ -151,9 +155,9 @@
                                     'MakeSupply', 'Quantity')}"
                 dataField="quantity" 
                 editorDataField="value"
-                rendererIsEditor="true" 
-                headerStyleName="dgHeader"
+                rendererIsEditor="true"
                 width="70">
+                
                 <mx:itemRenderer>
                     <mx:Component>
 <mx:NumericStepper minimum="1" maximum="1000" 
@@ -165,17 +169,16 @@
             <mx:DataGridColumn 
                 headerText="{resourceManager.getString('MakeSupply', 'Name')}" 
                 dataField="name" 
-                editable="false" 
-                headerStyleName="dgHeader"
+                editable="false"
                 width="150"/>
             
             <mx:DataGridColumn 
                 headerText="{resourceManager.getString('MakeSupply', 'Unit')}"
                 dataField="unit" 
                 editorDataField="value" 
-                rendererIsEditor="true" 
-                headerStyleName="dgHeader"
+                rendererIsEditor="true"
                 width="70">
+                
                 <mx:itemRenderer>
                     <mx:Component>
 <mx:NumericStepper minimum="1" maximum="100000" 
@@ -190,8 +193,8 @@
                 dataField="pricePerUnit" 
                 editorDataField="value"
                 rendererIsEditor="true"
-                headerStyleName="dgHeader"
                 width="85">
+                
                 <mx:itemRenderer>
                     <mx:Component>
 <mx:NumericStepper minimum="1" maximum="10000" stepSize="0.25" 
@@ -204,7 +207,6 @@
                 headerText="{resourceManager.getString('MakeSupply', 'Total')}"
                 dataField="total" 
                 editable="false"
-                headerStyleName="dgHeader"
                 width="85"/>
         </mx:columns>
     </mx:DataGrid>
@@ -214,20 +216,25 @@
                     [utils.formatPrice(total)])}" 
         textAlign="right" 
         paddingRight="10"
-        width="100%" height="30"/>
+        width="100%"
+        height="30"/>
     
     <mx:ControlBar>
         <mx:TextArea id="notationField" 
-            width="100%" height="60"/>
+            width="100%"
+            height="60"/>
         
-        <mx:Button label="{resourceManager.getString('MakeSupply', 'Clear')}"
+        <mx:Button
+        	label="{resourceManager.getString('MakeSupply', 'Clear')}"
             click="clearListener(event)"/>
         
-        <mx:Button label="{resourceManager.getString('MakeSupply', 'Remove')}"
+        <mx:Button
+        	label="{resourceManager.getString('MakeSupply', 'Remove')}"
         	enabled="{supplyItemList.selectedItem != null}"
             click="removeListener(event)"/>
         
-        <mx:Button label="{resourceManager.getString('MakeSupply', 'Process')}"
+        <mx:Button
+        	label="{resourceManager.getString('MakeSupply', 'Process')}"
             click="processListener(event)"/>
     </mx:ControlBar>
 </mx:Panel>

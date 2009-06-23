@@ -118,6 +118,7 @@ package com.j_nid.utils {
                 paymentPrintView.person = person;
                 paymentPrintView.width = printJob.pageWidth;
                 paymentPrintView.height = printJob.pageHeight;
+                paymentPrintView.outstandingTotal = outstandingPrintView.total;
                 // Set the data provider of the FormPrintView component's data grid
                 // to be the data provider of the displayed data grid.
                 paymentPrintView.paymentList.dataProvider = person.payments;
@@ -144,7 +145,7 @@ package com.j_nid.utils {
                             printJob.addObject(paymentPrintView);
                             break;
                         } else { // This is not the last page. Queue a middle page.
-                            outstandingPrintView.showPage("middle");
+                            paymentPrintView.showPage("middle");
                             printJob.addObject(paymentPrintView);
                         }
                     }

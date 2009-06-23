@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml"
+<mx:VBox
+	xmlns:mx="http://www.adobe.com/2006/mxml"
 	show="showHandler(event)"
-	showEffect="{wipeIn}"
-    hideEffect="{wipeOut}"
 	creationComplete="init(event)"
 	width="100%"
 	height="100%">
@@ -24,7 +23,8 @@
 			private function init(e:FlexEvent):void {
 				products = new ArrayCollection(model.products);
 				var sort:Sort = new Sort();
-				sort.fields = [new SortField("productType"), new SortField("name")];
+				sort.fields = [new SortField("productType"),
+				               new SortField("name")];
 				products.sort = sort;
 				products.filterFunction =
 				    function(obj:Object):Boolean {
@@ -38,9 +38,6 @@
 			}
 		]]>
 	</mx:Script>
-	
-	<mx:WipeDown id="wipeOut" duration="1000"/>
-    <mx:WipeDown id="wipeIn" duration="1000"/>
 	
 	<mx:TileList id="productList"
 		columnWidth="245"

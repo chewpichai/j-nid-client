@@ -1,6 +1,5 @@
 package com.j_nid.utils {
 	
-	import mx.effects.Fade;
 	import mx.formatters.DateFormatter;
 	import mx.formatters.NumberFormatter;
 	

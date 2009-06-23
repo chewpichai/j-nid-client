@@ -17,8 +17,18 @@ global {
    	font-sharpness: -300;
 }
 
-.dgHeader {
+.centerHeader {
 	text-align: center;
+}
+
+.printDataGrid {
+	header-background-skin: Embed(source="../assets/printHeaderSkin.png");
+	header-separator-skin: Embed(source="../assets/printHeaderSkin.png");
+	header-style-name: centerHeader;
+	border-style: none;
+	vertical-grid-lines: false;
+	horizontal-grid-lines: false;
+	
 }
 
 .cartItemList {
@@ -28,6 +38,7 @@ global {
 .copyright {
 	font-weight: normal;
 	font-size: 11;
+	text-align: center;
 }
 
 .squareBtn {

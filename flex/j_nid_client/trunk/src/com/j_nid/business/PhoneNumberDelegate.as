@@ -17,12 +17,16 @@ package com.j_nid.business {
 			ServiceUtils.send("/phonenumbers/", "GET", _responder);
 		}
 		
-		public function createPhoneNumber(phoneNumber:PhoneNumber):void {
-			ServiceUtils.send("/phonenumbers/", "POST", _responder, phoneNumber.toXML());
+		public function createPhoneNumber(pn:PhoneNumber):void {
+			ServiceUtils.send("/phonenumbers/", "POST", _responder, pn.toXML());
 		}
 		
 		public function listPhoneType():void {
 			ServiceUtils.send("/phonetypes/", "GET", _responder);
 		}
+		
+		public function deletePhoneNumber(pn:PhoneNumber):void {
+            ServiceUtils.send("/phonenumbers/" + pn.id + "/", "DELETE", _responder);
+        }
 	}
 }

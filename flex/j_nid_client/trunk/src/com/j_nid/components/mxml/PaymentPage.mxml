@@ -2,8 +2,6 @@
 <mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml"
     show="showHandler(event)"
     creationComplete="init(event)"
-    showEffect="{wipeIn}"
-    hideEffect="{wipeOut}"
     width="100%"
     height="100%">
     
@@ -204,9 +202,6 @@
             }
         ]]>
     </mx:Script>
-    
-    <mx:WipeDown id="wipeOut" duration="1000"/>
-    <mx:WipeDown id="wipeIn" duration="1000"/>
 
     <mx:Panel
         title="{resourceManager.getString('PaymentPage', 'Customer')}"
@@ -214,19 +209,20 @@
         height="100%">
         
         <mx:DataGrid id="personList"
+        	headerStyleName="centerHeader"
             width="100%"
             height="100%">
             
             <mx:columns>
-                <mx:DataGridColumn dataField="name"
+                <mx:DataGridColumn
+                	dataField="name"
                     headerText="{resourceManager.getString(
-                                       'PaymentPage', 'Name')}"
-                    headerStyleName="dgHeader"/>
+                                       'PaymentPage', 'Name')}"/>
                 
-                <mx:DataGridColumn dataField="outstandingTotal" 
+                <mx:DataGridColumn
+                	dataField="outstandingTotal" 
                     headerText="{resourceManager.getString(
-                                       'PaymentPage', 'OutstandingTotal')}"
-                    headerStyleName="dgHeader"/>
+                                       'PaymentPage', 'OutstandingTotal')}"/>
             </mx:columns>
         </mx:DataGrid>
     </mx:Panel>
@@ -267,38 +263,39 @@
         <mx:DataGrid id="transactionList"
             dataProvider="{personList.selectedItem.transactions}"
             keyDown="transactionListKeyDown(event)"
+            headerStyleName="centerHeader"
             width="100%"
             height="100%">
             
             <mx:columns>
                 <mx:DataGridColumn 
                     headerText="{resourceManager.getString(
-                                       'PaymentPage', 'Date')}"
-                    headerStyleName="dgHeader">
+                                       'PaymentPage', 'Date')}">
+                    
                     <mx:itemRenderer>
                         <mx:Component>
 <mx:Label text="{outerDocument.utils.formatDate(data.created,
-                                        'DD-MM-YY J:NN:SS')}"/>
+                        'DD-MM-YY J:NN:SS')}"/>
                         </mx:Component>
                     </mx:itemRenderer>
                 </mx:DataGridColumn>
                 
-                <mx:DataGridColumn dataField="amount"
+                <mx:DataGridColumn
+                	dataField="amount"
                     headerText="{resourceManager.getString(
                                        'PaymentPage', 'Paid')}"
-                    headerStyleName="dgHeader"
                     labelFunction="formatPrice"/>
                 
-                <mx:DataGridColumn dataField="total"
+                <mx:DataGridColumn
+                	dataField="total"
                     headerText="{resourceManager.getString(
                                        'PaymentPage', 'Outstanding')}"
-                    headerStyleName="dgHeader"
                     labelFunction="formatPrice"/>
                 
-                <mx:DataGridColumn dataField="notation"
+                <mx:DataGridColumn
+                	dataField="notation"
                     headerText="{resourceManager.getString(
-                                       'PaymentPage', 'Note')}"
-                    headerStyleName="dgHeader"/>
+                                       'PaymentPage', 'Note')}"/>
             </mx:columns>
         </mx:DataGrid>
         
@@ -328,7 +325,9 @@
     </mx:Panel>
     
     <mx:NumberValidator id="numberValidator" 
-        source="{amountField}" property="value"
-        trigger="{payBtn}" triggerEvent="click"
+        source="{amountField}"
+        property="value"
+        trigger="{payBtn}"
+        triggerEvent="click"
         minValue="1"/>
 </mx:HBox>

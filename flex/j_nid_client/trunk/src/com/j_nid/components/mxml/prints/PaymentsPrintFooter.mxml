@@ -15,10 +15,16 @@
             [Bindable]
             public var total:Number = 0;
             [Bindable]
+            public var outstandingTotal:Number = 0;
+            [Bindable]
             private var utils:Utils = Utils.getInstance();
         ]]>
     </mx:Script>
     
     <mx:Label text="{resourceManager.getString('PaymentsPrint', 'Summary',
                         [utils.formatPrice(total)])}"/>
+    
+    <mx:Label text="{resourceManager.getString(
+                        'PaymentsPrint', 'OutStandingSummary',
+                        [utils.formatPrice(outstandingTotal)])}"/>
 </mx:VBox>

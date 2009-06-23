@@ -3,7 +3,8 @@
     title="{resourceManager.getString('PersonPage', 'PersonForm')}"
     xmlns:mx="http://www.adobe.com/2006/mxml"
     creationComplete="init(event)"
-    width="400" height="500">
+    width="400"
+    height="500">
     
     <mx:Metadata>
         [ResourceBundle("PersonPage")]
@@ -11,6 +12,9 @@
     
     <mx:Script>
         <![CDATA[
+        	import mx.collections.ListCollectionView;
+        	import mx.controls.Alert;
+        	import mx.events.CloseEvent;
         	import mx.utils.StringUtil;
         	import com.j_nid.controls.ApplicationManager;
             import mx.collections.ArrayCollection;
@@ -44,9 +48,6 @@
                 _person = obj;
                 phoneNumbers = new ArrayCollection(_person.phoneNumbers);
                 bankAccounts = new ArrayCollection(_person.bankAccounts);
-                if (obj.id > 0) {
-                	saveBtn.visible = false;
-                }
             }
             
             public function get person():Person {
@@ -55,6 +56,31 @@
             
             private function init(e:FlexEvent):void {
                 PopUpManager.centerPopUp(this);
+                //
+                model.addEventListener(JNidEvent.BANK_ACCOUNT_DELETED,
+                    bankAccountDeleted);
+                model.addEventListener(JNidEvent.PHONE_NUMBER_DELETED,
+                    phoneNumberDeleted);
+                model.addEventListener(JNidEvent.BANK_ACCOUNT_CREATED,
+                    bankAccountCreated);
+                model.addEventListener(JNidEvent.PHONE_NUMBER_CREATED,
+                    phoneNumberCreated);
+            }
+            
+            private function bankAccountDeleted(e:JNidEvent):void {
+            	bankAccounts = new ArrayCollection(person.bankAccounts);
+            }
+            
+            private function phoneNumberDeleted(e:JNidEvent):void {
+            	phoneNumbers = new ArrayCollection(person.phoneNumbers);
+            }
+            
+            private function bankAccountCreated(e:JNidEvent):void {
+                bankAccounts.addItem(e.data);
+            }
+            
+            private function phoneNumberCreated(e:JNidEvent):void {
+                phoneNumbers.addItem(e.data);
             }
             
             override protected function createChildren():void {
@@ -118,7 +144,9 @@
                 	errMsg += resourceManager.getString("PersonPage",
                 	                   "NameLengthError");
                 } else {
-                	if (model.getPersonByName(personName) != null) {
+                	if (model.getPersonByName(personName) != null &&
+                	    person.name != personName) {
+                		
                 		errMsg += resourceManager.getString("PersonPage",
                                             "NameDuplicateError");
                 	}
@@ -152,8 +180,9 @@
                 	phoneNumber.personID = person.id;
                     CairngormUtils.dispatchEvent(JNidEvent.CREATE_PHONE_NUMBER,
                         phoneNumber);
+                } else {
+                    phoneNumbers.addItem(phoneNumber);
                 }
-                phoneNumbers.addItem(phoneNumber);
                 clearPhoneNumberForm();
             }
             
@@ -175,9 +204,68 @@
                 	bankAccount.personID = person.id;
                     CairngormUtils.dispatchEvent(JNidEvent.CREATE_BANK_ACCOUNT,
                         bankAccount);
+                } else {
+                    bankAccounts.addItem(bankAccount);
                 }
-                bankAccounts.addItem(bankAccount);
                 clearBankAccountForm();
+            }
+            
+            private function KeyDownHandler(e:KeyboardEvent):void {
+            	if (e.keyCode == Keyboard.DELETE) {
+            		if (e.currentTarget == bankAccountList) {
+            			removeBankAccount();
+            		} else if (e.currentTarget == phoneNumberList) {
+            			removePhoneNumber();
+            		}
+            	}
+            }
+            
+            private function removePhoneNumber():void {
+                var pn:PhoneNumber = PhoneNumber(phoneNumberList.selectedItem);
+                if (pn != null) {
+                	appMgr.showConfirm(
+                        resourceManager.getString('PersonPage',
+                            'ConfirmMessage'),
+                        resourceManager.getString('PersonPage',
+                            'ConfirmTitle'),
+                        function(e:CloseEvent):void {
+                            if (e.detail == Alert.OK) {
+                                if (person.id > 0) {
+                                    pn.remove();
+                                } else {
+                                    var phoneNumbers:ListCollectionView =
+                                            ListCollectionView(
+                                                phoneNumberList.dataProvider);
+                                    phoneNumbers.removeItemAt(
+                                         phoneNumbers.getItemIndex(pn));
+                                }
+                            }
+                        });
+                }
+            }
+            
+            private function removeBankAccount():void {
+                var ba:BankAccount = BankAccount(bankAccountList.selectedItem);
+                if (ba != null) {
+                	appMgr.showConfirm(
+                        resourceManager.getString('PersonPage',
+                            'ConfirmMessage'),
+                        resourceManager.getString('PersonPage',
+                            'ConfirmTitle'),
+                        function(e:CloseEvent):void {
+                            if (e.detail == Alert.OK) {
+			                	if (person.id > 0) {
+			                        ba.remove();
+			                    } else {
+			                    	var bankAccounts:ListCollectionView =
+			                    	        ListCollectionView(
+			                    	            bankAccountList.dataProvider);
+			                        bankAccounts.removeItemAt(
+			                             bankAccounts.getItemIndex(ba));
+			                    }
+                            }
+                        });
+                }
             }
         ]]>
     </mx:Script>
@@ -189,8 +277,10 @@
         
         <mx:Form 
             label="{resourceManager.getString('PersonPage', 'Name')}"
-            paddingLeft="10" paddingRight="10"
-            paddingTop="10" paddingBottom="10"
+            paddingTop="10"
+            paddingLeft="10"
+            paddingBottom="10"
+            paddingRight="10"
             width="100%" height="100%">
             
             <mx:FormItem
@@ -203,7 +293,8 @@
                     width="100%"/>
             </mx:FormItem>
             
-            <mx:FormItem label="{resourceManager.getString('PersonPage', 'FirstName')}:"
+            <mx:FormItem
+            	label="{resourceManager.getString('PersonPage', 'FirstName')}:"
                 width="100%">
                 
                 <mx:TextInput id="firstNameField" 
@@ -211,7 +302,8 @@
                     width="100%"/>
             </mx:FormItem>
             
-            <mx:FormItem label="{resourceManager.getString('PersonPage', 'LastName')}:"
+            <mx:FormItem
+            	label="{resourceManager.getString('PersonPage', 'LastName')}:"
                 width="100%">
                 
                 <mx:TextInput id="lastNameField" 
@@ -271,19 +363,21 @@
             height="100%">
             
             <mx:DataGrid id="phoneNumberList" 
-                dataProvider="{phoneNumbers}" 
+                dataProvider="{phoneNumbers}"
+                keyDown="KeyDownHandler(event)"
+                headerStyleName="centerHeader"
                 width="100%">
                 
                 <mx:columns>
-                    <mx:DataGridColumn dataField="number"
+                    <mx:DataGridColumn
+                    	dataField="number"
                         headerText="{resourceManager.getString('PersonPage',
-                                          'PhoneNumber')}"
-                        headerStyleName="dgHeader"/>
-                    <mx:DataGridColumn dataField="type" 
+                                          'PhoneNumber')}"/>
+                    <mx:DataGridColumn
+                    	dataField="type" 
                         headerText="{resourceManager.getString('PersonPage',
                                           'PhoneNumberType')}"
-                        labelFunction="getPhoneType"
-                        headerStyleName="dgHeader"/>
+                        labelFunction="getPhoneType"/>
                 </mx:columns>
             </mx:DataGrid>
             
@@ -330,19 +424,19 @@
             
             <mx:DataGrid id="bankAccountList" 
                 dataProvider="{bankAccounts}"
+                headerStyleName="centerHeader"
                 width="100%">
                 
                 <mx:columns>
-                    <mx:DataGridColumn dataField="number"
+                    <mx:DataGridColumn
+                    	dataField="number"
                         headerText="{resourceManager.getString('PersonPage',
-                                          'AccountNo')}"
-                        headerStyleName="dgHeader"/>
+                                          'AccountNo')}"/>
                     
                     <mx:DataGridColumn dataField="bank"
                         headerText="{resourceManager.getString('PersonPage',
                                           'Bank')}"
-                        labelFunction="getBankName"
-                        headerStyleName="dgHeader"/>
+                        labelFunction="getBankName"/>
                 </mx:columns>
             </mx:DataGrid>
             

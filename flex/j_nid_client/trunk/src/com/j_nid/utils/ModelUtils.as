@@ -12,6 +12,7 @@ package com.j_nid.utils {
     import com.j_nid.models.ProductType;
     import com.j_nid.models.Supply;
     import com.j_nid.models.SupplyItem;
+    
     import flash.events.EventDispatcher;
     
     [Event(name="personCreated", type="com.j_nid.events.JNidEvent")]
@@ -24,6 +25,10 @@ package com.j_nid.utils {
     [Event(name="supplyItemDeleted", type="com.j_nid.events.JNidEvent")]
     [Event(name="productCreated", type="com.j_nid.events.JNidEvent")]
     [Event(name="productTypeCreated", type="com.j_nid.events.JNidEvent")]
+    [Event(name="phoneNumberCreated", type="com.j_nid.events.JNidEvent")]
+    [Event(name="phoneNumberDeleted", type="com.j_nid.events.JNidEvent")]
+    [Event(name="bankAccountCreated", type="com.j_nid.events.JNidEvent")]
+    [Event(name="bankAccountDeleted", type="com.j_nid.events.JNidEvent")]
     
     [Bindable]
     public class ModelUtils extends EventDispatcher {
@@ -152,6 +157,7 @@ package com.j_nid.utils {
         public function setBankAccounts(obj:XML):void {
             for each (var xml:XML in obj.children()) {
                 var bankAccount:BankAccount = BankAccount.fromXML(xml);
+                _bankAccountIDMap[bankAccount.id] = bankAccount;
                 bankAccounts.push(bankAccount);
             }
             _loadedBankAccount = true;
@@ -161,6 +167,7 @@ package com.j_nid.utils {
         public function setPhoneNumbers(obj:XML):void {
             for each (var xml:XML in obj.children()) {
                 var phoneNumber:PhoneNumber = PhoneNumber.fromXML(xml);
+                _phoneNumberIDMap[phoneNumber.id] = phoneNumber;
                 phoneNumbers.push(phoneNumber);
             }
             _loadedPhoneNumber = true;
@@ -244,9 +251,7 @@ package com.j_nid.utils {
                     payment);
             }
             CairngormUtils.dispatchEvent(JNidEvent.ORDER_CREATED, order);
-            var event:JNidEvent = new JNidEvent(JNidEvent.ORDER_CREATED,
-                                                order);
-            dispatchEvent(event);
+            internalDispatch(JNidEvent.ORDER_CREATED, order);
         }
         
         public function createOrderItem(obj:XML):void {
@@ -282,21 +287,21 @@ package com.j_nid.utils {
                 createPhoneNumber(number);
             }
             people.push(person);
-            var event:JNidEvent = new JNidEvent(JNidEvent.PERSON_CREATED,
-                                                person);
-            dispatchEvent(event);
+            internalDispatch(JNidEvent.PERSON_CREATED, person);
         }
         
         public function createBankAccount(obj:XML):void {
             var bankAccount:BankAccount = BankAccount.fromXML(obj);
             _bankAccountIDMap[bankAccount.id] = bankAccount;
             bankAccounts.push(bankAccount);
+            internalDispatch(JNidEvent.BANK_ACCOUNT_CREATED, bankAccount);
         }
         
         public function createPhoneNumber(obj:XML):void {
             var phoneNumber:PhoneNumber = PhoneNumber.fromXML(obj);
             _phoneNumberIDMap[phoneNumber.id] = phoneNumber;
             phoneNumbers.push(phoneNumber);
+            internalDispatch(JNidEvent.PHONE_NUMBER_CREATED, phoneNumber);
         }
         
         public function createProductType(obj:XML):void {
@@ -305,9 +310,7 @@ package com.j_nid.utils {
             _productTypeNameMap[productType.name] = productType;
             productTypes.push(productType);
             createproductTypesWithAll();
-            var event:JNidEvent = new JNidEvent(JNidEvent.PRODUCT_TYPE_CREATED,
-                                                productType);
-            dispatchEvent(event);
+            internalDispatch(JNidEvent.PRODUCT_TYPE_CREATED, productType);
         }
         
         public function createProduct(obj:XML):void {
@@ -315,9 +318,7 @@ package com.j_nid.utils {
             _productIDMap[product.id] = product;
             _productNameMap[product.name] = product; 
             products.push(product);
-            var event:JNidEvent = new JNidEvent(JNidEvent.PRODUCT_CREATED,
-                                                product);
-            dispatchEvent(event);
+            internalDispatch(JNidEvent.PRODUCT_CREATED, product);
         }
         
         public function createPayment(obj:XML):void {
@@ -343,9 +344,7 @@ package com.j_nid.utils {
                     break;
                 }
             }
-            var event:JNidEvent = new JNidEvent(JNidEvent.PAYMENT_CREATED,
-                                                payment);
-            dispatchEvent(event);
+            internalDispatch(JNidEvent.PAYMENT_CREATED, payment);
         }
         
         public function getProductType(id:uint):ProductType {
@@ -429,12 +428,14 @@ package com.j_nid.utils {
         }
         
         public function updatePerson(obj:XML):void {
-        	var event:JNidEvent = new JNidEvent(JNidEvent.PERSON_UPDATED,
-        	                                    getPerson(obj.id));
-            dispatchEvent(event);
+        	internalDispatch(JNidEvent.PERSON_UPDATED, getPerson(obj.id));
         }
         
         public function updateOrder(obj:XML):void {
+            
+        }
+        
+        public function updateSupply(obj:XML):void {
             
         }
         
@@ -446,30 +447,36 @@ package com.j_nid.utils {
             }
             orders.splice(orders.indexOf(order), 1);
             delete _orderIDMap[order.id];
-            var event:JNidEvent = new JNidEvent(JNidEvent.ORDER_DELETED, order);
-            dispatchEvent(event);
+            internalDispatch(JNidEvent.ORDER_DELETED, order);
         }
         
         public function deletePayment(obj:XML):void {
             var payment:Payment = _paymentIDMap[obj];
             payments.splice(payments.indexOf(payment), 1);
             delete _paymentIDMap[payment.id];
-            var event:JNidEvent = new JNidEvent(JNidEvent.PAYMENT_DELETED,
-                                                payment);
-            dispatchEvent(event);
+            internalDispatch(JNidEvent.PAYMENT_DELETED, payment);
         }
         
+        // obj is <id/>
         public function deleteOrderItem(obj:XML):void {
             var orderItem:OrderItem = _orderItemIDMap[obj];
             orderItems.splice(orderItems.indexOf(orderItem), 1);
             delete _orderItemIDMap[orderItem.id];
-            var event:JNidEvent = new JNidEvent(JNidEvent.ORDER_ITEM_DELETED,
-                                                orderItem);
-            dispatchEvent(event);
+            internalDispatch(JNidEvent.ORDER_ITEM_DELETED, orderItem);
         }
         
-        public function updateSupply(obj:XML):void {
-            
+        public function deleteBankAccount(obj:XML):void {
+        	var bankAccount:BankAccount = _bankAccountIDMap[obj];
+        	bankAccounts.splice(bankAccounts.indexOf(bankAccount), 1);
+        	delete _bankAccountIDMap[bankAccount.id];
+        	internalDispatch(JNidEvent.BANK_ACCOUNT_DELETED, bankAccount);
+        }
+        
+        public function deletePhoneNumber(obj:XML):void {
+            var phoneNumber:PhoneNumber = _phoneNumberIDMap[obj];
+            phoneNumbers.splice(phoneNumbers.indexOf(phoneNumber), 1);
+            delete _phoneNumberIDMap[phoneNumber.id];
+            internalDispatch(JNidEvent.PHONE_NUMBER_DELETED, phoneNumber);
         }
         
         public function deleteSupply(obj:XML):void {
@@ -480,17 +487,14 @@ package com.j_nid.utils {
             }
             supplies.splice(supplies.indexOf(supply), 1);
             delete _supplyIDMap[supply.id];
-            var event:JNidEvent = new JNidEvent(JNidEvent.SUPPLY_DELETED, supply);
-            dispatchEvent(event);
+            internalDispatch(JNidEvent.SUPPLY_DELETED, supply);
         }
         
         public function deleteSupplyItem(obj:XML):void {
             var supplyItem:SupplyItem = _supplyItemIDMap[obj];
             supplyItems.splice(supplyItems.indexOf(supplyItem), 1);
             delete _supplyItemIDMap[supplyItem.id];
-            var event:JNidEvent = new JNidEvent(JNidEvent.SUPPLY_ITEM_DELETED,
-                                                supplyItem);
-            dispatchEvent(event);
+            internalDispatch(JNidEvent.SUPPLY_ITEM_DELETED, supplyItem);
         }
         
         public function getPersonByName(name:String):Person {
@@ -511,6 +515,11 @@ package com.j_nid.utils {
         
         public function getProductByName(name:String):Product {
             return _productNameMap[name];
+        }
+        
+        private function internalDispatch(eventName:String, data:Object):void {
+        	var event:JNidEvent = new JNidEvent(eventName, data);
+            dispatchEvent(event);
         }
         
 /* ----- get-set function. ------------------------------------------------- */

@@ -152,17 +152,18 @@
         itemEditEnd="event.preventDefault()"
         wordWrap="true"
         variableRowHeight="true" 
+        styleName="cartItemList"
+        headerStyleName="centerHeader"
         width="100%"
-        height="100%"
-        styleName="cartItemList">
+        height="100%">
         
         <mx:columns>
             <mx:DataGridColumn 
                 headerText="{resourceManager.getString('MakeOrder', 'Quantity')}" 
                 dataField="quantity" 
-                editorDataField="value" 
-                headerStyleName="dgHeader"
+                editorDataField="value"
                 width="70">
+                
                 <mx:itemRenderer>
                     <mx:Component>
 <mx:NumericStepper minimum="1" maximum="1000" 
@@ -175,16 +176,15 @@
                 headerText="{resourceManager.getString('MakeOrder', 'Name')}"
                 dataField="name" 
                 editable="false"
-                headerStyleName="dgHeader"
                 width="150"/>
                 
             <mx:DataGridColumn
                 headerText="{resourceManager.getString('MakeOrder', 'Unit')}"
                 dataField="unit" 
                 editorDataField="value"
-                rendererIsEditor="true" 
-                headerStyleName="dgHeader"
+                rendererIsEditor="true"
                 width="70">
+                
                 <mx:itemRenderer>
                     <mx:Component>
 <mx:NumericStepper minimum="1" maximum="100000" 
@@ -198,8 +198,8 @@
                 dataField="pricePerUnit" 
                 editorDataField="value"
                 rendererIsEditor="true"
-                headerStyleName="dgHeader"
                 width="85">
+                
                 <mx:itemRenderer>
                     <mx:Component>
 <mx:NumericStepper minimum="1" maximum="10000" stepSize="0.25" 
@@ -214,7 +214,6 @@
                 textAlign="right"
                 labelFunction="formatPrice"
                 editable="false"
-                headerStyleName="dgHeader"
                 width="85"/>
         </mx:columns>
     </mx:DataGrid>
@@ -224,7 +223,8 @@
                       [utils.formatPrice(total)])}" 
         textAlign="right" 
         paddingRight="10"
-        width="100%" height="30"/>
+        width="100%"
+        height="30"/>
     
     <mx:ControlBar>
         <mx:TextArea id="notationField"

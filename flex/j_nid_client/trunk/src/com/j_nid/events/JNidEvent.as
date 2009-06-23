@@ -33,12 +33,16 @@ package com.j_nid.events
         public static const CREATE_BANK_ACCOUNT:String = "createBankAccount";
         public static const UPDATE_BANK_ACCOUNT:String = "updateBankAccount";
         public static const DELETE_BANK_ACCOUNT:String = "deleteBankAccount";
+        public static const BANK_ACCOUNT_CREATED:String = "bankAccountCreated";
+        public static const BANK_ACCOUNT_DELETED:String = "bankAccountDeleted";
         // PhoneNumber events.
         public static const LIST_PHONE_TYPE:String = "listPhoneType";
         public static const LIST_PHONE_NUMBER:String = "listPhoneNumber";
         public static const CREATE_PHONE_NUMBER:String = "createPhoneNumber";
         public static const UPDATE_PHONE_NUMBER:String = "updatePhoneNumber";
         public static const DELETE_PHONE_NUMBER:String = "deletePhoneNumber";
+        public static const PHONE_NUMBER_CREATED:String = "phoneNumberCreated";
+        public static const PHONE_NUMBER_DELETED:String = "phoneNumberDeleted";
         // Order events.
         public static const LIST_ORDER:String = "listOrder";
         public static const CREATE_ORDER:String = "createOrder";

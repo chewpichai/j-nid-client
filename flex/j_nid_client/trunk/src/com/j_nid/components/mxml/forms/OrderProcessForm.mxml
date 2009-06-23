@@ -74,26 +74,24 @@
 	<mx:DataGrid id="orderItemList"
 		dataProvider="{order.orderItems}"
 		wordWrap="true"
-		variableRowHeight="true" 
+		variableRowHeight="true"
+		headerStyleName="centerHeader"
 		width="100%"
 		height="100%">
 		
 		<mx:columns>
 			<mx:DataGridColumn
 				headerText="{resourceManager.getString('OrderPage', 'Quantity')}" 
-				dataField="quantity"
-				headerStyleName="dgHeader"/>
+				dataField="quantity"/>
 			
 			<mx:DataGridColumn
 				headerText="{resourceManager.getString('OrderPage', 'Name')}" 
 				dataField="name"
-				headerStyleName="dgHeader"
 				width="150"/>
 			
 			<mx:DataGridColumn
 				headerText="{resourceManager.getString('OrderPage', 'Unit')}" 
 				dataField="unit"
-				headerStyleName="dgHeader"
 				width="70"/>
 			
 			<mx:DataGridColumn
@@ -101,14 +99,12 @@
 				                    'OrderPage', 'PricePerUnit')}" 
 				dataField="pricePerUnit"
 				labelFunction="formatPrice"
-				headerStyleName="dgHeader"
 				width="85"/>
 			
 			<mx:DataGridColumn
 				headerText="{resourceManager.getString('OrderPage', 'Total')}"
 				dataField="total"
 				labelFunction="formatPrice"
-				headerStyleName="dgHeader"
 				width="85"/>
 		</mx:columns>
 	</mx:DataGrid>
@@ -124,7 +120,9 @@
 		textAlign="right"
 		width="100%"/>
 	
-	<mx:ControlBar id="mainControlBar" horizontalAlign="right">
+	<mx:ControlBar id="mainControlBar"
+		horizontalAlign="right">
+		
 		<mx:Button id="submitBtn"
 			label="{resourceManager.getString('OrderPage', 'Submit')}"
 			click="submitBtnClickListener(event)"/>

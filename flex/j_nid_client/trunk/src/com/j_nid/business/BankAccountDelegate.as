@@ -17,12 +17,16 @@ package com.j_nid.business {
 			ServiceUtils.send("/bankaccounts/", "GET", _responder);
 		}
 		
-		public function createBankAccount(bankAccount:BankAccount):void {
-			ServiceUtils.send("/bankaccounts/", "POST", _responder, bankAccount.toXML());
+		public function createBankAccount(ba:BankAccount):void {
+			ServiceUtils.send("/bankaccounts/", "POST", _responder, ba.toXML());
 		}
 		
 		public function listBankName():void {
 			ServiceUtils.send("/banknames/", "GET", _responder);
 		}
+		
+		public function deleteBankAccount(ba:BankAccount):void {
+            ServiceUtils.send("/bankaccounts/" + ba.id + "/", "DELETE", _responder);
+        }
 	}
 }

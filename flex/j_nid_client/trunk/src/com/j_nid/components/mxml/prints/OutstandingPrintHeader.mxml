@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!-- Custom control for the header area of the printed page. -->
-<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml"
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml"
 	horizontalAlign="center"
 	paddingLeft="15" paddingRight="15" 
 	width="60%">
@@ -11,19 +11,19 @@
     
     <mx:Script>
     	<![CDATA[
+    		import com.j_nid.utils.Utils;
     		import mx.resources.ResourceBundle;
     		
     		[Bindable]
     		public var startDate:Date;
     		[Bindable]
     		public var endDate:Date;
+    		[Bindable]
+    		private var utils:Utils = Utils.getInstance();
     	]]>
     </mx:Script>
-    
-    <mx:DateFormatter id="dateFormatter"
-    	formatString="DD-MM-YYYY"/>
     					
     <mx:Label text="{resourceManager.getString('OutstandingPrint', 'DateBetween',
-    					   [dateFormatter.format(startDate),
-    					    dateFormatter.format(endDate)])}"/>
-</mx:HBox>
+    					   [utils.formatDate(startDate, 'DD-MM-YYYY'),
+    					    utils.formatDate(endDate, 'DD-MM-YYYY')])}"/>
+</mx:VBox>

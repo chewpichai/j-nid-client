@@ -32,10 +32,12 @@ package com.j_nid.controls {
 			addCommand(JNidEvent.LIST_BANK_NAME, ListBankNameCommand);
 			addCommand(JNidEvent.LIST_BANK_ACCOUNT, ListBankAccountCommand);
 			addCommand(JNidEvent.CREATE_BANK_ACCOUNT, CreateBankAccountCommand);
+			addCommand(JNidEvent.DELETE_BANK_ACCOUNT, DeleteBankAccountCommand);
 			// PhoneNumber commands.
 			addCommand(JNidEvent.LIST_PHONE_TYPE, ListPhoneTypeCommand);
 			addCommand(JNidEvent.LIST_PHONE_NUMBER, ListPhoneNumberCommand);
 			addCommand(JNidEvent.CREATE_PHONE_NUMBER, CreatePhoneNumberCommand);
+			addCommand(JNidEvent.DELETE_PHONE_NUMBER, DeletePhoneNumberCommand);
 			// Order commands.
 			addCommand(JNidEvent.LIST_ORDER, ListOrderCommand);
 			addCommand(JNidEvent.CREATE_ORDER, CreateOrderCommand);

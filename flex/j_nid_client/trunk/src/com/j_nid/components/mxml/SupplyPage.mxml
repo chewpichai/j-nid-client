@@ -2,8 +2,6 @@
 <mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml"
     creationComplete="createtionComplete(event)"
     show="showHandler(event)"
-    showEffect="{wipeIn}"
-    hideEffect="{wipeOut}"
     width="100%"
     height="100%">
     
@@ -181,9 +179,6 @@
         ]]>
     </mx:Script>
     
-    <mx:WipeDown id="wipeOut" duration="1000"/>
-    <mx:WipeDown id="wipeIn" duration="1000"/>
-    
     <mx:DateFormatter id="dateFormatter" formatString="DD/MM/YY J:NN:SS"/>
     
     <mx:Panel
@@ -252,6 +247,7 @@
             dataProvider="{selectedSupply.supplyItems}"
             textAlign="center"
             keyDown="itemListKeyDown(event)"
+            headerStyleName="centerHeader"
             width="100%"
             height="100%">
             
@@ -259,19 +255,16 @@
                 <mx:DataGridColumn
                     headerText="{resourceManager.getString('SupplyPage', 'Quantity')}"
                     dataField="quantity"
-                    headerStyleName="dgHeader"
                     width="50"/>
                 
                 <mx:DataGridColumn
                     headerText="{resourceManager.getString('SupplyPage', 'Name')}"
-                    dataField="name"
-                    headerStyleName="dgHeader"/>
+                    dataField="name"/>
                 
                 <mx:DataGridColumn
                     headerText="{resourceManager.getString('SupplyPage', 'Unit')}"
                     dataField="unit"
                     textAlign="right"
-                    headerStyleName="dgHeader"
                     width="50"/>
                 
                 <mx:DataGridColumn
@@ -279,7 +272,6 @@
                     dataField="pricePerUnit"
                     labelFunction="formatPrice"
                     textAlign="right"
-                    headerStyleName="dgHeader"
                     width="85"/>
                 
                 <mx:DataGridColumn
@@ -287,7 +279,6 @@
                     dataField="total"
                     labelFunction="formatPrice" 
                     textAlign="right"
-                    headerStyleName="dgHeader"
                     width="85"/>
             </mx:columns>
         </mx:DataGrid>
