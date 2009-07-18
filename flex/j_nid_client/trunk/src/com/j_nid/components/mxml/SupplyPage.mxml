@@ -27,24 +27,20 @@
             import com.j_nid.utils.CairngormUtils;
             import com.j_nid.events.JNidEvent;
             import com.j_nid.models.SupplyItem;
-            import com.j_nid.utils.ModelUtils;
             
-            [Bindable]
-            private var model:ModelUtils = ModelUtils.getInstance();
             [Bindable]
             private var people:ArrayCollection;
             [Bindable]
             private var supplies:ArrayCollection;
             [Bindable]
             private var selectedSupply:Supply;
-            [Bindable]
-            private var utils:Utils = Utils.getInstance();
             private var appMgr:ApplicationManager =
                 ApplicationManager.getInstance();
+            private var formatPrice:Function = Utils.formatPrice;
             
             private function createtionComplete(e:FlexEvent):void {
                 // Create people.
-                people = new ArrayCollection(model.people);
+                people = new ArrayCollection(Person.all());
                 var sort:Sort = new Sort();
                 sort.fields = [new SortField("name")];
                 people.sort = sort;
@@ -54,7 +50,7 @@
                     };
                 supplierList.dataProvider = people;
                 // Create supplies.
-                supplies = new ArrayCollection(model.supplies);
+                supplies = new ArrayCollection(Supply.all());
                 sort = new Sort();
                 sort.fields = [new SortField("created", false, true)];
                 supplies.sort = sort;
@@ -68,10 +64,6 @@
                 // Add change watchers.
                 ChangeWatcher.watch(supplierList, "selectedIndex", filterSupply);
                 ChangeWatcher.watch(dateField, "selectedRanges", filterSupply);
-                //
-                model.addEventListener(JNidEvent.SUPPLY_DELETED, supplyDeleted);
-                model.addEventListener(JNidEvent.SUPPLY_ITEM_DELETED,
-                    supplyItemDeleted);
             }
             
             private function supplyDeleted(e:JNidEvent):void {
@@ -93,7 +85,7 @@
             private function initData():void {
                 var today:Date = new Date();
                 var rangeEnd:Date = new Date(today.fullYear, today.month, today.date);
-                var rangeStart:Date = utils.moveDateByDay(rangeEnd, -7);
+                var rangeStart:Date = Utils.moveDateByDay(rangeEnd, -7);
                 dateField.selectedRanges = [{rangeStart: rangeStart, rangeEnd: rangeEnd}];
             }
             
@@ -116,7 +108,7 @@
                     var start:Date = new Date(obj.rangeStart.time);
                     var end:Date = new Date(obj.rangeEnd.time);
                     // Move end date to the midnight of the next day.
-                    end = utils.moveDateByDay(end, 1);
+                    end = Utils.moveDateByDay(end, 1);
                     if (date >= start && date < end) {
                         return true;
                     }
@@ -146,6 +138,8 @@
                         'ConfirmTitle'),
                     function(e:CloseEvent):void {
                     	if (e.detail == Alert.OK) {
+                    	    supply.addEventListener(JNidEvent.SUPPLY_DELETED,
+                    	       supplyDeleted);
                             supply.remove();
                         }
                     });
@@ -162,8 +156,14 @@
                         function(e:CloseEvent):void {
 			                if (e.detail == Alert.OK) {
 			                    if (item.supply.supplyItems.length > 1) {
+			                        item.addEventListener(
+                                        JNidEvent.SUPPLY_ITEM_DELETED,
+                                        supplyItemDeleted);
 			                        item.remove();
 			                    } else {
+			                        item.supply.addEventListener(
+                                        JNidEvent.SUPPLY_DELETED,
+                                        supplyDeleted);
 			                        item.supply.remove();
 			                    }
 			                }
@@ -171,10 +171,10 @@
                 }
             }
             
-            private function formatPrice(item:Object,
+            private function formatPriceGrid(item:Object,
                                          column:DataGridColumn):String {
                                               
-                return utils.formatPrice(item[column.dataField]);
+                return formatPrice(item[column.dataField]);
             }
         ]]>
     </mx:Script>
@@ -270,14 +270,14 @@
                 <mx:DataGridColumn
                     headerText="{resourceManager.getString('SupplyPage', 'PricePerUnit')}"
                     dataField="pricePerUnit"
-                    labelFunction="formatPrice"
+                    labelFunction="formatPriceGrid"
                     textAlign="right"
                     width="85"/>
                 
                 <mx:DataGridColumn
                     headerText="{resourceManager.getString('SupplyPage', 'Total')}"
                     dataField="total"
-                    labelFunction="formatPrice" 
+                    labelFunction="formatPriceGrid" 
                     textAlign="right"
                     width="85"/>
             </mx:columns>
@@ -291,7 +291,7 @@
             
             <mx:Label
             	text="{resourceManager.getString('SupplyPage', 'Summary',
-                            [utils.formatPrice(selectedSupply.total)])}"/>
+                            [formatPrice(selectedSupply.total)])}"/>
         </mx:HBox>
         
         <mx:ControlBar horizontalAlign="right">

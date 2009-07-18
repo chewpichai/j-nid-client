@@ -26,11 +26,10 @@
             public var total:Number;
             [Bindable]
             public var outstandingTotal:Number;
-            private var utils:Utils = Utils.getInstance();
             
             public function set person(obj:Person):void {
             	_person = obj;
-            	var lastDate:Date = utils.moveDateByDay(endDate, 1);
+            	var lastDate:Date = Utils.moveDateByDay(endDate, 1);
             	payments = new Array();
             	total = 0;
             	for each (var payment:* in person.payments) {
@@ -73,13 +72,13 @@
             private function formatPrice(item:Object,
             							 column:DataGridColumn):String {
             							  	
-            	return utils.formatPrice(item[column.dataField]);
+            	return Utils.formatPrice(item[column.dataField]);
             }
             
             private function formatDate(item:Object,
                                         column:DataGridColumn):String {
                                             
-                return utils.formatDate(item[column.dataField], "DD-MM-YYYY");
+                return Utils.formatDate(item[column.dataField], "DD-MM-YYYY");
             }
         ]]>
     </mx:Script>

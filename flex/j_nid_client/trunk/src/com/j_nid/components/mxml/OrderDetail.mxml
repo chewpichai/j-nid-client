@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:Panel title="{resourceManager.getString('MakeOrder', 'Order')}"
+<mx:Panel
     xmlns:mx="http://www.adobe.com/2006/mxml" 
     xmlns:jn="com.j_nid.components.mxml.*"
     xmlns:adobe="http://www.adobe.com/2006/fc"
+    title="{resourceManager.getString('MakeOrder', 'Order')}"
     layout="vertical" 
-    paddingLeft="5" paddingRight="5"
-    paddingTop="5">
+    paddingTop="5"
+    paddingLeft="5"
+    paddingRight="5">
     
     <mx:Metadata>
         [ResourceBundle("MakeOrder")]
@@ -20,29 +22,24 @@
             import mx.collections.ArrayCollection;
             import com.j_nid.models.Person;
             import mx.resources.ResourceBundle;
-            import mx.managers.PopUpManager;
             import mx.managers.DragManager;
             import mx.core.Application;
             import com.j_nid.components.mxml.forms.OrderProcessForm;
             import com.j_nid.models.Product;
             import com.j_nid.models.Order;
-            import com.j_nid.utils.ModelUtils;
             import com.j_nid.models.OrderItem;
             import mx.events.DragEvent;
             
             [Bindable]
             public var order:Order;
-            [Bindable]
-            public var model:ModelUtils = ModelUtils.getInstance();
             private var appMgr:ApplicationManager =
                 ApplicationManager.getInstance();
             [Bindable]
             public var customers:Array;
             [Bindable]
-            private var utils:Utils = Utils.getInstance();
-            [Bindable]
             private var total:Number;
             private var errMsg:String;
+            private var formatPrice:Function = Utils.formatPrice;
             
             public function set orderItems(obj:ArrayCollection):void {
                 orderItemList.dataProvider = obj;
@@ -51,7 +48,7 @@
             }
             
             private function orderItemsChange(e:CollectionEvent):void {
-                total = utils.sum(e.currentTarget, "total");
+                total = Utils.sum(e.currentTarget, "total");
             }
             
             private function dragEnterListener(e:DragEvent):void {
@@ -60,26 +57,26 @@
             
             private function dragDropListener(e:DragEvent):void {
                 var product:Product = e.dragSource.dataForFormat("items")[0];
-                var orderItem:OrderItem = new OrderItem();
-                orderItem.productID = product.id;
-                orderItem.unit = product.unit;
-                orderItem.pricePerUnit = product.pricePerUnit;
-                orderItem.costPerUnit = product.costPerUnit;
-                addOrderItem(orderItem);
+                addOrderItem(product);
             }
             
             public function set customer(obj:Person):void {
                 customerFiled.selectedItem = obj;
             }
             
-            public function addOrderItem(item:OrderItem):void {
+            public function addOrderItem(product:Product):void {
+                var orderItem:OrderItem = new OrderItem();
+                orderItem.productID = product.id;
+                orderItem.unit = product.unit;
+                orderItem.pricePerUnit = product.pricePerUnit;
+                orderItem.costPerUnit = product.costPerUnit;
                 for each (var obj:OrderItem in orderItemList.dataProvider) {
-                    if (item.productID == obj.productID) {
-                        obj.unit += item.unit;
+                    if (orderItem.productID == obj.productID) {
+                        obj.unit += orderItem.unit;
                         return;
                     }
                 }
-                orderItemList.dataProvider.addItem(item);
+                orderItemList.dataProvider.addItem(orderItem);
                 orderItemList.verticalScrollPosition = 
                     orderItemList.maxVerticalScrollPosition;
             }
@@ -98,13 +95,11 @@
             
             private function processListener(e:MouseEvent):void {
                 if (isValid()) {
-                    order.personID = model.getPersonByName(customerFiled.text).id;
+                    order.personID = Person.getByName(customerFiled.text).id;
                     order.notation = notationField.text;
                     order.orderItems = orderItemList.dataProvider.source;
-                    var orderProcessForm:OrderProcessForm = OrderProcessForm(
-                        PopUpManager.createPopUp(
-                            Application(Application.application), 
-                            OrderProcessForm, true));
+                    var orderProcessForm:OrderProcessForm =
+                        OrderProcessForm(appMgr.createPopUp(OrderProcessForm));
                     orderProcessForm.order = order;
                 } else {
                     appMgr.showMessage(errMsg,
@@ -118,17 +113,17 @@
             		errMsg += resourceManager.getString("MakeOrder",
             		              "ItemLengthError");
             	}
-            	if (model.getPersonByName(customerFiled.text) == null) {
+            	if (Person.getByName(customerFiled.text) == null) {
             		errMsg += resourceManager.getString("MakeOrder",
             		              "CustomerError");
             	}
                 return errMsg.length == 0;
             }
             
-            private function formatPrice(item:Object,
-                                         column:DataGridColumn):String {
+            private function formatPriceGrid(item:Object,
+                                             column:DataGridColumn):String {
                                               
-                return utils.formatPrice(item[column.dataField]);
+                return formatPrice(item[column.dataField]);
             }
         ]]>
     </mx:Script>
@@ -137,7 +132,8 @@
     	verticalAlign="middle"
     	width="100%">
         
-        <mx:Label text="{resourceManager.getString('MakeOrder', 'CustomerName')}:"/>
+        <mx:Label text="{resourceManager.getString(
+                                'MakeOrder', 'CustomerName')}:"/>
         
         <adobe:AutoComplete id="customerFiled" 
             labelField="name" 
@@ -166,7 +162,7 @@
                 
                 <mx:itemRenderer>
                     <mx:Component>
-<mx:NumericStepper minimum="1" maximum="1000" 
+<mx:NumericStepper minimum="0" maximum="1000" 
     change="{data.quantity = value}"/>
                     </mx:Component>
                 </mx:itemRenderer>
@@ -212,7 +208,7 @@
                 headerText="{resourceManager.getString('MakeOrder', 'Total')}"
                 dataField="total"
                 textAlign="right"
-                labelFunction="formatPrice"
+                labelFunction="formatPriceGrid"
                 editable="false"
                 width="85"/>
         </mx:columns>
@@ -220,7 +216,7 @@
     
     <mx:Text id="totalTxt" 
         text="{resourceManager.getString('MakeOrder', 'Summary',
-                      [utils.formatPrice(total)])}" 
+                      [formatPrice(total)])}" 
         textAlign="right" 
         paddingRight="10"
         width="100%"

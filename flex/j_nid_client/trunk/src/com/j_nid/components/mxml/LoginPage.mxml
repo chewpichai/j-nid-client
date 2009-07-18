@@ -11,13 +11,9 @@
 		<![CDATA[
 			import com.j_nid.events.JNidEvent;
 			import com.j_nid.utils.CairngormUtils;
-			import com.j_nid.utils.ModelUtils;
 			import flash.utils.describeType;
 			import mx.core.Application;
 			import mx.resources.ResourceBundle;
-			
-			[Bindable]
-			private var model:ModelUtils = ModelUtils.getInstance();
 			
 			private function loginBtnClick(e:MouseEvent):void {
                 var obj:Object = {username: usernameField.text,

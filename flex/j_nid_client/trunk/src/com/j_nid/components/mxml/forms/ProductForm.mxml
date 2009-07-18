@@ -11,20 +11,16 @@
     
     <mx:Script>
         <![CDATA[
+        	import com.j_nid.events.JNidEvent;
             import com.j_nid.controls.ApplicationManager;
             import mx.utils.StringUtil;
             import mx.resources.ResourceBundle;
             import mx.controls.LinkButton;
-            import com.j_nid.utils.ModelUtils;
-            import com.j_nid.events.JNidEvent;
             import com.j_nid.utils.CairngormUtils;
             import com.j_nid.models.Product;
             import com.j_nid.models.ProductType;
-            import mx.managers.PopUpManager;
             import mx.events.FlexEvent;
             
-            [Bindable]
-            private var model:ModelUtils = ModelUtils.getInstance();
             [Bindable]
             private var appMgr:ApplicationManager =
                 ApplicationManager.getInstance();
@@ -35,7 +31,7 @@
             
             
             private function init(e:FlexEvent):void {
-                PopUpManager.centerPopUp(this);
+            	typeField.dataProvider = ProductType.all();
             }
             
             override protected function createChildren():void {
@@ -63,17 +59,12 @@
             private function saveProductListener(e:MouseEvent):void {
                 if (isValid()) {
                     product.name = nameField.text;
-                    product.productTypeID = ProductType(typeField.selectedItem).id;
+                    product.productTypeID = 
+                        ProductType(typeField.selectedItem).id;
                     product.unit = unitField.value;
                     product.pricePerUnit = pricePerUnitField.value;
                     product.isSale = isSaleField.selected;
-                    if (product.id > 0) {
-                        CairngormUtils.dispatchEvent(
-                            JNidEvent.UPDATE_PRODUCT, product);
-                    } else {
-                        CairngormUtils.dispatchEvent(
-                            JNidEvent.CREATE_PRODUCT, product);
-                    }
+                    product.save();
                     close();
                 } else {
                     appMgr.showMessage(errMsg,
@@ -88,10 +79,15 @@
                     errMsg += resourceManager.getString("ProductPage",
                                    "NameLengthError");
                 } else {
-                    if (model.getProductByName(productName) != null) {
+                    if (Product.getByName(productName) != null &&
+                        product.name != productName) {
                         errMsg += resourceManager.getString("ProductPage",
                                        "NameDuplicateError");
                     }
+                }
+                if (typeField.selectedIndex < 0) {
+                    errMsg += resourceManager.getString("ProductPage",
+                                   "ProductTypeError");
                 }
                 return errMsg.length == 0;
             }
@@ -101,7 +97,7 @@
             }
             
             private function close():void {
-                PopUpManager.removePopUp(this);
+                CairngormUtils.dispatchEvent(JNidEvent.CLOSE_POPUP, this);
             }
         ]]>
     </mx:Script>
@@ -126,9 +122,8 @@
             width="100%">
             
             <mx:ComboBox id="typeField" 
-                selectedIndex="{model.productTypes.getItemIndex(
+                selectedIndex="{typeField.dataProvider.getItemIndex(
                                     product.productType)}"
-                dataProvider="{model.productTypes}"
                 itemRenderer="com.j_nid.components.mxml.ProductTypeComboRenderer"
                 width="100%" height="30"/>
         </mx:FormItem>

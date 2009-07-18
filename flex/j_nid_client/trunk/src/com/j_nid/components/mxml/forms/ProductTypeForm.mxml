@@ -11,19 +11,15 @@
     
     <mx:Script>
         <![CDATA[
+        	import com.j_nid.events.JNidEvent;
         	import mx.utils.StringUtil;
         	import com.j_nid.controls.ApplicationManager;
-            import com.j_nid.events.JNidEvent;
-            import com.j_nid.utils.ModelUtils;
             import com.j_nid.models.ProductType;
             import com.j_nid.utils.CairngormUtils;
             import mx.controls.LinkButton;
             import mx.events.FlexEvent;
-            import mx.managers.PopUpManager;
             import mx.resources.ResourceBundle;
             
-            [Bindable]
-            private var model:ModelUtils = ModelUtils.getInstance();
             [Bindable]
             private var appMgr:ApplicationManager =
                 ApplicationManager.getInstance();
@@ -33,7 +29,7 @@
             private var errMsg:String;
             
             private function init(e:FlexEvent):void {
-                PopUpManager.centerPopUp(this);
+                
             }
             
             override protected function createChildren():void {
@@ -46,6 +42,7 @@
             
             override protected function updateDisplayList(unscaledWidth:Number,
                                             unscaledHeight:Number):void    {
+                
                 super.updateDisplayList(unscaledWidth, unscaledHeight);    
                 var margin:int = 4;    
                 var pixelsFromTop:int = 5;
@@ -61,14 +58,7 @@
                 if (isValid()) {
                     productType.name = nameField.text;
                     productType.color = colorField.selectedColor;
-                    if (productType.id > 0) {
-                        CairngormUtils.dispatchEvent(
-                            JNidEvent.UPDATE_PRODUCT_TYPE, productType);
-                    } else {
-                        CairngormUtils.dispatchEvent(
-                            JNidEvent.CREATE_PRODUCT_TYPE, productType);
-                    }
-                    close();
+                    productType.save();
                 } else {
                     appMgr.showMessage(errMsg,
                         resourceManager.getString("ProductPage", "ErrorTitle"));
@@ -82,7 +72,8 @@
                     errMsg += resourceManager.getString("ProductPage",
                                    "TypeNameLengthError");
                 } else {
-                    if (model.getProductTypeByName(typeName) != null) {
+                    if (ProductType.getByName(typeName) != null &&
+                        productType.name != typeName) {
                         errMsg += resourceManager.getString("ProductPage",
                                        "TypeNameDuplicateError");
                     }
@@ -91,11 +82,7 @@
             }
             
             private function closeBtnClick(e:MouseEvent):void {
-                close();
-            }
-            
-            private function close():void {
-                PopUpManager.removePopUp(this);
+                CairngormUtils.dispatchEvent(JNidEvent.CLOSE_POPUP, this);
             }
         ]]>
     </mx:Script>

@@ -1,30 +1,24 @@
 package com.j_nid.commands {
 	
-	import com.adobe.cairngorm.commands.ICommand;
 	import com.adobe.cairngorm.control.CairngormEvent;
 	import com.j_nid.business.OrderItemDelegate;
-	import com.j_nid.utils.ModelUtils;
-	
-	import mx.rpc.IResponder;
+	import com.j_nid.models.OrderItem;
 
-	public class CreateOrderItemCommand implements ICommand, IResponder	{
+	public class CreateOrderItemCommand extends RespondCommand {
 		
-		public function CreateOrderItemCommand() {
-			
-		}
-
-		public function execute(event:CairngormEvent):void {
+		private var _orderItem:OrderItem;
+		
+		override public function execute(event:CairngormEvent):void {
+		    super.execute(event);
+		    _orderItem = event.data;
 			var delegate:OrderItemDelegate = new OrderItemDelegate(this);
-			delegate.createOrderItem(event.data);
+			delegate.createOrderItem(_orderItem);
 		}
 		
-		public function result(event:Object):void {
-			var model:ModelUtils = ModelUtils.getInstance();
-			model.createOrderItem(event.result);
-		}
-		
-		public function fault(event:Object):void {
-			trace(event.message);
+		override public function result(event:Object):void {
+			super.result(event);
+			OrderItem.add(event.result);
+			_orderItem.dispatchCreated();
 		}
 	}
 }

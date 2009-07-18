@@ -1,10 +1,18 @@
 package com.j_nid.models {
+    
 	import com.j_nid.events.JNidEvent;
-	import com.j_nid.utils.ModelUtils;
 	
+	[Event(name="bankAccountCreated", type="com.j_nid.events.JNidEvent")]
+    [Event(name="bankAccountDeleted", type="com.j_nid.events.JNidEvent")]
 	
 	[Bindable]
 	public class BankAccount extends Model {
+		
+		private static var _bankAccounts:Array = [];
+		private static var _idMap:Object = {};
+		public static var bankNames:XMLList;
+		public static var loaded:Boolean = false;
+		public static var bankNameLoaded:Boolean = false;
 		
 		public var personID:uint;
 		public var number:String;
@@ -19,15 +27,45 @@ package com.j_nid.models {
 			return bankAccount;
 		}
 		
+		public static function all():Array {
+		    return _bankAccounts;
+		}
+		
+		public static function add(obj:Object):void {
+		    if (obj is XML) {
+                obj = fromXML(XML(obj));
+            } else if (obj is XMLList) {
+                for each (var xml:XML in obj) {
+                    add(xml);
+                }
+                return;
+            }
+            _bankAccounts.push(obj);
+            _idMap[obj.id] = obj;
+		}
+		
+		public static function getByID(obj:int):BankAccount {
+            return _idMap[obj];
+        }
+        
+        public static function filterByPerson(personID:uint):Array {
+            return _bankAccounts.filter(
+                        function(ba:BankAccount, index:int, arr:Array):Boolean {
+                            return ba.personID == personID;
+                        });
+        }
+        
+        public static function deleteBankAccount(obj:uint):void {
+            var bankAccount:BankAccount = getByID(obj);
+            _bankAccounts.splice(_bankAccounts.indexOf(bankAccount), 1);
+            delete _idMap[bankAccount.id];
+        }
+		
 		public function BankAccount() {
 			super();
 			personID = 0;
 			number = "";
 			bank = "";
-			//
-            createEvent = JNidEvent.CREATE_BANK_ACCOUNT;
-            updateEvent = JNidEvent.UPDATE_BANK_ACCOUNT;
-            deleteEvent = JNidEvent.DELETE_BANK_ACCOUNT;
 		}
 		
 		public function toXML():XML {
@@ -41,7 +79,7 @@ package com.j_nid.models {
 /* ----- get-set function. ------------------------------------------------- */
 		
 		public function get person():Person {
-			return ModelUtils.getInstance().getPerson(personID);
+			return Person.getByID(personID);
 		}
 	}
 }

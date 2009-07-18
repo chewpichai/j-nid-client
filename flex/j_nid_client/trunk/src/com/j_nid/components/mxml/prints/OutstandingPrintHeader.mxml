@@ -18,12 +18,11 @@
     		public var startDate:Date;
     		[Bindable]
     		public var endDate:Date;
-    		[Bindable]
-    		private var utils:Utils = Utils.getInstance();
+    		private var formatDate:Function = Utils.formatDate;
     	]]>
     </mx:Script>
     					
     <mx:Label text="{resourceManager.getString('OutstandingPrint', 'DateBetween',
-    					   [utils.formatDate(startDate, 'DD-MM-YYYY'),
-    					    utils.formatDate(endDate, 'DD-MM-YYYY')])}"/>
+    					   [formatDate(startDate, 'DD-MM-YYYY'),
+    					    formatDate(endDate, 'DD-MM-YYYY')])}"/>
 </mx:VBox>

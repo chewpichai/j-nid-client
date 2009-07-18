@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:Panel title="{resourceManager.getString('MakeSupply', 'Supply')}"
+<mx:Panel
     xmlns:mx="http://www.adobe.com/2006/mxml" 
     xmlns:jn="com.j_nid.components.mxml.*"
     xmlns:adobe="http://www.adobe.com/2006/fc"
+    title="{resourceManager.getString('MakeSupply', 'Supply')}"
     layout="vertical" 
     paddingLeft="5"
     paddingRight="5"
@@ -20,14 +21,12 @@
         	import mx.collections.ArrayCollection;
             import com.j_nid.models.Person;
             import mx.resources.ResourceBundle;
-            import mx.managers.PopUpManager;
             import mx.managers.DragManager;
             import mx.core.Application;
             import mx.controls.Alert;
             import com.j_nid.components.mxml.forms.SupplyProcessForm;
             import com.j_nid.models.Supply;
             import com.j_nid.models.Product;
-            import com.j_nid.utils.ModelUtils;
             import com.j_nid.models.SupplyItem;
             import mx.events.DragEvent;
             
@@ -35,15 +34,12 @@
             public var supply:Supply;
             [Bindable]
             public var suppliers:Array;
-            [Bindable]
-            public var model:ModelUtils = ModelUtils.getInstance();
             private var appMgr:ApplicationManager =
                 ApplicationManager.getInstance();
             [Bindable]
-            private var utils:Utils = Utils.getInstance();
-            [Bindable]
             private var total:Number;
             private var errMsg:String;
+            private var formatPrice:Function = Utils.formatPrice;
             
             public function set supplyItems(obj:ArrayCollection):void {
             	supplyItemList.dataProvider = obj;
@@ -52,7 +48,7 @@
             }
             
             private function supplyItemsChange(e:CollectionEvent):void {
-                total = utils.sum(e.currentTarget, "total");
+                total = Utils.sum(e.currentTarget, "total");
             }
             
             private function dragEnterListener(e:DragEvent):void {
@@ -61,21 +57,21 @@
             
             private function dragDropListener(e:DragEvent):void {
                 var product:Product = e.dragSource.dataForFormat("items")[0];
+                addSupplyItem(product);
+            }
+            
+            public function addSupplyItem(product:Product):void {
                 var supplyItem:SupplyItem = new SupplyItem();
                 supplyItem.productID = product.id;
                 supplyItem.pricePerUnit = product.costPerUnit;
                 supplyItem.unit = product.unit;
-                addSupplyItem(supplyItem);
-            }
-            
-            public function addSupplyItem(item:SupplyItem):void {
                 for each (var obj:SupplyItem in supplyItemList.dataProvider) {
-                    if (item.productID == obj.productID) {
-                        obj.unit += item.unit;
+                    if (supplyItem.productID == obj.productID) {
+                        obj.unit += supplyItem.unit;
                         return;
                     }
                 }
-                supplyItemList.dataProvider.addItem(item);
+                supplyItemList.dataProvider.addItem(supplyItem);
                 supplyItemList.verticalScrollPosition = 
                     supplyItemList.maxVerticalScrollPosition;
             }
@@ -94,13 +90,11 @@
             
             private function processListener(e:MouseEvent):void {
                 if (isValid()) {
-                    supply.personID = model.getPersonByName(supplierFiled.text).id;
+                    supply.personID = Person.getByName(supplierFiled.text).id;
                     supply.notation = notationField.text;
                     supply.supplyItems = supplyItemList.dataProvider.source;
-                    var processForm:SupplyProcessForm = SupplyProcessForm(
-                        PopUpManager.createPopUp(
-                            Application(Application.application),
-                            SupplyProcessForm, true));
+                    var processForm:SupplyProcessForm =
+                        SupplyProcessForm(appMgr.createPopUp(SupplyProcessForm));
                     processForm.supply = supply;
                 } else {
                     appMgr.showMessage(errMsg,
@@ -114,7 +108,7 @@
                     errMsg += resourceManager.getString("MakeSupply",
                                   "ItemLengthError");
                 }
-                if (model.getPersonByName(supplierFiled.text) == null) {
+                if (Person.getByName(supplierFiled.text) == null) {
                     errMsg += resourceManager.getString("MakeSupply",
                                   "CustomerError");
                 }
@@ -181,8 +175,10 @@
                 
                 <mx:itemRenderer>
                     <mx:Component>
-<mx:NumericStepper minimum="1" maximum="100000" 
-    change="{data.unit = value}"/>
+<mx:NumericStepper
+	minimum="1"
+	maximum="100000" 
+    change="{data.unit=value}"/>
                     </mx:Component>
                 </mx:itemRenderer>
             </mx:DataGridColumn>
@@ -213,7 +209,7 @@
     
     <mx:Text id="totalTxt" 
         text="{resourceManager.getString('MakeSupply', 'Summary',
-                    [utils.formatPrice(total)])}" 
+                    [formatPrice(total)])}" 
         textAlign="right" 
         paddingRight="10"
         width="100%"

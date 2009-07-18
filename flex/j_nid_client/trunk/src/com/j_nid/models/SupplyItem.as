@@ -1,10 +1,14 @@
 package com.j_nid.models {
 	
-	import com.j_nid.events.JNidEvent;
-	import com.j_nid.utils.ModelUtils;
+	[Event(name="supplyItemCrated", type="com.j_nid.events.JNidEvent")]
+	[Event(name="supplyItemDeleted", type="com.j_nid.events.JNidEvent")]
 	
 	[Bindable]
 	public class SupplyItem extends Model {
+	    
+	    private static var _supplyItems:Array = [];
+        private static var _idMap:Object = {};
+        public static var loaded:Boolean = false;
 		
     	public var unit:uint;
     	public var pricePerUnit:Number;
@@ -20,6 +24,40 @@ package com.j_nid.models {
     		item.productID = obj.product_id;
     		return item;
     	}
+    	
+    	public static function all():Array {
+            return _supplyItems;
+        }
+        
+        public static function add(obj:Object):void {
+            if (obj is XML) {
+                obj = fromXML(XML(obj));
+            } else if (obj is XMLList) {
+                for each (var xml:XML in obj) {
+                    add(xml);
+                }
+                return;
+            }
+            _supplyItems.push(obj);
+            _idMap[obj.id] = obj;
+        }
+        
+        public static function getByID(obj:int):SupplyItem {
+            return _idMap[obj];
+        }
+        
+        public static function filterBySupply(supplyID:uint):Array {
+            return _supplyItems.filter(
+                        function(item:SupplyItem, index:int, arr:Array):Boolean {
+                            return item.supplyID == supplyID;
+                        });
+        }
+        
+        public static function deleteSupplyItem(obj:uint):void {
+            var item:SupplyItem = getByID(obj);
+            _supplyItems.splice(_supplyItems.indexOf(item), 1);
+            delete _idMap[item.id];
+        }
 		
 		public function SupplyItem() {
 			super();
@@ -27,10 +65,6 @@ package com.j_nid.models {
             pricePerUnit = 0;
             supplyID = 0;
             productID = 0;
-            //
-            createEvent = JNidEvent.CREATE_SUPPLY_ITEM;
-            updateEvent = JNidEvent.UPDATE_SUPPLY_ITEM;
-            deleteEvent = JNidEvent.DELETE_SUPPLY_ITEM;
 		}
 		
 		public function toXML():XML {
@@ -45,11 +79,11 @@ package com.j_nid.models {
 /* ----- get-set function. ------------------------------------------------- */
 		
 		public function get supply():Supply {
-			return ModelUtils.getInstance().getSupply(supplyID);
+			return Supply.getByID(supplyID);
 		}
 		
 		public function get product():Product {
-			return ModelUtils.getInstance().getProduct(productID);
+			return Product.getByID(productID);
 		}
 		
 		public function set quantity(obj:uint):void {

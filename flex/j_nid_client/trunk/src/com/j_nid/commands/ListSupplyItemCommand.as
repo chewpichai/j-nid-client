@@ -1,25 +1,24 @@
 package com.j_nid.commands {
 	
-	import com.adobe.cairngorm.commands.ICommand;
 	import com.adobe.cairngorm.control.CairngormEvent;
 	import com.j_nid.business.SupplyItemDelegate;
-	import com.j_nid.utils.ModelUtils;
-	import mx.rpc.IResponder;
+	import com.j_nid.events.JNidEvent;
+	import com.j_nid.models.SupplyItem;
+	import com.j_nid.utils.CairngormUtils;
 
-	public class ListSupplyItemCommand implements ICommand, IResponder {
+	public class ListSupplyItemCommand extends RespondCommand {
 		
-		public function execute(event:CairngormEvent):void {
+		override public function execute(event:CairngormEvent):void {
+			super.execute(event);
 			var delegate:SupplyItemDelegate = new SupplyItemDelegate(this);
 			delegate.listSupplyItem();
 		}
 		
-		public function result(event:Object):void {
-			var model:ModelUtils = ModelUtils.getInstance();
-			model.setSupplyItems(event.result);
-		}
-		
-		public function fault(event:Object):void {
-			
+		override public function result(event:Object):void {
+			super.result(event);
+			SupplyItem.add(event.result.children());
+			SupplyItem.loaded = true;
+			CairngormUtils.dispatchEvent(JNidEvent.DATA_LOADED);
 		}
 	}
 }

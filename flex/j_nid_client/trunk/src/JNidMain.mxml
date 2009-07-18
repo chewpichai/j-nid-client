@@ -29,28 +29,15 @@
             private var currentYear:Number = new Date().fullYear;
             
             private function init(e:FlexEvent):void {
-                CairngormUtils.dispatchEvent(JNidEvent.LIST_PRODUCT_TYPE);
-                CairngormUtils.dispatchEvent(JNidEvent.LIST_PRODUCT);
-                CairngormUtils.dispatchEvent(JNidEvent.LIST_PERSON);
-                CairngormUtils.dispatchEvent(JNidEvent.LIST_BANK_ACCOUNT);
-                CairngormUtils.dispatchEvent(JNidEvent.LIST_ORDER);
-                CairngormUtils.dispatchEvent(JNidEvent.LIST_ORDER_ITEM);
-                CairngormUtils.dispatchEvent(JNidEvent.LIST_SUPPLY);
-                CairngormUtils.dispatchEvent(JNidEvent.LIST_SUPPLY_ITEM);
-                CairngormUtils.dispatchEvent(JNidEvent.LIST_PHONE_NUMBER);
-                CairngormUtils.dispatchEvent(JNidEvent.LIST_PAYMENT);
-                CairngormUtils.dispatchEvent(JNidEvent.LIST_BANK_NAME);
-                CairngormUtils.dispatchEvent(JNidEvent.LIST_PHONE_TYPE);
                 
-                /*var timer:Timer = new Timer(1000);
-                timer.addEventListener(TimerEvent.TIMER, function(e:TimerEvent):void {
-                	status = Math.ceil(System.totalMemory / 1000000) + "M";
-                });
-                timer.start();*/
             }
             
             private function applicationComplete(e:FlexEvent):void {
-                //stage.nativeWindow.maximize();
+                stage.nativeWindow.maximize();
+            }
+            
+            private function logOutBtnClick(e:MouseEvent):void {
+            	CairngormUtils.dispatchEvent(JNidEvent.LOG_OUT);
             }
         ]]>
     </mx:Script>
@@ -165,10 +152,10 @@
         <mx:Spacer
         	width="100%"/>
         
-        <mx:LinkButton
+        <mx:LinkButton id="logOutBtn"
            label="{resourceManager.getString(
                         'MainMenu', 'LogOut')}"
-           click="currentState=null"/>
+           click="logOutBtnClick(event)"/>
     </mx:ApplicationControlBar>
     
     <jn:LoginPage id="loginPage" 

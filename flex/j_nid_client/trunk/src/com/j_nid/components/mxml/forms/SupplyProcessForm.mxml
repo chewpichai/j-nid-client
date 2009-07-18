@@ -16,44 +16,42 @@
 	
 	<mx:Script>
 		<![CDATA[
+			import com.j_nid.events.JNidEvent;
 			import com.j_nid.utils.Utils;
 			import flash.sampler.getInvocationCount;
 			import mx.resources.ResourceBundle;
 			import com.j_nid.models.Supply;
-			import com.j_nid.events.JNidEvent;
 			import com.j_nid.utils.CairngormUtils;
-			import com.j_nid.utils.ModelUtils;
 			import mx.rpc.events.ResultEvent;
 			import com.j_nid.models.Person;
 			import mx.collections.ArrayCollection;
-			import mx.controls.Alert;
-			import mx.managers.PopUpManager;
 			import mx.events.FlexEvent;
 			
 			[Bindable]
 			public var supply:Supply;
-			[Bindable]
-			private var model:ModelUtils = ModelUtils.getInstance();
-			[Bindable]
-			private var utils:Utils = Utils.getInstance();
+			private var formatPrice:Function = Utils.formatPrice;
 			
 			private function init(e:FlexEvent):void {
-				PopUpManager.centerPopUp(this);
+				
 			}
 			
 			private function submitBtnClickListener(e:MouseEvent):void {
-				CairngormUtils.dispatchEvent(JNidEvent.CREATE_SUPPLY, supply);
-				PopUpManager.removePopUp(this);
+				supply.save();
+				close();
 			}
 			
 			private function cancelBtnClickListener(e:MouseEvent):void {
-				PopUpManager.removePopUp(this);
+				close();
 			}
 			
-			private function formatPrice(item:Object,
-                                         column:DataGridColumn):String {
+			private function close():void {
+				CairngormUtils.dispatchEvent(JNidEvent.CLOSE_POPUP, this);
+			}
+			
+			private function formatPriceGrid(item:Object,
+                                             column:DataGridColumn):String {
                                             
-                return utils.formatPrice(item[column.dataField]);
+                return formatPrice(item[column.dataField]);
             }
 		]]>
 	</mx:Script>
@@ -106,12 +104,12 @@
 				headerText="{resourceManager.getString('SupplyPage',
 				                'PricePerUnit')}" 
 				dataField="pricePerUnit"
-				labelFunction="formatPrice"
+				labelFunction="formatPriceGrid"
 				width="85"/>
 			
 			<mx:DataGridColumn
 				headerText="{resourceManager.getString('SupplyPage', 'Total')}"
-				labelFunction="formatPrice"
+				labelFunction="formatPriceGrid"
 				dataField="total"
 				width="85"/>
 		</mx:columns>
@@ -127,7 +125,7 @@
 	
 	<mx:Label
 		text="{resourceManager.getString('SupplyPage', 'Summary',
-		              [utils.formatPrice(supply.total)])}" 
+		              [formatPrice(supply.total)])}" 
 		textAlign="right" width="100%"/>
 	
 	<mx:ControlBar id="mainControlBar" 

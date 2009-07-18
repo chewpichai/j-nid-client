@@ -1,10 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:TitleWindow title="{product.name}"
+<mx:TitleWindow
 	xmlns:mx="http://www.adobe.com/2006/mxml" 
-	layout="vertical" alpha="0.75"
-	borderThicknessLeft="0" borderThicknessRight="0"
-	paddingLeft="5" paddingRight="5"
-	paddingTop="5" paddingBottom="5"
+    title="{product.name}"
+	layout="vertical"
+	alpha="0.75"
+	borderThicknessLeft="0"
+	borderThicknessRight="0"
+	paddingTop="5"
+	paddingRight="5"
+	paddingBottom="5"
+	paddingLeft="5"
 	borderColor="{product.productType.color}"
 	width="250">
 	
@@ -14,30 +19,43 @@
 	
 	<mx:Script>
 		<![CDATA[
+		    import com.j_nid.events.JNidEvent;
 			import mx.resources.ResourceBundle;
-			import com.j_nid.events.JNidEvent;
 			import com.j_nid.utils.CairngormUtils;
-			import mx.managers.PopUpManager;
 			import com.j_nid.models.Product;
 			
 			[Bindable]
-			public var product:Product;
+			public function set product(obj:Product):void {
+			    _product = obj;
+			    _product.addEventListener(JNidEvent.PRODUCT_UPDATED,
+                    productSaved);
+			}
+			
+			private function productSaved(e:JNidEvent):void {
+                CairngormUtils.dispatchEvent(JNidEvent.CLOSE_POPUP, this);
+            }
+			
+			public function get product():Product {
+                return _product;
+            }
+			
+			private var _product:Product;
 			
 			private function saveBtnClick(e:MouseEvent):void {
 				product.costPerUnit = costField.value;
 				product.pricePerUnit = priceField.value;
-				CairngormUtils.dispatchEvent(
-					JNidEvent.UPDATE_PRODUCT, product);
-				PopUpManager.removePopUp(this);
+				product.save();
 			}
 			
 			private function cancelBtnClick(e:MouseEvent):void {
-				PopUpManager.removePopUp(this);
+				CairngormUtils.dispatchEvent(JNidEvent.CLOSE_POPUP, this);
 			}
 		]]>
 	</mx:Script>
 	
-	<mx:Form width="100%">
+	<mx:Form
+		width="100%">
+		
 		<mx:FormItem
 			label="{resourceManager.getString('ProductPage', 'CostPerUnit')}"
 			width="100%">
@@ -60,7 +78,10 @@
 		</mx:FormItem>
 	</mx:Form>
 	
-	<mx:HBox horizontalAlign="center" width="100%">
+	<mx:HBox
+		horizontalAlign="center"
+		width="100%">
+		
 		<mx:Button
 			label="{resourceManager.getString('ProductPage', 'Save')}"
 			click="saveBtnClick(event)"/>

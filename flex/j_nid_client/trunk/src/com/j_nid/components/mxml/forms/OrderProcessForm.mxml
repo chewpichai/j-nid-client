@@ -5,10 +5,11 @@
 	xmlns:adobe="http://www.adobe.com/2006/fc" 
 	xmlns:jn="com.j_nid.components.mxml.*"
 	layout="vertical" 
-	width="500"	
 	creationComplete="init(event)"
 	borderAlpha="0.8"
-	verticalScrollPolicy="off">
+	verticalScrollPolicy="off"
+	width="800"
+	height="600">
 	
 	<mx:Metadata>
 		[ResourceBundle("OrderPage")]
@@ -20,42 +21,41 @@
 			import mx.resources.ResourceBundle;
 			import com.j_nid.events.JNidEvent;
 			import com.j_nid.utils.CairngormUtils;
-			import com.j_nid.utils.ModelUtils;
 			import mx.rpc.events.ResultEvent;
 			import com.j_nid.models.Person;
 			import mx.controls.Alert;
 			import com.j_nid.models.Order;
-			import mx.managers.PopUpManager;
 			import mx.events.FlexEvent;
 			
 			[Bindable]
 			public var order:Order;
-			[Bindable]
-			private var model:ModelUtils = ModelUtils.getInstance();
-			[Bindable]
-			private var utils:Utils = Utils.getInstance();
+			private var formatPrice:Function = Utils.formatPrice;
 			
 			private function init(e:FlexEvent):void {
-				PopUpManager.centerPopUp(this);
-				model.addEventListener(JNidEvent.ORDER_CREATED, orderCreated);
+				
 			}
 			
 			private function submitBtnClickListener(e:MouseEvent):void {
-				CairngormUtils.dispatchEvent(JNidEvent.CREATE_ORDER, order);
+			    order.addEventListener(JNidEvent.ORDER_CREATED, orderCreated);
+				order.save();
 			}
 			
 			private function cancelBtnClickListener(e:MouseEvent):void {
-				PopUpManager.removePopUp(this);
+				close();
 			}
 			
 			private function orderCreated(e:JNidEvent):void {
-				PopUpManager.removePopUp(this);
+				close();
 			}
 			
-			private function formatPrice(item:Object,
-                                         column:DataGridColumn):String {
+			private function close():void {
+				CairngormUtils.dispatchEvent(JNidEvent.CLOSE_POPUP, this);
+			}
+			
+			private function formatPriceGrid(item:Object,
+                                             column:DataGridColumn):String {
                                             
-                return utils.formatPrice(item[column.dataField]);
+                return formatPrice(item[column.dataField]);
             }
 		]]>
 	</mx:Script>
@@ -63,12 +63,23 @@
 	<mx:DateFormatter id="dateFormatter"
     	formatString="DD-MM-YYYY JJ:NN:SS"/>
 	
-	<mx:HBox width="100%">
-		<mx:Label text="{resourceManager.getString('OrderPage', 'Customer')}:"/>
-		<mx:Label text="{order.person.name}"/>
-		<mx:Spacer width="100%"/>
-		<mx:Label text="{resourceManager.getString('OrderPage', 'Date')}:"/>
-		<mx:Label text="{dateFormatter.format(order.created)}"/>
+	<mx:HBox
+	    width="100%">
+		
+		<mx:Label
+		    text="{resourceManager.getString('OrderPage', 'Customer')}:"/>
+		
+		<mx:Label
+		    text="{order.person.name}"/>
+		
+		<mx:Spacer
+		    width="100%"/>
+		
+		<mx:Label
+		    text="{resourceManager.getString('OrderPage', 'Date')}:"/>
+		
+		<mx:Label
+		    text="{dateFormatter.format(order.created)}"/>
 	</mx:HBox>
 	
 	<mx:DataGrid id="orderItemList"
@@ -82,12 +93,12 @@
 		<mx:columns>
 			<mx:DataGridColumn
 				headerText="{resourceManager.getString('OrderPage', 'Quantity')}" 
-				dataField="quantity"/>
+				dataField="quantity"
+				width="70"/>
 			
 			<mx:DataGridColumn
 				headerText="{resourceManager.getString('OrderPage', 'Name')}" 
-				dataField="name"
-				width="150"/>
+				dataField="name"/>
 			
 			<mx:DataGridColumn
 				headerText="{resourceManager.getString('OrderPage', 'Unit')}" 
@@ -98,27 +109,40 @@
 				headerText="{resourceManager.getString(
 				                    'OrderPage', 'PricePerUnit')}" 
 				dataField="pricePerUnit"
-				labelFunction="formatPrice"
+				labelFunction="formatPriceGrid"
 				width="85"/>
 			
 			<mx:DataGridColumn
 				headerText="{resourceManager.getString('OrderPage', 'Total')}"
 				dataField="total"
-				labelFunction="formatPrice"
+				labelFunction="formatPriceGrid"
 				width="85"/>
 		</mx:columns>
 	</mx:DataGrid>
 	
-	<mx:HBox width="100%">
-		<mx:Label text="{resourceManager.getString('OrderPage', 'Note')}:"/>
-		<mx:Text text="{order.notation}" width="100%"/>
+	<mx:HBox
+	    width="100%">
+		
+		<mx:Label
+		    text="{resourceManager.getString('OrderPage', 'Note')}:"/>
+		
+		<mx:Text
+		    text="{order.notation}" width="100%"/>
 	</mx:HBox>
 	
-	<mx:Label
-		text="{resourceManager.getString('OrderPage', 'Summary',
-		              [utils.formatPrice(order.total), 0])}" 
-		textAlign="right"
-		width="100%"/>
+	<mx:HBox
+	    width="100%"
+	    horizontalAlign="right">
+	    
+        <mx:Label
+            text="{resourceManager.getString('OrderPage', 'QuantityTotal',
+                          [order.quantityTotal])}"/>
+    	
+    	<mx:Label
+    		text="{resourceManager.getString('OrderPage', 'Summary',
+    		              [formatPrice(order.total), 0])}" 
+    		textAlign="right"/>
+	</mx:HBox>       
 	
 	<mx:ControlBar id="mainControlBar"
 		horizontalAlign="right">

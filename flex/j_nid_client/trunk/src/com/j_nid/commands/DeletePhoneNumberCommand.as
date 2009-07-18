@@ -1,25 +1,24 @@
 package com.j_nid.commands {
-	
-	import com.adobe.cairngorm.commands.ICommand;
+    
 	import com.adobe.cairngorm.control.CairngormEvent;
 	import com.j_nid.business.PhoneNumberDelegate;
-	import com.j_nid.utils.ModelUtils;
-	import mx.rpc.IResponder;
+	import com.j_nid.models.PhoneNumber;
 
-	public class DeletePhoneNumberCommand implements ICommand, IResponder {
+	public class DeletePhoneNumberCommand extends RespondCommand {
 
-		public function execute(event:CairngormEvent):void {
+        private var _phoneNumber:PhoneNumber;
+
+		override public function execute(event:CairngormEvent):void {
+			super.execute(event);
+			_phoneNumber = event.data;
 			var delegate:PhoneNumberDelegate = new PhoneNumberDelegate(this);
-			delegate.deletePhoneNumber(event.data);
+			delegate.deletePhoneNumber(_phoneNumber);
 		}
 		
-		public function result(event:Object):void {
-			var model:ModelUtils = ModelUtils.getInstance();
-			model.deletePhoneNumber(event.result);
-		}
-		
-		public function fault(event:Object):void {
-			trace(event.message);
+		override public function result(event:Object):void {
+		    super.result(event);
+		    PhoneNumber.deletePhoneNumber(event.result);
+			_phoneNumber.dispatchDeleted();
 		}
 	}
 }

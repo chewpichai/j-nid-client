@@ -19,7 +19,6 @@
             public var pageNumber:Number = 1;
             [Bindable]
             public var order:Order;
-            private var utils:Utils = Utils.getInstance();
 
             // Control the page contents by selectively hiding the header and
             // footer based on the page type.
@@ -46,7 +45,7 @@
             private function formatPrice(item:Object,
                                          column:DataGridColumn):String {
                                           	
-                return utils.formatPrice(item[column.dataField]);
+                return Utils.formatPrice(item[column.dataField]);
             }
         ]]>
     </mx:Script>

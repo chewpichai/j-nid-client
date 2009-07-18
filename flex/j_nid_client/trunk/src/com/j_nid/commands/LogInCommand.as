@@ -1,34 +1,31 @@
 package com.j_nid.commands {
 	
-	import com.adobe.cairngorm.commands.ICommand;
 	import com.adobe.cairngorm.control.CairngormEvent;
 	import com.j_nid.business.SessionDelegate;
 	import com.j_nid.controls.ApplicationManager;
-	
 	import mx.resources.IResourceManager;
 	import mx.resources.ResourceManager;
-	import mx.rpc.IResponder;
 
 	[ResourceBundle("Messages")]
-	public class LogInCommand implements ICommand, IResponder {
-		
-		private var mgr:ApplicationManager = ApplicationManager.getInstance();
-		private var resourceMgr:IResourceManager = ResourceManager.getInstance();
-		
-		public function LogInCommand() {
-			
-		}
+	public class LogInCommand extends RespondCommand {
 
-		public function execute(event:CairngormEvent):void {
+		override public function execute(event:CairngormEvent):void {
+			super.execute(event);
 			var delegate:SessionDelegate = new SessionDelegate(this);
 			delegate.logIn(event.data);
 		}
 		
-		public function result(event:Object):void {
+		override public function result(event:Object):void {
+		    super.result(event);
+			var mgr:ApplicationManager = ApplicationManager.getInstance();
 			mgr.setState(ApplicationManager.LOADING_STATE);
+			mgr.loadAllData();
 		}
 		
-		public function fault(event:Object):void {
+		override public function fault(event:Object):void {
+			super.fault(event);
+			var mgr:ApplicationManager = ApplicationManager.getInstance();
+			var resourceMgr:IResourceManager = ResourceManager.getInstance();
 			mgr.showMessage(resourceMgr.getString("Messages", "CanNotLogIn"));
 		}
 	}

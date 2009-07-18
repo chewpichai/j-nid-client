@@ -1,25 +1,23 @@
 package com.j_nid.commands {
 	
-	import com.adobe.cairngorm.commands.ICommand;
 	import com.adobe.cairngorm.control.CairngormEvent;
 	import com.j_nid.business.SupplyDelegate;
-	import com.j_nid.utils.ModelUtils;	
-	import mx.rpc.IResponder;
+	import com.j_nid.models.Supply;
 
-	public class UpdateSupplyCommand implements ICommand, IResponder {
+	public class UpdateSupplyCommand extends RespondCommand {
 		
-		public function execute(event:CairngormEvent):void {
+		private var _supply:Supply;
+		
+		override public function execute(event:CairngormEvent):void {
+			super.execute(event);
+			_supply = event.data;
 			var delegate:SupplyDelegate = new SupplyDelegate(this);
-			delegate.updateSupply(event.data);
+			delegate.updateSupply(_supply);
 		}
 		
-		public function result(event:Object):void {
-			var model:ModelUtils = ModelUtils.getInstance();
-			model.updateSupply(event.result);
-		}
-		
-		public function fault(event:Object):void {
-			trace(event.message);
+		override public function result(event:Object):void {
+			super.result(event);
+            _supply.dispatchUpdated();
 		}
 	}
 }

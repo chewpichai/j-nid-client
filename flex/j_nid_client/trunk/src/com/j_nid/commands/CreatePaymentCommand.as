@@ -1,31 +1,50 @@
 package com.j_nid.commands {
 	
-	import com.adobe.cairngorm.commands.ICommand;
 	import com.adobe.cairngorm.control.CairngormEvent;
 	import com.j_nid.business.PaymentDelegate;
-	import com.j_nid.utils.ModelUtils;
+	import com.j_nid.events.JNidEvent;
+	import com.j_nid.models.Order;
 	import com.j_nid.models.Payment;
-	
-	import mx.rpc.IResponder;
+	import com.j_nid.utils.CairngormUtils;
 
-	public class CreatePaymentCommand implements ICommand, IResponder	{
+	public class CreatePaymentCommand extends RespondCommand {
+	    
+	    private var _payment:Payment;
 		
-		public function CreatePaymentCommand() {
-			
-		}
-
-		public function execute(event:CairngormEvent):void {
+		override public function execute(event:CairngormEvent):void {
+		    super.execute(event);
+		    _payment = event.data;
 			var delegate:PaymentDelegate = new PaymentDelegate(this);
-			delegate.createPayment(event.data);
+			delegate.createPayment(_payment);
 		}
 		
-		public function result(event:Object):void {
-			var model:ModelUtils = ModelUtils.getInstance();
-			model.createPayment(event.result);
+		override public function result(event:Object):void {
+		    super.result(event);
+			createPayment(event.result);
+			_payment.dispatchCreated();
 		}
 		
-		public function fault(event:Object):void {
-			trace(event.message);
-		}
+		private function createPayment(obj:XML):void {
+            Payment.add(obj);
+            var outStandingOrders:Array = _payment.person.orders.filter(
+                function (order:Order, index:int, array:Array):Boolean {
+                    return order.isOutstanding;
+                }
+            );
+            var amount:Number = _payment.amount;
+            for each (var order:Order in outStandingOrders) {
+                var totalToPaid:Number = order.totalToPaid;
+                if (totalToPaid > amount) {
+                    order.paidTotal += amount;
+                } else {
+                    order.paidTotal += totalToPaid;
+                }
+                amount -= totalToPaid;
+                CairngormUtils.dispatchEvent(JNidEvent.UPDATE_ORDER, order);
+                if (amount <= 0) {
+                    break;
+                }
+            }
+        }
 	}
 }

@@ -17,8 +17,7 @@
     		public var personName:String;
     		[Bindable]
     		public var date:Date;
-    		[Bindable]
-    		private var utils:Utils = Utils.getInstance();
+    		private var formatDate:Function = Utils.formatDate;
     	]]>
     </mx:Script>
 
@@ -28,5 +27,5 @@
     <mx:Spacer width="100%"/>
     					
     <mx:Label text="{resourceManager.getString('OrderPrint', 'Date',
-    					[utils.formatDate(date)])}"/>
+    					[formatDate(date)])}"/>
 </mx:HBox>

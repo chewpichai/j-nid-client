@@ -1,25 +1,24 @@
 package com.j_nid.commands {
 	
-	import com.adobe.cairngorm.commands.ICommand;
 	import com.adobe.cairngorm.control.CairngormEvent;
 	import com.j_nid.business.PersonDelegate;
-	import com.j_nid.utils.ModelUtils;
-	import mx.rpc.IResponder;
+	import com.j_nid.events.JNidEvent;
+	import com.j_nid.models.Person;
+	import com.j_nid.utils.CairngormUtils;
 
-	public class ListPersonCommand implements ICommand, IResponder {
+	public class ListPersonCommand extends RespondCommand {
 		
-		public function execute(event:CairngormEvent):void {
+		override public function execute(event:CairngormEvent):void {
+			super.execute(event);
 			var delegate:PersonDelegate = new PersonDelegate(this);
 			delegate.listPerson();
 		}
 		
-		public function result(event:Object):void {
-			var model:ModelUtils = ModelUtils.getInstance();
-			model.setPeople(event.result);
-		}
-		
-		public function fault(event:Object):void {
-			
+		override public function result(event:Object):void {
+			super.result(event);
+			Person.add(event.result.children());
+			Person.loaded = true;
+			CairngormUtils.dispatchEvent(JNidEvent.DATA_LOADED);
 		}
 	}
 }

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" 
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml" 
     creationComplete="creationComplete(event)"
     show="showHandler(event)"
     width="100%"
@@ -11,6 +11,7 @@
 
     <mx:Script>
         <![CDATA[
+            import mx.events.ItemClickEvent;
         	import com.j_nid.controls.ApplicationManager;
         	import mx.controls.Alert;
         	import mx.events.CloseEvent;
@@ -30,25 +31,21 @@
             import com.j_nid.utils.PrintUtils;
             import com.j_nid.models.Order;
             import com.j_nid.models.OrderItem;
-            import com.j_nid.utils.ModelUtils;
             
-            [Bindable]
-            private var model:ModelUtils = ModelUtils.getInstance();
             [Bindable]
             private var people:ArrayCollection;
             [Bindable]
             private var orders:ArrayCollection;
             [Bindable]
-            private var utils:Utils = Utils.getInstance();
-            [Bindable]
             private var selectedOrder:Order;
             [Bindable]
             private var appMgr:ApplicationManager =
                 ApplicationManager.getInstance();
+            private var formatPrice:Function = Utils.formatPrice; 
             
             private function creationComplete(e:FlexEvent):void {
                 // Create people.
-                people = new ArrayCollection(model.people);
+                people = new ArrayCollection(Person.all());
                 var sort:Sort = new Sort();
                 sort.fields = [new SortField("name")];
                 people.sort = sort;
@@ -58,7 +55,7 @@
                     };
                 personField.dataProvider = people;
                 // Create orders.
-                orders = new ArrayCollection(model.orders);
+                orders = new ArrayCollection(Order.all());
                 sort = new Sort();
                 sort.fields = [new SortField("created", false, true)];
                 orders.sort = sort;
@@ -75,10 +72,6 @@
                 ChangeWatcher.watch(dateField, "selectedRanges", filterOrder);
                 ChangeWatcher.watch(outstandingField, "selected", filterOrder);
                 ChangeWatcher.watch(paidField, "selected", filterOrder);
-                //
-                model.addEventListener(JNidEvent.ORDER_DELETED, orderDeleted);
-                model.addEventListener(JNidEvent.ORDER_ITEM_DELETED,
-                    orderItemDeleted);
             }
             
             private function orderDeleted(e:JNidEvent):void {
@@ -99,10 +92,15 @@
             
             private function initData():void {
                 outstandingField.selected = true;
-                var today:Date = new Date();
+                var now:Date = new Date();
+                /*
                 var rangeEnd:Date = new Date(today.fullYear, today.month, today.date);
-                var rangeStart:Date = utils.moveDateByDay(rangeEnd, -365);
-                dateField.selectedRanges = [{rangeStart: rangeStart, rangeEnd: rangeEnd}];
+                var rangeStart:Date = Utils.moveDateByDay(rangeEnd, -365);
+                */
+                var rangeStart:Date = new Date(now.fullYear, now.month, now.date);
+                var rangeEnd:Date = Utils.moveDateByDay(rangeStart, 1);
+                //dateField.selectedRanges = [{rangeStart: rangeStart, rangeEnd: rangeEnd}];
+                dateField.selectedDate = new Date(now.fullYear, now.month, now.date);
             }
             
             private function filterOrder(e:Event):void {
@@ -124,7 +122,7 @@
                     var start:Date = new Date(obj.rangeStart.time);
                     var end:Date = new Date(obj.rangeEnd.time);
                     // Move end date to the midnight of the next day.
-                    end = utils.moveDateByDay(end, 1);
+                    end = Utils.moveDateByDay(end, 1);
                     if (date >= start && date < end) {
                         return true;
                     }
@@ -157,6 +155,8 @@
                         'ConfirmTitle'),
                     function(e:CloseEvent):void {
                         if (e.detail == Alert.OK) {
+                            order.addEventListener(JNidEvent.ORDER_DELETED,
+                                orderDeleted);
                             order.remove();
                         }
                     });
@@ -188,6 +188,9 @@
 			                    if (item.order.orderItems.length > 1) {
 			                        item.remove();
 			                    } else {
+			                        item.addEventListener(
+                                        JNidEvent.ORDER_ITEM_DELETED,
+                                        orderItemDeleted);
 			                        item.order.remove();
 			                    }
 			                }
@@ -195,170 +198,200 @@
                 }
             }
             
-            private function formatPrice(item:Object,
-                                         column:DataGridColumn):String {
+            private function tabBarClick(e:ItemClickEvent):void {
+                
+            }
+            
+            private function formatPriceGrid(item:Object,
+                                             column:DataGridColumn):String {
                                               
-                return utils.formatPrice(item[column.dataField]);
+                return formatPrice(item[column.dataField]);
             }
         ]]>
     </mx:Script>
     
-    <mx:DateFormatter id="dateFormatter" formatString="DD/MM/YY J:NN:SS"/>
+    <mx:TabBar id="orderTabBar"
+        itemClick="tabBarClick(event)">
+        
+        <mx:dataProvider>
+            <mx:Array>
+                <mx:String>
+                    {resourceManager.getString('OrderPage', 'TodayOrder')}
+                </mx:String>
+                <mx:String>
+                    {resourceManager.getString('OrderPage',
+                        'SearchOrderByCustomer')}
+                </mx:String>
+                <mx:String>
+                    {resourceManager.getString('OrderPage',
+                        'SearchOrderByDate')}
+                </mx:String>
+            </mx:Array>
+        </mx:dataProvider>
+    </mx:TabBar>
     
-    <mx:Panel title="{resourceManager.getString('OrderPage', 'Filter')}"
-        verticalGap="5"
-        paddingTop="5"
-        paddingBottom="5"
-        width="220"
-        height="100%">
-        
-        <mx:HBox
-            paddingLeft="5"
-            paddingRight="5"
-            verticalAlign="middle"
-            width="100%">
-            
-            <mx:Label
-                text="{resourceManager.getString('OrderPage', 'SearchCustomer')}:"/>
-        
-            <mx:TextInput id="personSearchField"
-                change="searchChange(event)"
-                width="100%"/>
-        </mx:HBox>
-        
-        <mx:List id="personField"
-            labelField="name"
-            borderThickness="0"
-            width="100%"
-            height="100%"/>
-            
-        <mx:DateChooser id="dateField"
-            allowMultipleSelection="true"
-            borderThickness="0"
-            cornerRadius="0"
-            width="100%"/>
-            
-        <mx:VBox
-            paddingLeft="5"
-            paddingBottom="5"
-            paddingRight="5"
-            width="100%">
-            
-            <mx:CheckBox id="outstandingField"
-                label="{resourceManager.getString('OrderPage', 'Outstanding')}"/>
-            
-            <mx:CheckBox id="paidField"
-                label="{resourceManager.getString('OrderPage', 'Paid')}"/>
-        </mx:VBox>
-    </mx:Panel>
-    
-    <mx:Panel title="{resourceManager.getString('OrderPage', 'Order')}" 
-        layout="absolute"
-        width="250"
-        height="100%">
-        
-        <mx:List id="orderList"
-            change="selectedOrder=Order(orderList.selectedItem)"
-            width="100%"
-            height="100%">
-            
-            <mx:itemRenderer>
-                <mx:Component>
-<mx:Label text="{data}" color="{data.isPaid ? 0x0000FF:0xFF0000}"/>
-                </mx:Component>
-            </mx:itemRenderer>
-        </mx:List>
-    </mx:Panel>
-    
-    <mx:Panel title="{resourceManager.getString('OrderPage', 'Detail')}" 
-        layout="vertical"
-        paddingLeft="5"
-        paddingRight="5" 
-        paddingTop="5"
+    <mx:HBox
         width="100%"
         height="100%">
         
-        <mx:HBox 
-            horizontalAlign="right"
+        <mx:Panel id="customerPnl"
+            title="{resourceManager.getString('OrderPage', 'Filter')}"
+            verticalGap="5"
             paddingTop="5"
-            paddingRight="5" 
-            width="100%"
-            height="35">
+            paddingBottom="5"
+            width="220"
+            height="100%">
             
-            <mx:Label id="customerNameField"
-                text="{selectedOrder.person.name}"/>
+            <mx:HBox
+                paddingLeft="5"
+                paddingRight="5"
+                verticalAlign="middle"
+                width="100%">
+                
+                <mx:Label
+                    text="{resourceManager.getString('OrderPage',
+                                'SearchCustomer')}:"/>
             
-            <mx:Label id="createdDateField"
-                text="{dateFormatter.format(selectedOrder.created)}"/>
-        </mx:HBox>
+                <mx:TextInput id="personSearchField"
+                    change="searchChange(event)"
+                    width="100%"/>
+            </mx:HBox>
+            
+            <mx:List id="personField"
+                labelField="name"
+                borderThickness="0"
+                width="100%"
+                height="100%"/>
+                
+            <mx:DateChooser id="dateField"
+                allowMultipleSelection="true"
+                borderThickness="0"
+                cornerRadius="0"
+                width="100%"/>
+                
+            <mx:VBox
+                paddingLeft="5"
+                paddingBottom="5"
+                paddingRight="5"
+                width="100%">
+                
+                <mx:CheckBox id="outstandingField"
+                    label="{resourceManager.getString('OrderPage', 'Outstanding')}"/>
+                
+                <mx:CheckBox id="paidField"
+                    label="{resourceManager.getString('OrderPage', 'Paid')}"/>
+            </mx:VBox>
+        </mx:Panel>
         
-        <mx:DataGrid id="orderItemList" 
-            dataProvider="{selectedOrder.orderItems}"
-            textAlign="center"
-            keyDown="itemListKeyDown(event)"
-            headerStyleName="centerHeader"
+        <mx:Panel title="{resourceManager.getString('OrderPage', 'Order')}" 
+            layout="absolute"
+            width="250"
+            height="100%">
+            
+            <mx:List id="orderList"
+                change="selectedOrder=Order(orderList.selectedItem)"
+                width="100%"
+                height="100%">
+                
+                <mx:itemRenderer>
+                    <mx:Component>
+    <mx:Label text="{data}" color="{data.isPaid ? 0x0000FF:0xFF0000}"/>
+                    </mx:Component>
+                </mx:itemRenderer>
+            </mx:List>
+        </mx:Panel>
+        
+        <mx:Panel title="{resourceManager.getString('OrderPage', 'Detail')}" 
+            layout="vertical"
+            paddingLeft="5"
+            paddingRight="5" 
+            paddingTop="5"
             width="100%"
             height="100%">
             
-            <mx:columns>
-                <mx:DataGridColumn
-                    headerText="{resourceManager.getString(
-                                       'OrderPage', 'Quantity')}"
-                    dataField="quantity"
-                    width="50"/>
+            <mx:HBox 
+                horizontalAlign="right"
+                paddingTop="5"
+                paddingRight="5" 
+                width="100%"
+                height="35">
                 
-                <mx:DataGridColumn
-                    headerText="{resourceManager.getString('OrderPage', 'Name')}"
-                    dataField="name"/>
+                <mx:Label id="customerNameField"
+                    text="{selectedOrder.person.name}"/>
                 
-                <mx:DataGridColumn
-                    headerText="{resourceManager.getString('OrderPage', 'Unit')}"
-                    dataField="unit"
-                    textAlign="right"
-                    width="50"/>
-                
-                <mx:DataGridColumn
-                    headerText="{resourceManager.getString(
-                                       'OrderPage', 'PricePerUnit')}"
-                    dataField="pricePerUnit"
-                    labelFunction="formatPrice"
-                    textAlign="right"
-                    width="85"/>
-                
-                <mx:DataGridColumn
-                    headerText="{resourceManager.getString('OrderPage', 'Total')}"
-                    dataField="total"
-                    labelFunction="formatPrice"
-                    textAlign="right"
-                    width="85"/>
-            </mx:columns>
-        </mx:DataGrid>
-        
-        <mx:HBox
-            horizontalAlign="right"
-            paddingRight="5"
-            width="100%"
-            height="35">
+                <mx:Label id="createdDateField"
+                    text="{Utils.formatDate(selectedOrder.created,
+                                'DD/MM/YY J:NN:SS')}"/>
+            </mx:HBox>
             
-            <mx:Label
-                id="summaryField"
-                text="{resourceManager.getString('OrderPage', 'Summary',
-                            [utils.formatPrice(selectedOrder.total),
-                             utils.formatPrice(selectedOrder.paidTotal)])}"/>
-        </mx:HBox>
-        
-        <mx:ControlBar
-        	horizontalAlign="right">
-        
-            <mx:Button
-            	label="{resourceManager.getString('OrderPage', 'Delete')}"
-            	enabled="{orderList.selectedItem != null}"
-                click="deleteOrderClick(event)"/>
+            <mx:DataGrid id="orderItemList" 
+                dataProvider="{selectedOrder.orderItems}"
+                textAlign="center"
+                keyDown="itemListKeyDown(event)"
+                headerStyleName="centerHeader"
+                width="100%"
+                height="100%">
+                
+                <mx:columns>
+                    <mx:DataGridColumn
+                        headerText="{resourceManager.getString(
+                                           'OrderPage', 'Quantity')}"
+                        dataField="quantity"
+                        width="50"/>
+                    
+                    <mx:DataGridColumn
+                        headerText="{resourceManager.getString('OrderPage', 'Name')}"
+                        dataField="name"/>
+                    
+                    <mx:DataGridColumn
+                        headerText="{resourceManager.getString('OrderPage', 'Unit')}"
+                        dataField="unit"
+                        textAlign="right"
+                        width="50"/>
+                    
+                    <mx:DataGridColumn
+                        headerText="{resourceManager.getString(
+                                           'OrderPage', 'PricePerUnit')}"
+                        dataField="pricePerUnit"
+                        labelFunction="formatPriceGrid"
+                        textAlign="right"
+                        width="85"/>
+                    
+                    <mx:DataGridColumn
+                        headerText="{resourceManager.getString('OrderPage', 'Total')}"
+                        dataField="total"
+                        labelFunction="formatPriceGrid"
+                        textAlign="right"
+                        width="85"/>
+                </mx:columns>
+            </mx:DataGrid>
             
-            <mx:Button
-            	label="{resourceManager.getString('OrderPage', 'Print')}"
-                enabled="{orderList.selectedItem != null}"
-                click="printOrder(event)"/>
-        </mx:ControlBar>
-    </mx:Panel>
-</mx:HBox>
+            <mx:HBox
+                horizontalAlign="right"
+                paddingRight="5"
+                width="100%"
+                height="35">
+                
+                <mx:Label
+                    id="summaryField"
+                    text="{resourceManager.getString('OrderPage', 'Summary',
+                                [formatPrice(selectedOrder.total),
+                                 formatPrice(selectedOrder.paidTotal)])}"/>
+            </mx:HBox>
+            
+            <mx:ControlBar
+            	horizontalAlign="right">
+            
+                <mx:Button
+                	label="{resourceManager.getString('OrderPage', 'Delete')}"
+                	enabled="{orderList.selectedItem != null}"
+                    click="deleteOrderClick(event)"/>
+                
+                <mx:Button
+                	label="{resourceManager.getString('OrderPage', 'Print')}"
+                    enabled="{orderList.selectedItem != null}"
+                    click="printOrder(event)"/>
+            </mx:ControlBar>
+        </mx:Panel>
+    </mx:HBox>
+</mx:VBox>

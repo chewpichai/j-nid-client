@@ -3,7 +3,10 @@ package com.j_nid.events
 	import flash.events.Event;
 
 	public class JNidEvent extends Event {
-		
+		// Pop up events.
+		public static const CLOSE_POPUP:String = "closePopUp";
+		// Loaded data events.
+		public static const DATA_LOADED:String = "dataLoaded";
 		// Log in and out events.
         public static const LOG_IN:String = "logIn";
         public static const LOG_OUT:String = "logOut";
@@ -13,16 +16,17 @@ package com.j_nid.events
         public static const UPDATE_PRODUCT_TYPE:String = "updateProductType";
         public static const DELETE_PRODUCT_TYPE:String = "deleteProductType";
         public static const PRODUCT_TYPE_CREATED:String = "productTypeCreated";
+        public static const PRODUCT_TYPE_UPDATED:String = "productTypeUpdated";
         // Product events.
         public static const LIST_PRODUCT:String = "listProduct";
         public static const CREATE_PRODUCT:String = "createProduct";
         public static const UPDATE_PRODUCT:String = "updateProduct";
         public static const DELETE_PRODUCT:String = "deleteProduct";
         public static const PRODUCT_CREATED:String = "productCreated";
+        public static const PRODUCT_UPDATED:String = "productUpdated";
         // Person events.
         public static const LIST_PERSON:String = "listPerson";
         public static const CREATE_PERSON:String = "createPerson";
-        public static const CREATED_PERSON:String = "createdPerson";
         public static const UPDATE_PERSON:String = "updatePerson";
         public static const DELETE_PERSON:String = "deletePerson";
         public static const PERSON_CREATED:String = "personCreated";
@@ -68,6 +72,7 @@ package com.j_nid.events
         public static const CREATE_SUPPLY:String = "createSupply";
         public static const UPDATE_SUPPLY:String = "updateSupply";
         public static const DELETE_SUPPLY:String = "deleteSupply";
+        public static const SUPPLY_CREATED:String = "supplyCreated";
         public static const SUPPLY_DELETED:String = "supplyDeleted";
         // SupplyItem events.
         public static const LIST_SUPPLY_ITEM:String = "listSupplyItem";
@@ -82,6 +87,7 @@ package com.j_nid.events
 		                          data:Object,
 		                          bubbles:Boolean=false,
 		                          cancelable:Boolean=false) {
+			
 			super(type, bubbles, cancelable);
 			this.data = data;
 		}

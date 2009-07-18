@@ -1,9 +1,15 @@
 package com.j_nid.models {
 	
-	import com.j_nid.utils.ModelUtils;
+	[Event(name="productCreated", type="com.j_nid.events.JNidEvent")]
+    [Event(name="productUpdated", type="com.j_nid.events.JNidEvent")]
 	
 	[Bindable]
 	public class Product extends Model {
+	    
+	    private static var _products:Array = [];
+	    private static var _idMap:Object = {};
+	    private static var _nameMap:Object = {};
+	    public static var loaded:Boolean = false;
 		
 		public var name:String;
     	public var productTypeID:uint;
@@ -23,6 +29,47 @@ package com.j_nid.models {
 			product.isSale = Boolean(int(obj.is_sale));
 			return product;
     	}
+    	
+    	public static function all():Array {
+    	    return _products;
+    	}
+    	
+    	public static function add(obj:Object):void {
+            if (obj is XML) {
+                obj = fromXML(XML(obj));
+            } else if (obj is XMLList) {
+                for each (var xml:XML in obj) {
+                    add(xml);
+                }
+                return;
+            }
+            _products.push(obj);
+            _idMap[obj.id] = obj;
+            _nameMap[obj.name] = obj;
+        }
+        
+        public static function getByID(obj:int):Product {
+            return _idMap[obj];
+        }
+        
+        public static function filterByType(productTypeID:int):Array {
+            return _products.filter(
+                        function(product:Product, index:int, arr:Array):Boolean {
+                            return product.productTypeID == productTypeID;
+                        });
+        }
+        
+        public static function filterIsSaleByType(productTypeID:int):Array {
+            return _products.filter(
+                        function(product:Product, index:int, arr:Array):Boolean {
+                            return product.isSale &&
+                                   product.productTypeID == productTypeID;
+                        });
+        }
+        
+        public static function getByName(obj:String):Product {
+            return _nameMap[obj];
+        }
 		
 		public function Product() {
 			super();
@@ -52,7 +99,7 @@ package com.j_nid.models {
 /* ----- get-set function. ------------------------------------------------- */
 		
 		public function get productType():ProductType {
-			return ModelUtils.getInstance().getProductType(productTypeID);
+			return ProductType.getByID(productTypeID);
 		}
 		
 		public function set productType(obj:ProductType):void {

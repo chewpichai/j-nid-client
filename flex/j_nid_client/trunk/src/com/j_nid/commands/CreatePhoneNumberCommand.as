@@ -1,29 +1,24 @@
 package com.j_nid.commands {
 	
-	import com.adobe.cairngorm.commands.ICommand;
 	import com.adobe.cairngorm.control.CairngormEvent;
 	import com.j_nid.business.PhoneNumberDelegate;
-	import com.j_nid.utils.ModelUtils;
-	import mx.rpc.IResponder;
+	import com.j_nid.models.PhoneNumber;
 
-	public class CreatePhoneNumberCommand implements ICommand, IResponder	{
-		
-		public function CreatePhoneNumberCommand() {
-			
-		}
-
-		public function execute(event:CairngormEvent):void {
+	public class CreatePhoneNumberCommand extends RespondCommand {
+	    
+	    private var _phoneNumber:PhoneNumber;
+	    
+		override public function execute(event:CairngormEvent):void {
+			super.execute(event);
+			_phoneNumber = event.data;
 			var delegate:PhoneNumberDelegate = new PhoneNumberDelegate(this);
-			delegate.createPhoneNumber(event.data);
+			delegate.createPhoneNumber(_phoneNumber);
 		}
 		
-		public function result(event:Object):void {
-			var model:ModelUtils = ModelUtils.getInstance();
-			model.createPhoneNumber(event.result);
-		}
-		
-		public function fault(event:Object):void {
-			trace(event.message);
+		override public function result(event:Object):void {
+			super.result(event);
+			PhoneNumber.add(event.result);
+			_phoneNumber.dispatchCreated();
 		}
 	}
 }

@@ -11,6 +11,8 @@
 	
 	 <mx:Script>
 		<![CDATA[
+			import com.j_nid.models.ProductType;
+			import mx.events.ListEvent;
 			import mx.collections.ArrayCollection;
 			import com.j_nid.utils.Utils;
 			import com.j_nid.models.Person;
@@ -19,42 +21,39 @@
 			import com.j_nid.models.Product;
 			import com.j_nid.models.OrderItem;
 			import mx.resources.ResourceBundle;
-			import com.j_nid.utils.ModelUtils;
 			
-			[Bindable]
-			private var model:ModelUtils = ModelUtils.getInstance();
-			[Bindable]
-            private var utils:Utils = Utils.getInstance();
             [Bindable]
             private var orderItems:ArrayCollection;
 			
 			private function showHandler(e:FlexEvent):void {
+			    productTypeList.dataProvider = ProductType.all();
 				setCustomers();
 				orderDetail.order = new Order();
 				orderItems = new ArrayCollection();
-				orderDetail.customer = model.people[new Date().hours];
+				orderDetail.customer = Person.all()[new Date().hours];
 				validateNow();
 			}
 			
+			private function productTypeListChange(e:ListEvent):void {
+				var productType:ProductType = 
+				    ProductType(productTypeList.selectedItem);
+				productList.dataProvider = productType.isSaleProducts;
+			}
+			
 			private function setCustomers():void {
-				var customers:Array = model.people.filter(
-				    function(item:*, index:int, arr:Array):Boolean {
-				    	return item.isCustomer;
-				    });
+				var customers:Array = Person.getCustomers();
 				orderDetail.customers = customers;
 			}
 						
 			private function productDoubleClick(e:MouseEvent):void {
 				var product:Product = Product(productList.selectedItem);
-				var orderItem:OrderItem = new OrderItem();
-				orderItem.productID = product.id
-				orderDetail.addOrderItem(orderItem);
+				orderDetail.addOrderItem(product);
 			}
 			
 			private function formatPrice(item:Object,
                                          column:DataGridColumn):String {
                                             
-                return utils.formatPrice(item[column.dataField]);
+                return Utils.formatPrice(item[column.dataField]);
             }
 		]]>
 	</mx:Script>
@@ -68,7 +67,7 @@
 			height="100%">
 			
 			<mx:List id="productTypeList"
-				dataProvider="{model.productTypes}"
+				change="productTypeListChange(event)"
 				labelField="name"
 				borderStyle="none"
 				height="100%"
@@ -80,8 +79,7 @@
 			width="350"
 			height="100%">
 			
-			<mx:DataGrid id="productList" 
-				dataProvider="{productTypeList.selectedItem.products}"
+			<mx:DataGrid id="productList"
 				variableRowHeight="true"
 				dragEnabled="true" 
 				doubleClickEnabled="true"

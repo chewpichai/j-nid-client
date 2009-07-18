@@ -16,15 +16,14 @@
             public var total:Number = 0;
             [Bindable]
             public var outstandingTotal:Number = 0;
-            [Bindable]
-            private var utils:Utils = Utils.getInstance();
+            private var formatPrice:Function = Utils.formatPrice;
         ]]>
     </mx:Script>
     
     <mx:Label text="{resourceManager.getString('PaymentsPrint', 'Summary',
-                        [utils.formatPrice(total)])}"/>
+                        [formatPrice(total)])}"/>
     
     <mx:Label text="{resourceManager.getString(
                         'PaymentsPrint', 'OutStandingSummary',
-                        [utils.formatPrice(outstandingTotal)])}"/>
+                        [formatPrice(outstandingTotal)])}"/>
 </mx:VBox>

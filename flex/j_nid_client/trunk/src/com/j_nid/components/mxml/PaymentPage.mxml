@@ -11,6 +11,7 @@
 
     <mx:Script>
         <![CDATA[
+            import com.j_nid.models.Model;
         	import mx.controls.Alert;
         	import mx.events.CloseEvent;
             import com.j_nid.controls.ApplicationManager;
@@ -34,21 +35,17 @@
             import mx.collections.IViewCursor;
             import mx.collections.ArrayCollection;
             import com.j_nid.models.Person;
-            import com.j_nid.utils.ModelUtils;
             
-            [Bindable]
-            private var model:ModelUtils = ModelUtils.getInstance();
             [Bindable]
             private var appMgr:ApplicationManager =
                 ApplicationManager.getInstance();
             [Bindable]
             private var people:ArrayCollection;
-            [Bindable]
-            public var utils:Utils = Utils.getInstance();
             private var errMsg:String;
+            public var formatDate:Function = Utils.formatDate;
             
             private function init(e:FlexEvent):void {
-                people = new ArrayCollection(model.people);
+                people = new ArrayCollection(Person.all());
                 var sort:Sort = new Sort();
                 sort.fields = [new SortField("name")];
                 people.sort = sort;
@@ -57,13 +54,6 @@
                         return Person(item).outstandingTotal != 0;
                     };
                 personList.dataProvider = people;
-                // Add event listeners.
-                model.addEventListener(JNidEvent.PAYMENT_CREATED,
-                    paymentCreated);
-                model.addEventListener(JNidEvent.PAYMENT_DELETED,
-                    transactionDeleted);
-                model.addEventListener(JNidEvent.ORDER_DELETED,
-                    transactionDeleted);
             }
             
             private function transactionDeleted(e:JNidEvent):void {
@@ -97,8 +87,8 @@
             
             private function initData():void {
                 startDateField.selectedDate = 
-                    utils.moveDateByDay(new Date(), -180);
-                var rangeStart:Date = utils.moveDateByDay(new Date(), 1);
+                    Utils.moveDateByDay(new Date(), -180);
+                var rangeStart:Date = Utils.moveDateByDay(new Date(), 1);
                 startDateField.disabledRanges = [{rangeStart: rangeStart}];
                 endDateField.disabledRanges = 
                     [{rangeStart: rangeStart}, {rangeEnd: rangeStart}];
@@ -122,7 +112,7 @@
                                                start:Date, end:Date):void {
                 
                 if (transaction != null) {
-                    end = utils.moveDateByDay(end, 1);
+                    end = Utils.moveDateByDay(end, 1);
                     transaction.filterFunction = 
                         function(obj:Object):Boolean {
                             return obj.created > start && obj.created < end;
@@ -148,10 +138,12 @@
             private function payBtnClickListener(evt:MouseEvent):void {
                 if (isValid()) {
                     var payment:Payment = new Payment();
+                    payment.addEventListener(JNidEvent.PAYMENT_CREATED,
+                    paymentCreated);
                     payment.amount = amountField.value;
                     payment.notation = notationField.text;
                     payment.personID = Person(personList.selectedItem).id;
-                    CairngormUtils.dispatchEvent(JNidEvent.CREATE_PAYMENT, payment);
+                    payment.save();
                 } else {
                     appMgr.showMessage(errMsg);
                 }
@@ -175,7 +167,7 @@
                                          column:DataGridColumn):String {
                 
                 try {
-                    return utils.formatPrice(item[column.dataField]);
+                    return Utils.formatPrice(item[column.dataField]);
                 } catch (err:ReferenceError) {
                     
                 }
@@ -196,8 +188,16 @@
             }
             
             private function closeHandler(e:CloseEvent):void {
+                var obj:Model = Model(transactionList.selectedItem);
             	if (e.detail == Alert.OK) {
-                    transactionList.selectedItem.remove();
+            	    if (obj is Order) {
+                        Order(obj).addEventListener(JNidEvent.ORDER_DELETED,
+                            transactionDeleted);
+                    } else if (obj is Payment) {
+                        Payment(obj).addEventListener(JNidEvent.PAYMENT_DELETED,
+                            transactionDeleted);
+                    }
+                    obj.remove();
             	}
             }
         ]]>
@@ -274,7 +274,7 @@
                     
                     <mx:itemRenderer>
                         <mx:Component>
-<mx:Label text="{outerDocument.utils.formatDate(data.created,
+<mx:Label text="{outerDocument.formatDate(data.created,
                         'DD-MM-YY J:NN:SS')}"/>
                         </mx:Component>
                     </mx:itemRenderer>

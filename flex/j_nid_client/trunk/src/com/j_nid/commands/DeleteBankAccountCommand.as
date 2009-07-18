@@ -1,25 +1,24 @@
 package com.j_nid.commands {
 	
-	import com.adobe.cairngorm.commands.ICommand;
 	import com.adobe.cairngorm.control.CairngormEvent;
 	import com.j_nid.business.BankAccountDelegate;
-	import com.j_nid.utils.ModelUtils;
-	import mx.rpc.IResponder;
+	import com.j_nid.models.BankAccount;
 
-	public class DeleteBankAccountCommand implements ICommand, IResponder {
+	public class DeleteBankAccountCommand extends RespondCommand {
 		
-		public function execute(event:CairngormEvent):void {
+		private var _bankAccount:BankAccount;
+		
+		override public function execute(event:CairngormEvent):void {
+			super.execute(event);
+			_bankAccount = event.data;
 			var delegate:BankAccountDelegate = new BankAccountDelegate(this);
-			delegate.deleteBankAccount(event.data);
+			delegate.deleteBankAccount(_bankAccount);
 		}
 		
-		public function result(event:Object):void {
-			var model:ModelUtils = ModelUtils.getInstance();
-			model.deleteBankAccount(event.result);
-		}
-		
-		public function fault(event:Object):void {
-			
+		override public function result(event:Object):void {
+		    super.result(event);
+		    BankAccount.deleteBankAccount(event.result);
+		    _bankAccount.dispatchDeleted();
 		}
 	}
 }

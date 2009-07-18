@@ -12,25 +12,21 @@
     
     <mx:Script>
         <![CDATA[
+            import mx.collections.ArrayCollection;
         	import mx.collections.ListCollectionView;
         	import mx.controls.Alert;
+            import mx.controls.LinkButton;
         	import mx.events.CloseEvent;
+            import mx.events.FlexEvent;
+            import mx.resources.ResourceBundle;
         	import mx.utils.StringUtil;
         	import com.j_nid.controls.ApplicationManager;
-            import mx.collections.ArrayCollection;
-            import mx.resources.ResourceBundle;
-            import com.j_nid.models.PhoneNumber;
-            import com.j_nid.models.BankAccount;
-            import mx.controls.LinkButton;
-            import mx.managers.PopUpManager;
-            import mx.events.FlexEvent;
-            import com.j_nid.utils.ModelUtils;
-            import com.j_nid.models.Person;
             import com.j_nid.events.JNidEvent;
+            import com.j_nid.models.BankAccount;
+            import com.j_nid.models.Person;
+            import com.j_nid.models.PhoneNumber;
             import com.j_nid.utils.CairngormUtils;
             
-            [Bindable]
-            public var model:ModelUtils = ModelUtils.getInstance();
             [Bindable]
             public var appMgr:ApplicationManager = 
                 ApplicationManager.getInstance();
@@ -55,16 +51,7 @@
             }
             
             private function init(e:FlexEvent):void {
-                PopUpManager.centerPopUp(this);
-                //
-                model.addEventListener(JNidEvent.BANK_ACCOUNT_DELETED,
-                    bankAccountDeleted);
-                model.addEventListener(JNidEvent.PHONE_NUMBER_DELETED,
-                    phoneNumberDeleted);
-                model.addEventListener(JNidEvent.BANK_ACCOUNT_CREATED,
-                    bankAccountCreated);
-                model.addEventListener(JNidEvent.PHONE_NUMBER_CREATED,
-                    phoneNumberCreated);
+                
             }
             
             private function bankAccountDeleted(e:JNidEvent):void {
@@ -105,12 +92,8 @@
                 closeBtn.move(xPos, yPos);
             }
             
-            public function close():void {
-                PopUpManager.removePopUp(this);
-            }
-            
             private function closeBtnClick(e:MouseEvent):void {
-                close();
+                CairngormUtils.dispatchEvent(JNidEvent.CLOSE_POPUP, this);
             }
             
             private function saveClickListener(e:MouseEvent):void {
@@ -122,15 +105,11 @@
                     person.address = addressField.text;
                     person.detail1 = detail1Field.text;
                     person.detail2 = detail2Field.text;
-                    if (person.id > 0) {
-                        CairngormUtils.dispatchEvent(JNidEvent.UPDATE_PERSON,
-                            person);
-                    } else {
+                    if (person.id == 0) {
                         person.bankAccounts = bankAccounts.source;
                         person.phoneNumbers = phoneNumbers.source;
-                        CairngormUtils.dispatchEvent(JNidEvent.CREATE_PERSON,
-                            person);
                     }
+                    person.save();
                 } else {
                     appMgr.showMessage(errMsg,
                         resourceManager.getString("PersonPage", "ErrorTitle"));
@@ -144,29 +123,29 @@
                 	errMsg += resourceManager.getString("PersonPage",
                 	                   "NameLengthError");
                 } else {
-                	if (model.getPersonByName(personName) != null &&
+                	if (Person.getByName(personName) != null &&
                 	    person.name != personName) {
                 		
                 		errMsg += resourceManager.getString("PersonPage",
-                                            "NameDuplicateError");
+                                        "NameDuplicateError");
                 	}
                 }
                 return errMsg.length == 0;
             }
             
             public function getPhoneType(item:Object, column:DataGridColumn):String {
-                for (var i:int = 0; i < model.phoneTypes.length(); i++) {
-                    if (model.phoneTypes[i].data == item.type) {
-                        return model.phoneTypes[i].label;
+                for (var i:int = 0; i < PhoneNumber.phoneTypes.length(); i++) {
+                    if (PhoneNumber.phoneTypes[i].data == item.type) {
+                        return PhoneNumber.phoneTypes[i].label;
                     }
                 }
                 return "";
             }
             
             public function getBankName(item:Object, column:DataGridColumn):String {
-                for (var i:int = 0; i < model.bankNames.length(); i++) {
-                    if (model.bankNames[i].data == item.bank) {
-                        return model.bankNames[i].label;
+                for (var i:int = 0; i < BankAccount.bankNames.length(); i++) {
+                    if (BankAccount.bankNames[i].data == item.bank) {
+                        return BankAccount.bankNames[i].label;
                     }
                 }
                 return "";
@@ -174,12 +153,13 @@
             
             private function phoneNumberAddBtnClick(e:MouseEvent):void {
                 var phoneNumber:PhoneNumber = new PhoneNumber();
+                phoneNumber.addEventListener(JNidEvent.PHONE_NUMBER_CREATED,
+                    phoneNumberCreated);
                 phoneNumber.number = phoneNumberField.text;
                 phoneNumber.type = phoneTypeField.selectedItem.data;
                 if (person.id > 0) {
                 	phoneNumber.personID = person.id;
-                    CairngormUtils.dispatchEvent(JNidEvent.CREATE_PHONE_NUMBER,
-                        phoneNumber);
+                    phoneNumber.save();
                 } else {
                     phoneNumbers.addItem(phoneNumber);
                 }
@@ -198,12 +178,13 @@
             
             private function bankAccountAddBtnClick(e:MouseEvent):void {
                 var bankAccount:BankAccount = new BankAccount();
+                bankAccount.addEventListener(JNidEvent.BANK_ACCOUNT_CREATED,
+                    bankAccountCreated);
                 bankAccount.number = bankNumberField.text;
                 bankAccount.bank = bankNameField.selectedItem.data;
                 if (person.id > 0) {
                 	bankAccount.personID = person.id;
-                    CairngormUtils.dispatchEvent(JNidEvent.CREATE_BANK_ACCOUNT,
-                        bankAccount);
+                    bankAccount.save();
                 } else {
                     bankAccounts.addItem(bankAccount);
                 }
@@ -222,6 +203,8 @@
             
             private function removePhoneNumber():void {
                 var pn:PhoneNumber = PhoneNumber(phoneNumberList.selectedItem);
+                pn.addEventListener(JNidEvent.PHONE_NUMBER_DELETED,
+                    phoneNumberDeleted);
                 if (pn != null) {
                 	appMgr.showConfirm(
                         resourceManager.getString('PersonPage',
@@ -246,6 +229,8 @@
             
             private function removeBankAccount():void {
                 var ba:BankAccount = BankAccount(bankAccountList.selectedItem);
+                ba.addEventListener(JNidEvent.BANK_ACCOUNT_DELETED,
+                    bankAccountDeleted);
                 if (ba != null) {
                 	appMgr.showConfirm(
                         resourceManager.getString('PersonPage',
@@ -405,7 +390,7 @@
                     width="100%">
                     
                     <mx:ComboBox id="phoneTypeField"
-                        dataProvider="{model.phoneTypes}"
+                        dataProvider="{PhoneNumber.phoneTypes}"
                         width="100%"/>
                 </mx:FormItem>
                 
@@ -460,7 +445,7 @@
                     width="100%">
                     
                     <mx:ComboBox id="bankNameField"
-                        dataProvider="{model.bankNames}"
+                        dataProvider="{BankAccount.bankNames}"
                         width="100%"/>
                 </mx:FormItem>
                 

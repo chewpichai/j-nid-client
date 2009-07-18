@@ -11,6 +11,10 @@ package com.j_nid.controls {
 		}
 		
 		private function initializeCommands():void {
+			// Pop up commands.
+			addCommand(JNidEvent.CLOSE_POPUP, ClosePopUpCommand);
+			// Loaded data commands.
+			addCommand(JNidEvent.DATA_LOADED, DataLoadedCommand);
 			// Log in and log out commands.
 			addCommand(JNidEvent.LOG_IN, LogInCommand);
 			addCommand(JNidEvent.LOG_OUT, LogOutCommand);

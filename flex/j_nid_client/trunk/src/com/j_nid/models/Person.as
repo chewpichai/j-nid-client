@@ -1,6 +1,7 @@
 package com.j_nid.models {
     
-    import com.j_nid.utils.ModelUtils;
+    [Event(name="personCreated", type="com.j_nid.events.JNidEvent")]
+    [Event(name="personUpdated", type="com.j_nid.events.JNidEvent")]
 	
 	[Bindable]
 	public class Person	extends Model {
@@ -8,6 +9,11 @@ package com.j_nid.models {
         private static const GENERAL:uint = 0;
         private static const CUSTOMER:uint = 1;
         private static const SUPPLIER:uint = 2;
+        
+        private static var _people:Array = [];
+        private static var _idMap:Object = {};
+        private static var _nameMap:Object = {};
+        public static var loaded:Boolean = false;
         
         public var name:String;
     	public var firstName:String;
@@ -34,6 +40,46 @@ package com.j_nid.models {
 			person.type = obj.type;
 			return person;
     	}
+    	
+    	public static function all():Array {
+            return _people;
+        }
+        
+        public static function getCustomers():Array {
+            return _people.filter(
+                        function(person:Person, index:int, arr:Array):Boolean {
+                            return person.isCustomer;
+                        });
+        }
+        
+        public static function getSupplies():Array {
+            return _people.filter(
+                        function(person:Person, index:int, arr:Array):Boolean {
+                            return person.isSupplier;
+                        });
+        } 
+    	
+    	public static function add(obj:Object):void {
+            if (obj is XML) {
+                obj = fromXML(XML(obj));
+            } else if (obj is XMLList) {
+                for each (var xml:XML in obj) {
+                    add(xml);
+                }
+                return;
+            }
+            _people.push(obj);
+            _idMap[obj.id] = obj;
+            _nameMap[obj.name] = obj;
+        }
+        
+        public static function getByID(obj:int):Person {
+            return _idMap[obj];
+        }
+        
+        public static function getByName(obj:String):Person {
+            return _nameMap[obj];
+        }
         
 		public function Person() {
 			super();
@@ -82,7 +128,7 @@ package com.j_nid.models {
 			if (id == 0) {
 				return _phoneNumbers;
 			}
-			return ModelUtils.getInstance().getPhoneNumbersByPerson(id);
+			return PhoneNumber.filterByPerson(id);
 		}
 		
 		public function set bankAccounts(obj:Array):void {
@@ -93,7 +139,7 @@ package com.j_nid.models {
 			if (id == 0) {
 				return _bankAccounts;
 			}
-			return ModelUtils.getInstance().getBankAccountsByPerson(id);
+			return BankAccount.filterByPerson(id);
 		}
 		
 		public function get outstandingTotal():Number {
@@ -117,15 +163,15 @@ package com.j_nid.models {
 		}
 		
 		public function get orders():Array {
-			return ModelUtils.getInstance().getOrdersByPerson(id);
+			return Order.filterByPerson(id);
 		}
 		
 		public function get supplies():Array {
-			return ModelUtils.getInstance().getSuppliesByPerson(id);
+			return Supply.filterByPerson(id);
 		}
 		
 		public function get payments():Array {
-			return ModelUtils.getInstance().getPaymentsByPerson(id);
+			return Payment.filterByPerson(id);
 		}
 		
 		public function set transactions(obj:Array):void {

@@ -22,17 +22,15 @@
             public var endDate:Date;
             [Bindable]
             public var total:Number;
-            private var utils:Utils = Utils.getInstance();
             
             public function set person(obj:Person):void {
                 _person = obj;
-                var lastDate:Date = utils.moveDateByDay(endDate, 1);
+                var lastDate:Date = Utils.moveDateByDay(endDate, 1);
                 orders = new Array();
                 total = 0;
                 for each (var order:* in person.orders) {
                     if (order.created > startDate &&
-                        order.created < lastDate &&
-                        order.totalToPaid > 0) {
+                        order.created < lastDate) {
                         
                         orders.push(order);
                         total += order.total;
@@ -70,13 +68,13 @@
             private function formatPrice(item:Object,
                                          column:DataGridColumn):String {
                 
-                return utils.formatPrice(item[column.dataField]);
+                return Utils.formatPrice(item[column.dataField]);
             }
             
             private function formatDate(item:Object,
                                         column:DataGridColumn):String {
                                             
-                return utils.formatDate(item[column.dataField], "DD-MM-YYYY");
+                return Utils.formatDate(item[column.dataField], "DD-MM-YYYY");
             }
         ]]>
     </mx:Script>
@@ -107,7 +105,7 @@
             <mx:DataGridColumn
                 headerText="{resourceManager.getString('OutstandingPrint',
                                     'Total')}"
-                dataField="totalToPaid"
+                dataField="total"
                 labelFunction="formatPrice"/>
         </mx:columns>
     </mx:PrintDataGrid>
