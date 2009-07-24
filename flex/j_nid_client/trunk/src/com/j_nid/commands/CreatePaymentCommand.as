@@ -5,7 +5,6 @@ package com.j_nid.commands {
 	import com.j_nid.events.JNidEvent;
 	import com.j_nid.models.Order;
 	import com.j_nid.models.Payment;
-	import com.j_nid.utils.CairngormUtils;
 
 	public class CreatePaymentCommand extends RespondCommand {
 	    
@@ -40,7 +39,7 @@ package com.j_nid.commands {
                     order.paidTotal += totalToPaid;
                 }
                 amount -= totalToPaid;
-                CairngormUtils.dispatchEvent(JNidEvent.UPDATE_ORDER, order);
+                order.save();
                 if (amount <= 0) {
                     break;
                 }

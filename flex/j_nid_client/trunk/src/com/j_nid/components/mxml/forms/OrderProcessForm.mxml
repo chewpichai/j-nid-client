@@ -37,6 +37,7 @@
 			
 			private function submitBtnClickListener(e:MouseEvent):void {
 			    order.addEventListener(JNidEvent.ORDER_CREATED, orderCreated);
+			    order.paidTotal = payAmountField.value;
 				order.save();
 			}
 			
@@ -127,7 +128,8 @@
 		    text="{resourceManager.getString('OrderPage', 'Note')}:"/>
 		
 		<mx:Text
-		    text="{order.notation}" width="100%"/>
+		    text="{order.notation}"
+		    width="100%"/>
 	</mx:HBox>
 	
 	<mx:HBox
@@ -142,7 +144,23 @@
     		text="{resourceManager.getString('OrderPage', 'Summary',
     		              [formatPrice(order.total), 0])}" 
     		textAlign="right"/>
-	</mx:HBox>       
+	</mx:HBox>
+	
+	<mx:HBox
+	    width="100%"
+	    horizontalAlign="right">
+	    
+	    <mx:FormItem
+	        label="{resourceManager.getString('OrderPage', 'PayAmount')}:">
+	        
+	        <mx:NumericStepper id="payAmountField"
+	            value="{order.paidTotal}"
+                minimum="0"
+                maximum="{order.total}"
+                stepSize="0.25"
+                width="100"/>
+	    </mx:FormItem>
+	</mx:HBox>
 	
 	<mx:ControlBar id="mainControlBar"
 		horizontalAlign="right">

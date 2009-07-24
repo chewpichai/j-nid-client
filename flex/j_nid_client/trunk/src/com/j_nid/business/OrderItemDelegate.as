@@ -21,6 +21,10 @@ package com.j_nid.business {
 			ServiceUtils.send("/orderitems/", "POST", _responder, item.toXML());
 		}
 		
+		public function updateOrderItem(item:OrderItem):void {
+            ServiceUtils.send("/orderitems/" + item.id + "/", "PUT", _responder, item.toXML());
+        }
+		
 		public function deleteOrderItem(item:OrderItem):void {
 			ServiceUtils.send("/orderitems/" + item.id + "/", "DELETE", _responder);
 		}

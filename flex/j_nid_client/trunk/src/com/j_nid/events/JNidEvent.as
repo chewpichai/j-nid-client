@@ -7,6 +7,8 @@ package com.j_nid.events
 		public static const CLOSE_POPUP:String = "closePopUp";
 		// Loaded data events.
 		public static const DATA_LOADED:String = "dataLoaded";
+		// Selected product events.
+		public static const SELECTED_PRODUCT:String = "selectedProduct";
 		// Log in and out events.
         public static const LOG_IN:String = "logIn";
         public static const LOG_OUT:String = "logOut";

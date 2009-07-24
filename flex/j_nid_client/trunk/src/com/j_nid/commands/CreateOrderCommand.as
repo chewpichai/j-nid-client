@@ -30,10 +30,10 @@ package com.j_nid.commands {
             for each (var item:XML in obj.order_items.order_item) {
                 OrderItem.add(item);
             }
-            // For cash customer create payment.
-            if (_order.personID <= 24) {
+            // Create payment.
+            if (_order.paidTotal > 0) {
                 var payment:Payment = new Payment();
-                payment.amount = _order.total;
+                payment.amount = _order.paidTotal;
                 payment.personID = _order.personID;
                 CairngormUtils.dispatchEvent(JNidEvent.CREATE_PAYMENT,
                     payment);

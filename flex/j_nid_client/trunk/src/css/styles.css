@@ -45,6 +45,10 @@ global {
 	corner-radius: 0;
 }
 
+.formLabel {
+    text-align: right;
+}
+
 /*
 WindowedApplication {
 	padding-top: 0;

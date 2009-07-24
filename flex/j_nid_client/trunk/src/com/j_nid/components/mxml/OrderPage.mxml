@@ -11,6 +11,7 @@
 
     <mx:Script>
         <![CDATA[
+            import com.j_nid.models.Product;
             import mx.events.ItemClickEvent;
         	import com.j_nid.controls.ApplicationManager;
         	import mx.controls.Alert;
@@ -41,7 +42,8 @@
             [Bindable]
             private var appMgr:ApplicationManager =
                 ApplicationManager.getInstance();
-            private var formatPrice:Function = Utils.formatPrice; 
+            private var formatPrice:Function = Utils.formatPrice;
+            private var productSelector:ProductSelector;
             
             private function creationComplete(e:FlexEvent):void {
                 // Create people.
@@ -69,9 +71,11 @@
                 orderList.dataProvider = orders;
                 // Add change watchers.
                 ChangeWatcher.watch(personField, "selectedIndex", filterOrder);
-                ChangeWatcher.watch(dateField, "selectedRanges", filterOrder);
+                ChangeWatcher.watch(startDateField, "selectedDate", filterOrder);
+                ChangeWatcher.watch(endDateField, "selectedDate", filterOrder);
                 ChangeWatcher.watch(outstandingField, "selected", filterOrder);
                 ChangeWatcher.watch(paidField, "selected", filterOrder);
+                currentState = "TodayOrder";
             }
             
             private function orderDeleted(e:JNidEvent):void {
@@ -87,20 +91,41 @@
             
             private function showHandler(e:FlexEvent):void {
                 people.refresh();
-                initData();
+                if (orderTabBar.selectedIndex == 0) {
+                    initTodayOrder();
+                } else if (orderTabBar.selectedIndex == 1) {
+                    
+                } else if (orderTabBar.selectedIndex == 2) {
+                    initOrderByDate();
+                }
             }
             
-            private function initData():void {
+            private function initOrderByDate():void {
+                initOrderByCustomer();
+                personField.selectedIndex = -1;
+            }
+            
+            private function initOrderByCustomer():void {
                 outstandingField.selected = true;
                 var now:Date = new Date();
-                /*
-                var rangeEnd:Date = new Date(today.fullYear, today.month, today.date);
-                var rangeStart:Date = Utils.moveDateByDay(rangeEnd, -365);
-                */
-                var rangeStart:Date = new Date(now.fullYear, now.month, now.date);
-                var rangeEnd:Date = Utils.moveDateByDay(rangeStart, 1);
-                //dateField.selectedRanges = [{rangeStart: rangeStart, rangeEnd: rangeEnd}];
-                dateField.selectedDate = new Date(now.fullYear, now.month, now.date);
+                var rangeEnd:Date = new Date(now.fullYear, now.month, now.date);
+                var rangeStart:Date = Utils.moveDateByDay(rangeEnd, -7);
+                startDateField.selectedDate = rangeStart;
+                endDateField.selectedDate = rangeEnd;
+                startDateField.enabled = true;
+                endDateField.enabled = true;
+            }
+            
+            private function initTodayOrder():void {
+                outstandingField.selected = true;
+                paidField.selected = true;
+                var now:Date = new Date();
+                var today:Date = new Date(now.fullYear, now.month, now.date);
+                startDateField.selectedDate = today;
+                endDateField.selectedDate = today;
+                startDateField.enabled = false;
+                endDateField.enabled = false;
+                personField.selectedIndex = -1;
             }
             
             private function filterOrder(e:Event):void {
@@ -115,12 +140,9 @@
             }
             
             private function checkDate(date:Date):Boolean {
-                if (dateField.selectedRanges.length == 0) {
-                    return true;
-                }
-                for each (var obj:Object in dateField.selectedRanges) {
-                    var start:Date = new Date(obj.rangeStart.time);
-                    var end:Date = new Date(obj.rangeEnd.time);
+                var start:Date = startDateField.selectedDate;
+                var end:Date = endDateField.selectedDate;
+                if (start != null && end != null) {
                     // Move end date to the midnight of the next day.
                     end = Utils.moveDateByDay(end, 1);
                     if (date >= start && date < end) {
@@ -199,7 +221,16 @@
             }
             
             private function tabBarClick(e:ItemClickEvent):void {
-                
+                if (orderTabBar.selectedIndex == 0) {
+                    currentState = "TodayOrder";
+                    initTodayOrder();
+                } else if (orderTabBar.selectedIndex == 1) {
+                    currentState = "";
+                    initOrderByDate();
+                } else if (orderTabBar.selectedIndex == 2) {
+                    currentState = "TodayOrder";
+                    initOrderByDate();
+                }
             }
             
             private function formatPriceGrid(item:Object,
@@ -207,8 +238,43 @@
                                               
                 return formatPrice(item[column.dataField]);
             }
+            
+            private function addOrderItemClick(e:MouseEvent):void {
+                var productSelector:ProductSelector =
+                        ProductSelector(appMgr.createPopUp(ProductSelector));
+                productSelector.addEventListener(JNidEvent.SELECTED_PRODUCT,
+                    addOrderItem);
+            }
+            
+            private function addOrderItem(e:JNidEvent):void {
+                var product:Product = Product(e.data);
+                var orderItem:OrderItem = new OrderItem();
+                orderItem.productID = product.id;
+                orderItem.unit = product.unit;
+                orderItem.pricePerUnit = product.pricePerUnit;
+                orderItem.costPerUnit = product.costPerUnit;
+                for each (var obj:OrderItem in orderItemList.dataProvider) {
+                    if (orderItem.productID == obj.productID) {
+                        obj.unit += orderItem.unit;
+                        obj.save();
+                        return;
+                    }
+                }
+                orderItem.orderID = Order(orderList.selectedItem).id;
+                orderItem.save();
+                orderItemList.dataProvider.addItem(orderItem);
+                orderItemList.verticalScrollPosition = 
+                    orderItemList.maxVerticalScrollPosition;
+            }
         ]]>
     </mx:Script>
+    
+    <mx:states>
+        <mx:State name="TodayOrder">
+            <mx:RemoveChild target="{searchBox}"/>
+            <mx:RemoveChild target="{personField}"/>
+        </mx:State>
+    </mx:states>
     
     <mx:TabBar id="orderTabBar"
         itemClick="tabBarClick(event)">
@@ -220,11 +286,11 @@
                 </mx:String>
                 <mx:String>
                     {resourceManager.getString('OrderPage',
-                        'SearchOrderByCustomer')}
+                        'OrderByCustomer')}
                 </mx:String>
                 <mx:String>
                     {resourceManager.getString('OrderPage',
-                        'SearchOrderByDate')}
+                        'OrderByDate')}
                 </mx:String>
             </mx:Array>
         </mx:dataProvider>
@@ -242,7 +308,7 @@
             width="220"
             height="100%">
             
-            <mx:HBox
+            <mx:HBox id="searchBox"
                 paddingLeft="5"
                 paddingRight="5"
                 verticalAlign="middle"
@@ -263,11 +329,30 @@
                 width="100%"
                 height="100%"/>
                 
-            <mx:DateChooser id="dateField"
-                allowMultipleSelection="true"
-                borderThickness="0"
-                cornerRadius="0"
-                width="100%"/>
+            <mx:VBox id="dateRangeBox"
+                horizontalAlign="left"
+                width="100%">
+                
+                <mx:HBox
+                    horizontalAlign="right"
+                    width="180">
+                    
+                    <mx:Label text="{resourceManager.getString('OrderPage',
+                                'StartDate')}:"/>
+                    
+                    <mx:DateField id="startDateField"/>
+                </mx:HBox>
+                
+                <mx:HBox
+                    horizontalAlign="right"
+                    width="180">
+                    
+                    <mx:Label text="{resourceManager.getString('OrderPage',
+                                'EndDate')}:"/>
+                    
+                    <mx:DateField id="endDateField"/>
+                </mx:HBox>
+            </mx:VBox>
                 
             <mx:VBox
                 paddingLeft="5"
@@ -329,6 +414,7 @@
                 textAlign="center"
                 keyDown="itemListKeyDown(event)"
                 headerStyleName="centerHeader"
+                editable="true"
                 width="100%"
                 height="100%">
                 
@@ -337,17 +423,36 @@
                         headerText="{resourceManager.getString(
                                            'OrderPage', 'Quantity')}"
                         dataField="quantity"
-                        width="50"/>
+                        editorDataField="value"
+                        width="50">
+                        
+                        <mx:itemEditor>
+                            <mx:Component>
+<mx:NumericStepper minimum="0" maximum="1000" 
+    change="{data.quantity = value;data.save();}"/>
+                            </mx:Component>
+                        </mx:itemEditor>
+                    </mx:DataGridColumn>
                     
                     <mx:DataGridColumn
                         headerText="{resourceManager.getString('OrderPage', 'Name')}"
-                        dataField="name"/>
+                        dataField="name"
+                        editable="false"/>
                     
                     <mx:DataGridColumn
                         headerText="{resourceManager.getString('OrderPage', 'Unit')}"
                         dataField="unit"
                         textAlign="right"
-                        width="50"/>
+                        editorDataField="value"
+                        width="50">
+                        
+                        <mx:itemEditor>
+                            <mx:Component>
+<mx:NumericStepper minimum="1" maximum="100000" 
+    change="{data.unit = value;data.save();}"/>
+                            </mx:Component>
+                        </mx:itemEditor>
+                    </mx:DataGridColumn>
                     
                     <mx:DataGridColumn
                         headerText="{resourceManager.getString(
@@ -355,13 +460,23 @@
                         dataField="pricePerUnit"
                         labelFunction="formatPriceGrid"
                         textAlign="right"
-                        width="85"/>
+                        editorDataField="value"
+                        width="85">
+                        
+                        <mx:itemEditor>
+                            <mx:Component>
+<mx:NumericStepper minimum="1" maximum="10000" stepSize="0.25" 
+    change="{data.pricePerUnit = value;data.save();}"/>
+                            </mx:Component>
+                        </mx:itemEditor>
+                    </mx:DataGridColumn>
                     
                     <mx:DataGridColumn
                         headerText="{resourceManager.getString('OrderPage', 'Total')}"
                         dataField="total"
                         labelFunction="formatPriceGrid"
                         textAlign="right"
+                        editable="false"
                         width="85"/>
                 </mx:columns>
             </mx:DataGrid>
@@ -381,6 +496,11 @@
             
             <mx:ControlBar
             	horizontalAlign="right">
+            	
+            	<mx:Button
+                    label="{resourceManager.getString('OrderPage', 'Add')}"
+                    enabled="{orderList.selectedItem != null}"
+                    click="addOrderItemClick(event)"/>
             
                 <mx:Button
                 	label="{resourceManager.getString('OrderPage', 'Delete')}"

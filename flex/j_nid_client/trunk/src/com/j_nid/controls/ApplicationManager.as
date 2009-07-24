@@ -87,6 +87,7 @@ package com.j_nid.controls {
         
         private function mainState():void {
             mainApp.currentState = "main";
+            mainApp.mainView.selectedChild = mainApp["mainPage"];
         }
         
         private function paymentState():void {

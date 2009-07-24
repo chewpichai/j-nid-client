@@ -1,4 +1,6 @@
 package com.j_nid.models {
+    import com.j_nid.utils.Utils;
+    
     
     [Event(name="personCreated", type="com.j_nid.events.JNidEvent")]
     [Event(name="personUpdated", type="com.j_nid.events.JNidEvent")]
@@ -148,18 +150,12 @@ package com.j_nid.models {
 		
 		public function get paidTotal():Number {
 			var sum:Number = 0;
-			for each (var payment:Payment in payments) {
-				sum += payment.amount;
-			}
-			return sum;
+			return Utils.sum(payments, "amount");
 		}
 		
 		public function get orderTotal():Number {
 			var sum:Number = 0;
-            for each (var order:Order in orders) {
-                sum += order.total;
-            }
-            return sum;
+			return Utils.sum(orders, "total");
 		}
 		
 		public function get orders():Array {

@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml"
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml"
     show="showHandler(event)"
     creationComplete="init(event)"
+    paddingBottom="10"
     width="100%"
     height="100%">
     
@@ -11,6 +12,7 @@
 
     <mx:Script>
         <![CDATA[
+            import mx.events.ItemClickEvent;
             import com.j_nid.models.Model;
         	import mx.controls.Alert;
         	import mx.events.CloseEvent;
@@ -49,11 +51,26 @@
                 var sort:Sort = new Sort();
                 sort.fields = [new SortField("name")];
                 people.sort = sort;
+                personList.dataProvider = people;
+            }
+            
+            private function baseState():void {
+                currentState = "";
                 people.filterFunction = 
                     function(item:Object):Boolean {
                         return Person(item).outstandingTotal != 0;
                     };
-                personList.dataProvider = people;
+                people.refresh();
+            }
+            
+            private function outstandingDetailState():void {
+                currentState = "OutstandingDetail";
+            }
+            
+            private function customerAccountState():void {
+                currentState = "CustomerAccount";
+                people.filterFunction = null;
+                people.refresh();
             }
             
             private function transactionDeleted(e:JNidEvent):void {
@@ -65,6 +82,7 @@
             }
             
             private function showHandler(e:FlexEvent):void {
+                baseState();
                 people.refresh();
                 initData();
             }
@@ -200,129 +218,208 @@
                     obj.remove();
             	}
             }
+            
+            private function tabBarClick(e:ItemClickEvent):void {
+                if (e.index == 0) {
+                    baseState();
+                } else if (e.index == 1) {
+                    outstandingDetailState();
+                } else if (e.index == 2) {
+                    customerAccountState();
+                }
+            }
+            
+            private function personListDoubleClick(e:MouseEvent):void {
+                outstandingDetailState();
+                paymentTabBar.selectedIndex = 1;
+            }
         ]]>
     </mx:Script>
-
-    <mx:Panel
-        title="{resourceManager.getString('PaymentPage', 'Customer')}"
-        width="380"
-        height="100%">
-        
-        <mx:DataGrid id="personList"
-        	headerStyleName="centerHeader"
-            width="100%"
-            height="100%">
-            
-            <mx:columns>
-                <mx:DataGridColumn
-                	dataField="name"
-                    headerText="{resourceManager.getString(
-                                       'PaymentPage', 'Name')}"/>
-                
-                <mx:DataGridColumn
-                	dataField="outstandingTotal" 
-                    headerText="{resourceManager.getString(
-                                       'PaymentPage', 'OutstandingTotal')}"/>
-            </mx:columns>
-        </mx:DataGrid>
-    </mx:Panel>
     
-    <mx:Panel title="{resourceManager.getString('PaymentPage', 'Detail')}"
-        layout="vertical"
-        paddingTop="10"
-        paddingLeft="5"
-        paddingBottom="10"
-        paddingRight="5"
+    <mx:states>
+        <mx:State name="OutstandingDetail">
+            
+            <mx:SetProperty
+                target="{transactionPnl}"
+                name="width"
+                value="100%"/>
+                
+            <mx:SetProperty
+                target="{personPnl}"
+                name="width"
+                value="0"/>
+        </mx:State>
+        
+        <mx:State name="CustomerAccount">
+            
+            <mx:SetProperty
+                target="{transactionPnl}"
+                name="width"
+                value="100%"/>
+        </mx:State>
+    </mx:states>
+    
+    <mx:transitions>
+        <mx:Transition
+            fromState=""
+            toState="OutstandingDetail">
+            
+            <mx:Parallel>
+                <mx:Resize target="{transactionPnl}"/>
+                <mx:Resize target="{personPnl}"/>
+            </mx:Parallel>
+        </mx:Transition>
+    </mx:transitions>
+    
+    <mx:TabBar id="paymentTabBar"
+        itemClick="tabBarClick(event)">
+        
+        <mx:dataProvider>
+            <mx:Array>
+                <mx:String>
+                    {resourceManager.getString('PaymentPage',
+                        'OutstandingSummary')}
+                </mx:String>
+                <mx:String>
+                    {resourceManager.getString('PaymentPage',
+                        'OutstandingDetail')}
+                </mx:String>
+                <mx:String>
+                    {resourceManager.getString('PaymentPage',
+                        'CustomerAccount')}
+                </mx:String>
+            </mx:Array>
+        </mx:dataProvider>
+    </mx:TabBar>
+
+    <mx:HBox
         width="100%"
         height="100%">
         
-        <mx:HBox
-            verticalAlign="middle"
-            width="100%">
-            
-            <mx:Label
-                text="{resourceManager.getString('PaymentPage', 'PayAmount')}:"/>
-            
-            <mx:NumericStepper id="amountField" 
-                maximum="1000000" 
-                width="250"/>
-                
-            <mx:Label
-                text="{resourceManager.getString('PaymentPage', 'Note')}:"/>
-            
-            <mx:TextArea id="notationField"
-                width="100%"/>
-            
-            <mx:Button id="payBtn"
-                label="{resourceManager.getString('PaymentPage', 'Pay')}" 
-                enabled="{personList.selectedItem != null}"
-                click="payBtnClickListener(event)" 
-                width="100"/>
-        </mx:HBox>
-        
-        <mx:DataGrid id="transactionList"
-            dataProvider="{personList.selectedItem.transactions}"
-            keyDown="transactionListKeyDown(event)"
-            headerStyleName="centerHeader"
-            width="100%"
+        <mx:Panel id="personPnl"
+            title="{resourceManager.getString('PaymentPage', 'Customer')}"
+            width="380"
             height="100%">
             
-            <mx:columns>
-                <mx:DataGridColumn 
-                    headerText="{resourceManager.getString(
-                                       'PaymentPage', 'Date')}">
+            <mx:DataGrid id="personList"
+            	headerStyleName="centerHeader"
+            	doubleClickEnabled="true"
+            	doubleClick="personListDoubleClick(event)"
+                width="100%"
+                height="100%">
+                
+                <mx:columns>
+                    <mx:DataGridColumn
+                    	dataField="name"
+                        headerText="{resourceManager.getString(
+                                           'PaymentPage', 'Name')}"/>
                     
-                    <mx:itemRenderer>
-                        <mx:Component>
-<mx:Label text="{outerDocument.formatDate(data.created,
-                        'DD-MM-YY J:NN:SS')}"/>
-                        </mx:Component>
-                    </mx:itemRenderer>
-                </mx:DataGridColumn>
-                
-                <mx:DataGridColumn
-                	dataField="amount"
-                    headerText="{resourceManager.getString(
-                                       'PaymentPage', 'Paid')}"
-                    labelFunction="formatPrice"/>
-                
-                <mx:DataGridColumn
-                	dataField="total"
-                    headerText="{resourceManager.getString(
-                                       'PaymentPage', 'Outstanding')}"
-                    labelFunction="formatPrice"/>
-                
-                <mx:DataGridColumn
-                	dataField="notation"
-                    headerText="{resourceManager.getString(
-                                       'PaymentPage', 'Note')}"/>
-            </mx:columns>
-        </mx:DataGrid>
+                    <mx:DataGridColumn
+                    	dataField="outstandingTotal" 
+                        headerText="{resourceManager.getString(
+                                           'PaymentPage', 'OutstandingTotal')}"/>
+                </mx:columns>
+            </mx:DataGrid>
+        </mx:Panel>
         
-        <mx:ControlBar>
-            <mx:Label
-                text="{resourceManager.getString('PaymentPage', 'StartDate')}:"/>
+        <mx:Panel id="transactionPnl"
+            title="{personList.selectedItem.name}"
+            layout="vertical"
+            paddingTop="10"
+            paddingLeft="5"
+            paddingBottom="10"
+            paddingRight="5"
+            width="0"
+            height="100%">
             
-            <mx:DateField id="startDateField"
-                formatString="DD-MM-YYYY"
-                change="dateChange(event)"/>
+            <mx:HBox
+                verticalAlign="middle"
+                width="100%">
                 
-            <mx:Label
-                text="{resourceManager.getString('PaymentPage', 'ToDate')}:"/>
-            
-            <mx:DateField id="endDateField"
-                selectedDate="{new Date()}"
-                formatString="DD-MM-YYYY"
-                change="dateChange(event)"/>
+                <mx:Label
+                    text="{resourceManager.getString('PaymentPage', 'PayAmount')}:"/>
                 
-            <mx:Spacer width="100%"/>
+                <mx:NumericStepper id="amountField" 
+                    maximum="1000000" 
+                    width="250"/>
+                    
+                <mx:Label
+                    text="{resourceManager.getString('PaymentPage', 'Note')}:"/>
+                
+                <mx:TextArea id="notationField"
+                    width="100%"/>
+                
+                <mx:Button id="payBtn"
+                    label="{resourceManager.getString('PaymentPage', 'Pay')}" 
+                    enabled="{personList.selectedItem != null}"
+                    click="payBtnClickListener(event)" 
+                    width="100"/>
+            </mx:HBox>
             
-            <mx:Button
-                label="{resourceManager.getString('PaymentPage', 'Print')}"
-                enabled="{personList.selectedItem != null}"
-                click="printBtnClick(event)"/>
-        </mx:ControlBar>
-    </mx:Panel>
+            <mx:DataGrid id="transactionList"
+                dataProvider="{personList.selectedItem.transactions}"
+                keyDown="transactionListKeyDown(event)"
+                headerStyleName="centerHeader"
+                width="100%"
+                height="100%">
+                
+                <mx:columns>
+                    <mx:DataGridColumn 
+                        headerText="{resourceManager.getString(
+                                           'PaymentPage', 'Date')}">
+                        
+                        <mx:itemRenderer>
+                            <mx:Component>
+    <mx:Label text="{outerDocument.formatDate(data.created,
+                            'DD-MM-YY J:NN:SS')}"/>
+                            </mx:Component>
+                        </mx:itemRenderer>
+                    </mx:DataGridColumn>
+                    
+                    <mx:DataGridColumn
+                    	dataField="amount"
+                        headerText="{resourceManager.getString(
+                                           'PaymentPage', 'Paid')}"
+                        labelFunction="formatPrice"/>
+                    
+                    <mx:DataGridColumn
+                    	dataField="total"
+                        headerText="{resourceManager.getString(
+                                           'PaymentPage', 'Outstanding')}"
+                        labelFunction="formatPrice"/>
+                    
+                    <mx:DataGridColumn
+                    	dataField="notation"
+                        headerText="{resourceManager.getString(
+                                           'PaymentPage', 'Note')}"/>
+                </mx:columns>
+            </mx:DataGrid>
+            
+            <mx:ControlBar>
+                <mx:Label
+                    text="{resourceManager.getString('PaymentPage', 'StartDate')}:"/>
+                
+                <mx:DateField id="startDateField"
+                    formatString="DD-MM-YYYY"
+                    change="dateChange(event)"/>
+                    
+                <mx:Label
+                    text="{resourceManager.getString('PaymentPage', 'ToDate')}:"/>
+                
+                <mx:DateField id="endDateField"
+                    selectedDate="{new Date()}"
+                    formatString="DD-MM-YYYY"
+                    change="dateChange(event)"/>
+                    
+                <mx:Spacer width="100%"/>
+                
+                <mx:Button
+                    label="{resourceManager.getString('PaymentPage', 'Print')}"
+                    enabled="{personList.selectedItem != null}"
+                    click="printBtnClick(event)"/>
+            </mx:ControlBar>
+        </mx:Panel>
+    </mx:HBox>
     
     <mx:NumberValidator id="numberValidator" 
         source="{amountField}"
@@ -330,4 +427,4 @@
         trigger="{payBtn}"
         triggerEvent="click"
         minValue="1"/>
-</mx:HBox>
+</mx:VBox>

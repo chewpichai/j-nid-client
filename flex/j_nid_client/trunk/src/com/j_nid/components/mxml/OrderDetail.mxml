@@ -95,12 +95,17 @@
             
             private function processListener(e:MouseEvent):void {
                 if (isValid()) {
+                    var order:Order = new Order();
                     order.personID = Person.getByName(customerFiled.text).id;
                     order.notation = notationField.text;
                     order.orderItems = orderItemList.dataProvider.source;
                     var orderProcessForm:OrderProcessForm =
                         OrderProcessForm(appMgr.createPopUp(OrderProcessForm));
                     orderProcessForm.order = order;
+                    if (order.personID <= 24) {
+                        order.paidTotal = order.total;
+                        orderProcessForm.payAmountField.enabled = false;
+                    }
                 } else {
                     appMgr.showMessage(errMsg,
                         resourceManager.getString("MakeOrder", "ErrorTitle"));

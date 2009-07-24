@@ -51,6 +51,7 @@ package com.j_nid.controls {
 			// OrderItem commands.
 			addCommand(JNidEvent.LIST_ORDER_ITEM, ListOrderItemCommand);
 			addCommand(JNidEvent.CREATE_ORDER_ITEM, CreateOrderItemCommand);
+			addCommand(JNidEvent.UPDATE_ORDER_ITEM, UpdateOrderItemCommand);
 			addCommand(JNidEvent.DELETE_ORDER_ITEM, DeleteOrderItemCommand);
 			// Payment commands.
 			addCommand(JNidEvent.LIST_PAYMENT, ListPaymentCommand);
