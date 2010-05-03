@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
+	backgroundColor="#FFFFFF" horizontalScrollPolicy="off"
+	verticalScrollPolicy="off" fontSize="12">
+	
+	<mx:Script>
+		<![CDATA[
+			import com.j_nid.utils.Utils;
+			
+			[Bindable]
+			public var order:XML;
+			[Bindable]
+            public var orderItems:Array;
+            [Bindable]
+            public var numPages:int;
+            [Bindable]
+            public var pageNum:int;
+		]]>
+	</mx:Script>
+	
+	<mx:states>
+        <mx:State name="middle">
+        	
+        	<mx:RemoveChild target="{noteTxt}"/>
+        	
+        	<mx:SetStyle target="{totalLbl}" name="bottom" value="65"/>
+        	
+        	<mx:SetProperty target="{totalLbl}"	name="text" value="มีต่อ"/>
+        		
+        	<mx:RemoveChild target="{quantityTotalTxt}"/>
+        </mx:State>
+    </mx:states>
+    
+    <mx:Label id="pageLbl"
+    	text="{pageNum}/{numPages}"
+    	textAlign="center"
+    	left="329" top="10"
+    	width="50" height="24"/>
+	
+	<mx:Label id="nameLbl"
+		text="{order.person_name}"
+		top="92" left="25"
+		width="200" height="24"/>
+	
+	<mx:Label id="dateLabel"
+		text="{Utils.formatDate(new Date(), 'DD/MM/YY JJ:NN')}"
+		top="92" left="279"
+		width="100" height="24"/>
+	
+	<mx:PrintDataGrid id="orderItemDg"
+		dataProvider="{orderItems}"
+		top="120" right="2" left="2"
+		height="330" rowHeight="20"
+		styleName="printDataGrid">
+		
+		<mx:columns>
+            <mx:DataGridColumn headerText="จำนวน" dataField="quantity"
+				width="12"/>
+            
+            <mx:DataGridColumn headerText="รายการ" dataField="name"
+                width="67"/>
+            
+            <mx:DataGridColumn headerText="หน่วย" dataField="unit"
+                width="12"/>
+            
+            <mx:DataGridColumn headerText="ราคา" dataField="price_per_unit"
+                labelFunction="Utils.priceLabelFunction" width="12"/>
+            
+            <mx:DataGridColumn headerText="รวม" dataField="total"
+                labelFunction="Utils.priceLabelFunction"
+                textAlign="center" width="30"/>
+        </mx:columns>
+	</mx:PrintDataGrid>
+	
+	<mx:Text id="noteTxt"
+		text="{order.notation}"
+		bottom="85" left="12"/>
+		
+	<mx:Label id="quantityTotalTxt"
+		text="จำนวนรวม {Utils.sum(order.order_items.order_item, 'quantity')} ชิ้น"
+		bottom="45" left="12"
+		width="120" height="24"/>
+	
+	<mx:Label id="totalLbl"
+		text="{Utils.formatPrice(Utils.sum(order.order_items.order_item, 'total'))}"
+		textAlign="right"
+		bottom="45" left="294"
+		height="24" width="85"/>
+</mx:Canvas>
