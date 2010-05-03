@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:WindowedApplication xmlns:mx="http://www.adobe.com/2006/mxml"
+	applicationComplete="applicationCompleteHanler(event)"
+	horizontalScrollPolicy="off" verticalScrollPolicy="off"
+	layout="absolute" backgroundColor="0xffffff" statusTextStyleName="copyright"
+	width="1280" height="800">
+	
+	<mx:Script>
+		<![CDATA[
+			import com.j_nid.ui.popups.LogInForm;
+			import com.j_nid.utils.Responder;
+			import com.j_nid.utils.ServiceUtils;
+			import com.j_nid.utils.Utils;
+			
+			import mx.events.FlexEvent;
+			import mx.events.ItemClickEvent;
+			import mx.rpc.events.FaultEvent;
+			
+			public var productsToUpdate:XML = <products/>;
+			
+            [Bindable]
+			public var mainMenuList:Array = [
+                "หน้าหลัก", "ทำรายการขาย", "ข้อมูลสินค้า",
+                "ข้อมูลบุคคล", "รายการขาย", "รายการบัญชี"];
+                
+            private function applicationCompleteHanler(e:FlexEvent):void {
+            	Utils.showPopUp(LogInForm);
+				var currentYear:int = new Date().fullYear;
+            	status = "Copyright (c) 2008-" + currentYear + " ChewLab. All rights reserved."
+            }
+            
+            private function logOutBtnClickHandler(e:MouseEvent):void {
+            	var responder:com.j_nid.utils.Responder =
+                    new com.j_nid.utils.Responder(resultHandler);
+                ServiceUtils.send("/sessions/", "DELETE", responder);
+            }
+            
+            private function resultHandler(data:Object):void {
+            	Utils.clearMainContainer();
+                Utils.showPopUp(LogInForm);
+				mainMenu.selectedIndex = 0;
+            }
+            
+            private function menuClickHandler(e:ItemClickEvent):void {
+                switch (e.index) {
+                    case 0:
+                        Utils.showMainPage();
+                        break;
+                    case 1:
+                        Utils.showMakeOrderPage();
+                        break;
+					case 2:
+						Utils.showProductPage();
+						break;
+					case 3:
+						Utils.showPersonPage();
+						break;
+					case 4:
+						Utils.showOrderPage();
+						break;
+					case 5:
+						Utils.showAccountPage();
+						break;
+                }
+            }
+		]]>
+	</mx:Script>
+	
+	<mx:Style source="css/styles.css"/>
+	
+	<mx:ApplicationControlBar
+		paddingTop="0" paddingRight="0"
+		paddingBottom="0" paddingLeft="0"
+		dock="true"	height="40">
+		
+		<mx:ToggleButtonBar id="mainMenu"
+			dataProvider="{mainMenuList}" itemClick="menuClickHandler(event)"
+			height="100%"/>
+			
+        <mx:Spacer width="100%"/>
+        
+        <mx:LinkButton id="logOutBtn"
+            label="ออกจากระบบ" click="logOutBtnClickHandler(event)"/>
+	</mx:ApplicationControlBar>
+	
+	<mx:Box id="mainContainer"
+        paddingTop="10" paddingRight="10" paddingBottom="10" paddingLeft="10"
+		width="100%" height="100%"/>
+</mx:WindowedApplication>

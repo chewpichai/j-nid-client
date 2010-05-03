@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml"
+	title="รายการคืนลัง"	layout="vertical"
+	creationComplete="creationCompleteHandler(event)"
+	width="800" height="600">
+	
+	<mx:Script>
+		<![CDATA[
+			import com.j_nid.utils.Responder;
+			import com.j_nid.utils.ServiceUtils;
+			import com.j_nid.utils.Utils;
+			
+			import mx.collections.Sort;
+			import mx.collections.SortField;
+			import mx.collections.XMLListCollection;
+			import mx.events.DragEvent;
+			import mx.events.FlexEvent;
+			import mx.events.ListEvent;
+			
+			[Bindable]
+			private var pledgeBaskets:XMLListCollection;
+			[Bindable]
+			private var nonPledgeBaskets:XMLListCollection;
+			[Bindable]
+			private var returnBaskets:XMLListCollection;
+			private var sort:Sort;
+			
+			private function creationCompleteHandler(e:FlexEvent):void {
+				sort = new Sort();
+				sort.fields = [new SortField("name")];
+				loadCustomers();
+			}
+			
+			private function loadCustomers():void {
+				var responder:com.j_nid.utils.Responder =
+					new com.j_nid.utils.Responder(customerResultHandler);
+				var attrs:String = "attrs=id,name";
+				var filters:String = "filters=is_customer=1";
+				ServiceUtils.send("/people/?" + attrs + "&" + filters,
+					"GET", responder);
+			}
+			
+			private function customerResultHandler(data:Object):void {
+				customerField.dataProvider = data.result.children();
+				customerField.selectedIndex = -1;
+			}
+			
+			private function loadBaskets():void {
+				pledgeBaskets = new XMLListCollection();
+				pledgeBaskets.sort = sort;
+				nonPledgeBaskets = new XMLListCollection();
+				nonPledgeBaskets.sort = sort;
+				returnBaskets = new XMLListCollection();
+				var responder:com.j_nid.utils.Responder =
+					new com.j_nid.utils.Responder(basketResultHandler);
+				var attrs:String = "attrs=id,name,is_pledge";
+				var filters:String = "filters=is_return=0";
+				var customerID:int = customerField.selectedItem.id;
+				ServiceUtils.send("/people/" + customerID + "/baskets/?" + attrs + "&" + filters,
+					"GET", responder);
+			}
+			
+			private function basketResultHandler(data:Object):void {
+				for each (var basket:XML in data.result.children())
+					if (Boolean(int(basket.is_pledge)))
+						pledgeBaskets.addItem(basket);
+					else
+						nonPledgeBaskets.addItem(basket);
+				pledgeBaskets.refresh();
+				nonPledgeBaskets.refresh();
+			}
+			
+			private function close():void {
+				Utils.hidePopUp(this);
+			}
+			
+			private function selectCustomerBtnDown(e:FlexEvent):void {
+				var form:PersonSelectForm =
+					PersonSelectForm(Utils.showPopUp(PersonSelectForm));
+				form.people = new XMLListCollection(XMLList(customerField.dataProvider));
+				form.addEventListener(Event.REMOVED_FROM_STAGE,
+					personSelectFormCloseHandler);
+			}
+			
+			private function personSelectFormCloseHandler(e:Event):void {
+				var form:PersonSelectForm = PersonSelectForm(e.currentTarget);
+				form.removeEventListener(Event.REMOVED_FROM_STAGE,
+					personSelectFormCloseHandler);
+				if (form.selectedPerson) {
+					customerField.selectedItem = form.selectedPerson;
+					loadBaskets();
+				}
+			}
+			
+			private function dragDropHandler(e:DragEvent):void {
+				var basket:XML = e.dragSource.dataForFormat("items")[0];
+				if (Boolean(int(basket.is_pledge)))
+					pledgeBaskets.removeItemAt(pledgeBaskets.getItemIndex(basket));
+				else
+					nonPledgeBaskets.removeItemAt(nonPledgeBaskets.getItemIndex(basket));
+			}
+			
+			private function removeReturnBasket(basket:XML):void {
+				if (Boolean(int(basket.is_pledge))) {
+					pledgeBaskets.addItem(basket);
+					pledgeBaskets.refresh();
+				} else {
+					nonPledgeBaskets.addItem(basket);
+					nonPledgeBaskets.refresh();
+				}
+			}
+			
+			private function deleteBtnDownHandler(e:FlexEvent):void {
+				var basket:XML = XML(returnList.selectedItem);
+				removeReturnBasket(basket);
+				returnBaskets.removeItemAt(returnBaskets.getItemIndex(basket));
+			}
+			
+			private function clearBtnDownHandler(e:FlexEvent):void {
+				for each (var basket:XML in returnBaskets)
+					removeReturnBasket(basket);
+				returnBaskets.removeAll();
+			}
+			
+			private function saveBtnDown(e:FlexEvent):void {
+				if (returnBaskets.length > 0) {
+					var basketOrders:XML = <basket_orders/>;
+					for each (var basket:XML in returnBaskets)
+						basket.is_return = 1;
+					basketOrders.appendChild(returnBaskets.source);
+					var responder:com.j_nid.utils.Responder =
+						new com.j_nid.utils.Responder(basketOrderResultHandler);
+					ServiceUtils.send("/basketorders/",	"PUT", responder, basketOrders);
+				}
+			}
+			
+			private function basketOrderResultHandler(data:Object):void {
+				close();
+			}
+		]]>
+	</mx:Script>
+	
+	<mx:HBox horizontalAlign="center" width="100%">
+		
+		<mx:Label text="ชื่อลูกค้า:"/>
+		
+		<mx:ComboBox id="customerField" labelField="name"
+			change="loadBaskets()" width="250"/>
+		
+		<mx:Button label="เลือก" buttonDown="selectCustomerBtnDown(event)"/>
+	</mx:HBox>
+	
+	<mx:HBox width="100%" height="100%">
+		
+		<mx:VBox width="50%" height="100%">
+			
+			<mx:VBox width="100%" height="50%">
+				<mx:Label text="ลังมัดจำ"/>
+				
+				<mx:List id="pledgeList" labelField="name"
+					dataProvider="{pledgeBaskets}"
+					dragEnabled="true"
+					width="100%" height="100%"/>
+			</mx:VBox>
+			
+			<mx:VBox width="100%" height="50%">
+				<mx:Label text="ลังไม่มัดจำ"/>
+				
+				<mx:List id="nonPledgeList" labelField="name"
+					dataProvider="{nonPledgeBaskets}"
+					dragEnabled="true"
+					width="100%" height="100%"/>
+			</mx:VBox>
+		</mx:VBox>
+		
+		<mx:VBox width="50%" height="100%">
+			<mx:Label text="คืนลัง"/>
+			
+			<mx:List id="returnList" labelField="name"
+				dataProvider="{returnBaskets}"
+				dropEnabled="true" dragDrop="dragDropHandler(event)"
+				width="100%" height="100%"/>
+			
+			<mx:HBox horizontalAlign="center" width="100%">
+				
+				<mx:Button label="ล้าง" buttonDown="clearBtnDownHandler(event)"/>
+				
+				<mx:Button label="ลบ" enabled="{returnList.selectedItem}"
+					buttonDown="deleteBtnDownHandler(event)"/>
+			</mx:HBox>
+		</mx:VBox>
+	</mx:HBox>
+	
+	<mx:ControlBar horizontalAlign="right">
+		
+		<mx:Button label="บันทึก" buttonDown="saveBtnDown(event)"/>
+		
+		<mx:Button label="ยกเลิก" buttonDown="close()"/>
+	</mx:ControlBar>
+</mx:TitleWindow>

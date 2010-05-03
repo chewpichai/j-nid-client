@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:NumericStepper xmlns:mx="http://www.adobe.com/2006/mxml"
+	creationComplete="creationCompleteHandler(event)"
+	change="changeHandler(event)" maximum="{Number.MAX_VALUE}">
+	
+	<mx:Script>
+		<![CDATA[
+			import mx.binding.utils.ChangeWatcher;
+			import mx.collections.XMLListCollection;
+			import mx.controls.DataGrid;
+			import mx.controls.dataGridClasses.DataGridListData;
+			import mx.events.FlexEvent;
+			import mx.events.NumericStepperEvent;
+			
+			private var dataField:String;
+			private var timer:Timer;
+			
+			private function creationCompleteHandler(e:FlexEvent):void {
+				dataField = DataGridListData(listData).dataField;
+				if (dataField == "price_per_unit")
+				    stepSize = 0.25;
+				if (dataField != "quantity")
+					minimum = 1;
+				if (dataField == "quantity" && data.type == "basket") {
+					enabled = false;
+				} else {
+					timer = new Timer(100);
+					timer.addEventListener(TimerEvent.TIMER, timerHandler);
+					timer.start();
+				}
+			}
+			
+			private function timerHandler(e:TimerEvent):void {
+				value = data[dataField];
+			}
+			
+			private function changeHandler(e:NumericStepperEvent):void {
+				var diff:Number = value - Number(data[dataField]);
+				data[dataField] = value;
+				if (dataField == "quantity")
+				    data["unit"] = Math.max(0, int(data["unit"]) + diff * int(data["unit_per_quantity"]));
+				else if (dataField == "unit" && (data.type != "basket" && data.name() != "basket_order"))
+				    data["quantity"] = Math.ceil(int(data["unit"]) / int(data["unit_per_quantity"]));
+				data["total"] = Number(data["unit"]) * Number(data["price_per_unit"]);
+			}
+		]]>
+	</mx:Script>
+</mx:NumericStepper>

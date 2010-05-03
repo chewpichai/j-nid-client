@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:CheckBox xmlns:mx="http://www.adobe.com/2006/mxml"
+	creationComplete="creationCompleteHandler(event)"
+	change="changeListener(event)">
+	
+	<mx:Script>
+		<![CDATA[
+			import com.j_nid.utils.Responder;
+			import com.j_nid.utils.ServiceUtils;
+			
+			import mx.controls.dataGridClasses.DataGridListData;
+			import mx.events.FlexEvent;
+			
+			private var dataField:String;
+			
+			private function creationCompleteHandler(e:FlexEvent):void {
+				dataField = DataGridListData(listData).dataField;
+				selected = Boolean(int(data[dataField]));
+			}
+			
+			private function changeListener(e:Event):void {
+				data[dataField] = int(selected);
+				var responder:com.j_nid.utils.Responder =
+					new com.j_nid.utils.Responder(resultHandler);
+				ServiceUtils.send("/people/" + data.id + "/",
+					"PUT", responder, XML(data));
+			}
+			
+			private function resultHandler(data:Object):void {
+				
+			}
+		]]>
+	</mx:Script>
+</mx:CheckBox>

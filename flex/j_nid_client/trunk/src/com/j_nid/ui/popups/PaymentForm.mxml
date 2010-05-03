@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml"
+    title="{resourceManager.getString('PaymentPage', 'PaymentForm')}"
+    layout="absolute" width="350" height="300">
+    
+    <mx:Script>
+        <![CDATA[
+			import com.j_nid.utils.ServiceUtils;
+			import com.j_nid.utils.Utils;
+			
+			import mx.controls.LinkButton;
+			import mx.events.ValidationResultEvent;
+			import mx.validators.ValidationResult;
+            
+            [Bindable]
+            public var person:XML;
+            private var closeBtn:LinkButton;
+            private var errMsg:String;
+            
+            override protected function createChildren():void {
+                super.createChildren();
+                closeBtn = new LinkButton();
+                closeBtn.label = "x";
+                closeBtn.addEventListener(MouseEvent.CLICK, closeBtnClick);
+                rawChildren.addChild(closeBtn);
+            }
+            
+            override protected function updateDisplayList(unscaledWidth:Number,
+                                            unscaledHeight:Number):void {
+                
+                super.updateDisplayList(unscaledWidth, unscaledHeight);    
+                var margin:int = 4;    
+                var pixelsFromTop:int = 5;
+                var pixelsFromRight:int = 10;
+                closeBtn.setActualSize(30 + margin, 20 + margin);
+                var buttonWidth:int = closeBtn.width;
+                var xPos:int = unscaledWidth - buttonWidth - pixelsFromRight;
+                var yPos:int = pixelsFromTop;
+                closeBtn.move(xPos, yPos);
+            }
+            
+            private function closeBtnClick(e:MouseEvent):void {
+                close();
+            }
+            
+            private function payBtnClick(e:MouseEvent):void {
+                if (isValid()) {
+                    var payment:XML = <payment/>;
+                    payment.amount = amountField.value;
+                    payment.notation = notationField.text;
+                    payment.person_id = int(person.id);
+					var responder:com.j_nid.utils.Responder =
+						new com.j_nid.utils.Responder(paymentResultHandler);
+					ServiceUtils.send("/payments/", "POST", responder, payment);
+                } else {
+                    Utils.showMessage(errMsg);
+                }
+            }
+			
+			private function paymentResultHandler(data:Object):void {
+				close();
+			}
+            
+            private function isValid():Boolean {
+                errMsg = "";
+                var event:ValidationResultEvent = numberValidator.validate();
+                if (event.type == ValidationResultEvent.INVALID) {
+                    for each (var result:ValidationResult in event.results) {
+                        errMsg += result.errorMessage + "\n";
+                    }
+                }
+                return errMsg.length == 0;
+            }
+            
+            private function close():void {
+                Utils.hidePopUp(this);
+            }
+			
+			private function getColor(outstandingTotal:Number):int {
+				if (outstandingTotal < 0)
+					return 0xff0000;
+				return 0x0000ff;
+			}
+        ]]>
+    </mx:Script>
+    
+    <mx:Form width="100%" height="100%">
+        
+        <mx:FormItem label="ค้างจ่ายทั้งสิ้น" width="100%">
+            
+            <mx:Label text="{Math.abs(Number(person.outstanding_total))}"
+				color="{getColor(person.outstanding_total)}"/>
+        </mx:FormItem>
+        
+        <mx:FormItem label="ชำระจำนวน" width="100%">
+            
+            <mx:NumericStepper id="amountField" 
+                maximum="1000000" width="100%"/>
+        </mx:FormItem>
+        
+        <mx:FormItem label="หมายเหตุ" width="100%">
+            
+            <mx:TextArea id="notationField" width="100%" height="80"/>
+        </mx:FormItem>
+        
+        <mx:FormItem>
+            <mx:Button id="payBtn"
+                label="ชำระเงิน" click="payBtnClick(event)" width="100"/>
+        </mx:FormItem>
+    </mx:Form>
+    
+    <mx:NumberValidator id="numberValidator" 
+        source="{amountField}" property="value" trigger="{payBtn}"
+		triggerEvent="click" minValue="1"/>
+</mx:TitleWindow>

@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml"
+	creationComplete="creationCompleteHandler(event)"
+	width="100%" height="100%">
+	
+	<mx:Script>
+		<![CDATA[
+			import com.j_nid.ui.popups.PersonForm;
+			import com.j_nid.utils.Responder;
+			import com.j_nid.utils.ServiceUtils;
+			import com.j_nid.utils.Utils;
+			
+			import mx.collections.XMLListCollection;
+			import mx.events.FlexEvent;
+            
+            private function creationCompleteHandler(e:FlexEvent):void {
+				loadPeople();
+            }
+			
+			private function loadPeople():void {
+				var responder:com.j_nid.utils.Responder =
+					new com.j_nid.utils.Responder(resultHandler);
+				var attrs:String = "attrs=id,name,is_customer,is_supplier,is_general,phone_numbers,bank_accounts";
+				var name:String = searchField.text;
+				if (name.length == 0) {
+					ServiceUtils.send("/people/?" + attrs, "GET", responder);
+				} else {
+					var filters:String = "filters=name=" + name;
+					ServiceUtils.send("/people/?" + attrs + "&" + filters,
+						"GET", responder);
+				}
+			}
+			
+			private function resultHandler(data:Object):void {
+				personPhoneNumberList.dataProvider = data.result.children();
+			}
+            
+            private function searchFieldChangeListener(e:Event):void {
+                loadPeople();
+            }
+            
+            private function newClickListener(e:MouseEvent):void {
+                var form:PersonForm = PersonForm(Utils.showPopUp(PersonForm));
+                form.person = <person/>;
+            }
+            
+            public function personListDoubleClick(e:MouseEvent):void {
+				var person:XML = e.currentTarget.selectedItem;
+				var form:PersonForm = PersonForm(Utils.showPopUp(PersonForm));
+                form.person = person;
+				form.phoneNumbers = new XMLListCollection(person.phone_numbers.phone_number);
+				form.bankAccounts = new XMLListCollection(person.bank_accounts.bank_account);
+				form.addEventListener(Event.REMOVED_FROM_STAGE, personFormClose);
+            }
+			
+			private function personFormClose(e:Event):void {
+				loadPeople();
+			}
+        ]]>
+    </mx:Script>
+    
+    <mx:HBox verticalAlign="middle" width="100%">
+        
+        <mx:Label text="ค้นหา:"/>
+        
+        <mx:TextInput id="searchField"
+            change="searchFieldChangeListener(event)"
+            width="250"/>
+        
+        <mx:Button id="newBtn"
+            label="เพิ่ม" click="newClickListener(event)"/>
+    </mx:HBox>
+    
+    <mx:TabNavigator creationPolicy="all" width="100%" height="100%">
+        
+        <mx:VBox label="บุคคล">
+            
+            <mx:DataGrid id="personPhoneNumberList"
+                doubleClickEnabled="true"
+                doubleClick="personListDoubleClick(event)"
+                headerStyleName="centerHeader"
+                width="100%" height="100%">
+                
+                <mx:columns>
+                    <mx:DataGridColumn headerText="ชื่อ" dataField="name"/>
+                        
+                    <mx:DataGridColumn headerText="เบอร์โทรศัพท์ 1" dataField="0"
+						itemRenderer="com.j_nid.ui.PersonPhoneNumberRenderer"
+						width="200"/>
+					
+					<mx:DataGridColumn headerText="เบอร์โทรศัพท์ 2" dataField="1"
+						itemRenderer="com.j_nid.ui.PersonPhoneNumberRenderer"
+						width="200"/>
+					
+					<mx:DataGridColumn headerText="เบอร์โทรศัพท์ 3" dataField="2"
+						itemRenderer="com.j_nid.ui.PersonPhoneNumberRenderer"
+						width="200"/>
+					
+					<mx:DataGridColumn headerText="เบอร์โทรศัพท์ 4" dataField="3"
+						itemRenderer="com.j_nid.ui.PersonPhoneNumberRenderer"
+						width="200"/>
+                </mx:columns>
+            </mx:DataGrid>
+        </mx:VBox>
+        
+        <mx:VBox label="ประเภทบุคคล">
+            
+            <mx:DataGrid id="personTypeList"
+                dataProvider="{personPhoneNumberList.dataProvider}"
+				doubleClickEnabled="true"
+                doubleClick="personListDoubleClick(event)"
+                headerStyleName="centerHeader"
+                width="100%" height="100%">
+                
+                <mx:columns>
+                    <mx:DataGridColumn headerText="ชื่อ" dataField="name"
+                        width="250"/>
+                        
+                    <mx:DataGridColumn headerText="ลูกค้า" textAlign="center"
+                        itemRenderer="com.j_nid.ui.PersonTypeRenderer"
+						dataField="is_customer" width="40"/>
+                    
+                    <mx:DataGridColumn headerText="ผู้ขาย" textAlign="center"
+						itemRenderer="com.j_nid.ui.PersonTypeRenderer"
+						dataField="is_supplier" width="40"/>
+					
+                    <mx:DataGridColumn headerText="ทั่วไป" textAlign="center"
+						itemRenderer="com.j_nid.ui.PersonTypeRenderer"
+						dataField="is_general" width="40"/>
+				</mx:columns>
+            </mx:DataGrid>
+        </mx:VBox>
+    </mx:TabNavigator>
+</mx:VBox>

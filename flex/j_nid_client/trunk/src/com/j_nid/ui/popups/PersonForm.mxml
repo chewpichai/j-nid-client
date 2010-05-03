@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml"
+    title="เพิ่มข้อมูลบุคคล" creationComplete="creationCompleteHandler(event)"
+    width="800" height="600">
+    
+    <mx:Script>
+        <![CDATA[
+        	import com.j_nid.utils.Responder;
+        	import com.j_nid.utils.ServiceUtils;
+        	import com.j_nid.utils.Utils;
+        	
+        	import mx.collections.XMLListCollection;
+        	import mx.controls.Alert;
+        	import mx.controls.LinkButton;
+        	import mx.events.CloseEvent;
+        	import mx.events.FlexEvent;
+        	import mx.rpc.events.ResultEvent;
+        	import mx.utils.StringUtil;
+        
+            private var closeBtn:LinkButton;
+            [Bindable]
+            public var person:XML;
+            [Bindable]
+			public var phoneNumbers:XMLListCollection;
+            [Bindable]
+			public var bankAccounts:XMLListCollection;
+            private var errMsg:String;
+            
+            override protected function createChildren():void {
+                super.createChildren();
+                closeBtn = new LinkButton();
+                closeBtn.label = "x";
+                closeBtn.addEventListener(MouseEvent.CLICK, closeBtnClick);
+                rawChildren.addChild(closeBtn);
+            }
+            
+            override protected function updateDisplayList(unscaledWidth:Number,
+                                            unscaledHeight:Number):void {
+                
+                super.updateDisplayList(unscaledWidth, unscaledHeight);    
+                var margin:int = 4;    
+                var pixelsFromTop:int = 5;
+                var pixelsFromRight:int = 10;
+                closeBtn.setActualSize(30 + margin, 20 + margin);
+                var buttonWidth:int = closeBtn.width;
+                var xPos:int = unscaledWidth - buttonWidth - pixelsFromRight;
+                var yPos:int = pixelsFromTop;
+                closeBtn.move(xPos, yPos);
+            }
+            
+            private function closeBtnClick(e:MouseEvent):void {
+                Utils.hidePopUp(this);
+            }
+            
+            private function creationCompleteHandler(e:FlexEvent):void {
+            	phoneNumbers = new XMLListCollection();
+            	bankAccounts = new XMLListCollection();
+            	loadPhoneTypes();
+                loadBanks();
+            }
+            
+            private function loadPhoneTypes():void {
+            	var responder:com.j_nid.utils.Responder =
+                    new com.j_nid.utils.Responder(phoneTypeResultHandler);
+                ServiceUtils.send("/phonetypes/", "GET", responder);
+            }
+            
+            private function phoneTypeResultHandler(data:Object):void {
+            	var resultEvent:ResultEvent = ResultEvent(data);
+                phoneTypeField.dataProvider = resultEvent.result.children();
+            }
+            
+            private function loadBanks():void {
+            	var responder:com.j_nid.utils.Responder =
+                    new com.j_nid.utils.Responder(bankResultHandler);
+                ServiceUtils.send("/banks/", "GET", responder);
+            }
+            
+            private function bankResultHandler(data:Object):void {
+                var resultEvent:ResultEvent = ResultEvent(data);
+                bankNameField.dataProvider = resultEvent.result.children();
+            }
+            
+            private function saveClickListener(e:MouseEvent):void {
+                if (isValid()) {
+					var person:XML = this.person.copy();
+                    person.name = nameField.text;
+                    person.first_name = firstNameField.text;
+                    person.last_name = lastNameField.text;
+                    person.id_card_number = idCardNumberFiled.text;
+                    person.address = addressField.text;
+                    person.detail1 = detail1Field.text;
+                    person.detail2 = detail2Field.text;
+                    if (bankAccounts.length > 0) {
+                        person.bank_accounts = <bank_accounts/>;
+                        person.bank_accounts.appendChild(bankAccounts.source);
+                    }
+                    if (phoneNumbers.length > 0) {
+	                    person.phone_numbers = <phone_numbers/>;
+                        person.phone_numbers.appendChild(phoneNumbers.source);
+                    }
+                    if (int(person.id) > 0)
+                        putPerson(person);
+                    else
+                        postPerson(person);
+                } else {
+                    Utils.showMessage(errMsg, "พบข้อผิดพลาด");
+                }
+            }
+            
+            private function putPerson(person:XML):void {
+            	var responder:com.j_nid.utils.Responder =
+                    new com.j_nid.utils.Responder(personResultHandler);
+                ServiceUtils.send("/people/" + person.id + "/", "PUT", responder, person);
+            }
+            
+            private function postPerson(person:XML):void {
+            	var responder:com.j_nid.utils.Responder =
+                    new com.j_nid.utils.Responder(personResultHandler);
+                ServiceUtils.send("/people/", "POST", responder, person);
+            }
+            
+            private function personResultHandler(data:Object):void {
+            	person = data.result;
+            	closeBtnClick(null);
+            }
+            
+            private function isValid():Boolean {
+                errMsg = "";
+                var personName:String = StringUtil.trim(nameField.text);
+                if (personName.length < 1) {
+                	errMsg += "กรุณาใส่ชื่อบุคคล\n";
+                }
+                return errMsg.length == 0;
+            }
+            
+            public function getPhoneType(item:Object, column:DataGridColumn):String {
+                for each (var pt:XML in phoneTypeField.dataProvider)
+					if (int(pt.id) == int(item.type_id))
+                        return pt.name;
+                return "";
+            }
+            
+            public function getBankName(item:Object, column:DataGridColumn):String {
+                for each (var bn:XML in bankNameField.dataProvider)
+                    if (int(bn.id) == int(item.bank_id))
+                        return bn.name;
+                return "";
+            }
+            
+            private function phoneNumberAddBtnClick(e:MouseEvent):void {
+                var pn:XML = <phone_number/>;
+                pn.number = phoneNumberField.text;
+                pn.type_id = int(phoneTypeField.selectedItem.id);
+                phoneNumbers.addItem(pn);
+                clearPhoneNumberForm();
+            }
+            
+            private function clearPhoneNumberForm():void {
+                phoneNumberField.text = "";
+                phoneTypeField.selectedIndex = 0;
+            }
+            
+            private function clearBankAccountForm():void {
+                bankNumberField.text = "";
+                bankNameField.selectedIndex = 0;
+            }
+            
+            private function bankAccountAddBtnClick(e:MouseEvent):void {
+                var ba:XML = <bank_account/>;
+                ba.number = bankNumberField.text;
+                ba.bank_id = int(bankNameField.selectedItem.id);
+                bankAccounts.addItem(ba);
+                clearBankAccountForm();
+            }
+            
+            private function deleteKeyDownHandler(e:KeyboardEvent):void {
+            	if (e.keyCode == Keyboard.DELETE) {
+            		if (e.currentTarget == bankAccountList) {
+            			removeBankAccount();
+            		} else if (e.currentTarget == phoneNumberList) {
+            			removePhoneNumber();
+            		}
+            	}
+            }
+            
+            private function removePhoneNumber():void {
+                var pn:XML = XML(phoneNumberList.selectedItem);
+                if (pn != null) {
+                	Utils.showConfirm("ต้องการลบข้อมูลหรือไม่", "ยืนยันการลบ",
+                        phoneNumberRemoveCloseHandler);
+                }
+            }
+            
+            private function phoneNumberRemoveCloseHandler(e:CloseEvent):void {
+            	var pn:XML = XML(phoneNumberList.selectedItem);
+            	if (e.detail == Alert.OK) {
+            		phoneNumbers.removeItemAt(phoneNumbers.getItemIndex(pn));
+            	}
+            }
+            
+            private function removeBankAccount():void {
+                var ba:XML = XML(bankAccountList.selectedItem);
+                if (ba != null) {
+                	Utils.showConfirm("ต้องการลบข้อมูลหรือไม่", "ยืนยันการลบ",
+                        bankAccountRemoveCloseHandler);
+                }
+            }
+            
+            private function bankAccountRemoveCloseHandler(e:CloseEvent):void {
+                var ba:XML = XML(bankAccountList.selectedItem);
+                if (e.detail == Alert.OK) {
+                    bankAccounts.removeItemAt(bankAccounts.getItemIndex(ba));
+                }
+            }
+        ]]>
+    </mx:Script>
+    
+    <mx:Accordion headerStyleName="personFormHeader" creationPolicy="all"
+    	headerHeight="30" width="100%" height="100%">
+        
+        <mx:Form label="ชื่อ" paddingTop="10" paddingRight="10"
+        	paddingBottom="10" paddingLeft="10"
+            width="100%" height="100%">
+            
+            <mx:FormItem label="ชื่อ:" required="true" width="100%">
+                
+                <mx:TextInput id="nameField"
+                	text="{person.name}" width="100%"/>
+            </mx:FormItem>
+            
+            <mx:FormItem label="ชื่อเต็ม:" width="100%">
+                
+                <mx:TextInput id="firstNameField" 
+                    text="{person.first_name}" width="100%"/>
+            </mx:FormItem>
+            
+            <mx:FormItem label="นามสกุล:" width="100%">
+                
+                <mx:TextInput id="lastNameField" 
+                    text="{person.last_name}" width="100%"/>
+            </mx:FormItem>
+            
+            <mx:FormItem label="เลขที่บัตรประขาขน:" width="100%">
+                
+                <mx:TextInput id="idCardNumberFiled" 
+                    text="{person.id_card_number}" width="100%"/>
+            </mx:FormItem>
+        </mx:Form>
+        
+        <mx:Form label="ที่อยู่" paddingTop="10" paddingRight="10"
+            paddingBottom="10" paddingLeft="10"
+            width="100%" height="100%">
+            
+            <mx:FormItem label="ที่อยู่:" width="100%">
+                
+                <mx:TextArea id="addressField" 
+                    text="{person.address}" width="100%"/>
+            </mx:FormItem>
+            
+            <mx:FormItem label="รายลละเอียด 1:" width="100%">
+                
+                <mx:TextArea id="detail1Field" 
+                    text="{person.detail1}" width="100%"/>
+            </mx:FormItem>
+            
+            <mx:FormItem label="รายลละเอียด 2:" width="100%">
+                
+                <mx:TextArea id="detail2Field" 
+                    text="{person.detail2}" width="100%"/>
+            </mx:FormItem>
+        </mx:Form>
+        
+        <mx:VBox label="เบอร์โทรศัพท์ " width="100%" height="100%">
+            
+            <mx:DataGrid id="phoneNumberList"
+            	dataProvider="{phoneNumbers}"
+            	keyDown="deleteKeyDownHandler(event)"
+            	headerStyleName="centerHeader" width="100%">
+                
+                <mx:columns>
+                    <mx:DataGridColumn dataField="number"
+                    	headerText="เบอร์โทรศัพท์"/>
+                    
+                    <mx:DataGridColumn dataField="type_id"
+                    	headerText="ประเภทเบอร์โทรศัพท์"
+                        labelFunction="getPhoneType"/>
+                </mx:columns>
+            </mx:DataGrid>
+            
+            <mx:Spacer height="100%"/>
+            
+            <mx:Form paddingTop="10" paddingRight="10"
+            	paddingBottom="10" paddingLeft="10" width="100%">
+                
+                <mx:FormItem label="เบอร์โทรศัพท์:" width="100%">
+                    
+                    <mx:TextInput id="phoneNumberField" width="100%"/>
+                </mx:FormItem>
+                
+                <mx:FormItem label="ประเภทเบอร์โทรศัพท์:" width="100%">
+                    
+                    <mx:ComboBox id="phoneTypeField" labelField="name"
+                    	width="100%"/>
+                </mx:FormItem>
+                
+                <mx:FormItem>
+                    <mx:Button label="เพิ่ม"
+                    	click="phoneNumberAddBtnClick(event)"/>
+                </mx:FormItem>
+            </mx:Form>
+        </mx:VBox>
+        
+        <mx:VBox label="บัญชีธนาคาร" width="100%" height="100%">
+            
+            <mx:DataGrid id="bankAccountList"
+            	dataProvider="{bankAccounts}"
+            	keyDown="deleteKeyDownHandler(event)"
+            	headerStyleName="centerHeader" width="100%">
+                
+                <mx:columns>
+                    <mx:DataGridColumn headerText="เลขที่บัญชี"
+						dataField="number"/>
+                    
+                    <mx:DataGridColumn headerText="ธนาคาร"
+						dataField="bank_id"
+						labelFunction="getBankName"/>
+                </mx:columns>
+            </mx:DataGrid>
+            
+            <mx:Spacer height="100%"/>
+            
+            <mx:Form paddingTop="10" paddingRight="10"
+            	paddingBottom="10" paddingLeft="10" width="100%">
+                
+                <mx:FormItem label="เลขที่บัญชี:" width="100%">
+                    
+                    <mx:TextInput id="bankNumberField" width="100%"/>
+                </mx:FormItem>
+                
+                <mx:FormItem label="ธนาคาร:" width="100%">
+                    
+                    <mx:ComboBox id="bankNameField" labelField="name"
+                    	width="100%"/>
+                </mx:FormItem>
+                
+                <mx:FormItem>
+                    <mx:Button label="เพิ่ม"
+                    	click="bankAccountAddBtnClick(event)"/>
+                </mx:FormItem>
+            </mx:Form>
+        </mx:VBox>
+    </mx:Accordion>
+    
+    <mx:ControlBar horizontalAlign="right">
+                
+        <mx:Button id="saveBtn"
+            label="บันทึก" click="saveClickListener(event)"/>
+    </mx:ControlBar>
+</mx:TitleWindow>

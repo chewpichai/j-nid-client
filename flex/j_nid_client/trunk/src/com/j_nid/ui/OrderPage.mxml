@@ -1,0 +1,445 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml"
+    creationComplete="creationCompleteHandler(event)"
+    width="100%" height="100%">
+
+    <mx:Script>
+        <![CDATA[
+			import com.j_nid.ui.popups.ProductSelectForm;
+			import com.j_nid.utils.PrintUtils;
+			import com.j_nid.utils.ServiceUtils;
+			import com.j_nid.utils.Utils;
+			
+			import mx.binding.utils.ChangeWatcher;
+			import mx.collections.ArrayCollection;
+			import mx.collections.ListCollectionView;
+			import mx.collections.Sort;
+			import mx.collections.SortField;
+			import mx.collections.XMLListCollection;
+			import mx.controls.Alert;
+			import mx.events.CalendarLayoutChangeEvent;
+			import mx.events.CloseEvent;
+			import mx.events.CollectionEvent;
+			import mx.events.FlexEvent;
+			import mx.events.ItemClickEvent;
+			import mx.events.ListEvent;
+			
+            [Bindable]
+            private var selectedOrder:XML;
+			[Bindable]
+			private var orderItems:XMLListCollection;
+			private var pledgeBaskets:XMLListCollection;
+			private var nonPledgeBaskets:XMLListCollection;
+			[Bindable]
+            private var total:Number;
+            [Bindable]
+            private var paid:Number;
+			[Bindable]
+			private var menuList:Array = [
+				"รายการขายของวันนี้", "ค้นหารายการของลูกค้า",
+				"ค้นหารายการขายย้อนหลัง"];
+            
+            private function creationCompleteHandler(e:FlexEvent):void {
+				total = 0;
+				paid = 0;
+				currentState = "TodayOrder";
+				initTodayOrder();
+            }
+			
+			private function loadCustomers(name:String=""):void {
+				var responder:com.j_nid.utils.Responder =
+					new com.j_nid.utils.Responder(customerResultHandler);
+				var attrs:String = "attrs=id,name,outstanding_total";
+				var filters:String = "filters=is_customer=1";
+				if (name.length > 0)
+					filters += ",name=" + name;
+				ServiceUtils.send("/people/?" + attrs + "&" + filters,
+					"GET", responder);
+			}
+			
+			private function customerResultHandler(data:Object):void {
+				customerField.dataProvider = data.result.children();
+			}
+			
+			private function loadOrders():void {
+				selectedOrder = null;
+				pledgeBaskets = new XMLListCollection();
+				nonPledgeBaskets = new XMLListCollection();
+				var isToday:Boolean = orderTabBar.selectedIndex == 0;
+				var responder:com.j_nid.utils.Responder =
+					new com.j_nid.utils.Responder(orderResultHandler);
+				var attrs:String = "attrs=id,created,person_name,total,notation,paid";
+				var filters:String = "filters=is_today=" + int(isToday);
+				if (!isToday) {
+					var startDate:Date = startDateField.selectedDate;
+					var endDate:Date = endDateField.selectedDate;
+					filters += ",date_range=" + Utils.formatDate(startDate, "YYYY-MM-DD") +
+						":" + Utils.formatDate(endDate, "YYYY-MM-DD");
+				}
+				ServiceUtils.send("/orders/?" + attrs + "&" + filters, "GET", responder);
+			}
+			
+			private function orderResultHandler(data:Object):void {
+				var orders:XMLListCollection = new XMLListCollection();
+				for each (var order:XML in data.result.children()) {
+					var isOutstanding:Boolean = Number(order.total) > Number(order.paid);
+					var isPaid:Boolean = !isOutstanding;
+					if (!paidField.selected && isPaid)
+						continue;
+					if (!outstandingField.selected && isOutstanding)
+						continue;
+					orders.addItem(order);
+				}
+				orderList.dataProvider = orders;
+			}
+			
+			private function loadOrderItems(orderID:int):void {
+				var responder:com.j_nid.utils.Responder =
+					new com.j_nid.utils.Responder(orderItemResultHandler);
+				var attrs:String = "attrs=id,quantity,name,unit,price_per_unit,total,is_deleted,unit_per_quantity";
+				var filters:String = "filters=order_id=" + orderID;
+				ServiceUtils.send("/orderitems/?" + attrs + "&" + filters,
+					"GET", responder);
+			}
+			
+			private function orderItemResultHandler(data:Object):void {
+				orderItems = new XMLListCollection();
+				orderItems.addEventListener(CollectionEvent.COLLECTION_CHANGE,
+					orderItemsChange);
+				for each (var item:XML in data.result.children())
+					orderItems.addItem(item);
+				loadBasketsOrders(selectedOrder.id);
+			}
+			
+			private function loadBasketsOrders(orderID:int):void {
+				var responder:com.j_nid.utils.Responder =
+					new com.j_nid.utils.Responder(basketOrderResultHandler);
+				var attrs:String = "attrs=id,name,quantity,price_per_unit,is_pledge";
+				ServiceUtils.send("/orders/" + orderID + "/baskets/?" + attrs,
+					"GET", responder);
+			}
+			
+			private function basketOrderResultHandler(data:Object):void {
+				for each (var item:XML in data.result.children())
+					if (Boolean(int(item.is_pledge))) {
+						var addedBasket:XML = getAddedBasket(item);
+						if (addedBasket) {
+							addedBasket.unit = int(addedBasket.unit) + 1;
+							addedBasket.total = Number(addedBasket.price_per_unit) * int(addedBasket.unit);
+						} else {
+							item.unit = 1;
+							item.total = Number(item.price_per_unit);
+							orderItems.addItem(item);
+						}
+						pledgeBaskets.addItem(item);
+					} else {
+						nonPledgeBaskets.addItem(item);
+					}
+			}
+			
+			private function getAddedBasket(basket:XML):XML {
+				for each (var item:XML in orderItems)
+				if (item.name == basket.name)
+					return item;
+				return null;
+			}
+            
+            private function orderDeleteResultHandler(data:Object):void {
+                loadOrders();
+            }
+            
+            private function orderItemDeleteResultHandler(data:Object):void {
+                
+            }
+            
+            private function initOrderByDate():void {
+                outstandingField.selected = true;
+                var now:Date = new Date();
+                var rangeEnd:Date = new Date(now.fullYear, now.month, now.date);
+                var rangeStart:Date = Utils.moveDateByDay(rangeEnd, -7);
+                startDateField.selectedDate = rangeStart;
+                endDateField.selectedDate = rangeEnd;
+                startDateField.enabled = true;
+                endDateField.enabled = true;
+				loadOrders();
+            }
+            
+            private function initTodayOrder():void {
+                var now:Date = new Date();
+                var today:Date = new Date(now.fullYear, now.month, now.date);
+                startDateField.selectedDate = today;
+                endDateField.selectedDate = today;
+                startDateField.enabled = false;
+                endDateField.enabled = false;
+                outstandingField.selected = true;
+                paidField.selected = true;
+				loadOrders();
+            }
+            
+            private function printOrder(e:MouseEvent):void {
+				PrintUtils.printOrder(XML(orderList.selectedItem));
+            }
+            
+            private function deleteOrderClick(e:MouseEvent):void {
+                Utils.showConfirm("ต้องการลบข้อมูลหรือไม่", "ยืนยันการลบ",
+                    deleteOrderConfirmCloseHandler);
+            }
+			
+			private function deleteOrderConfirmCloseHandler(e:CloseEvent):void {
+				if (e.detail == Alert.OK) {
+					var order:XML = XML(orderList.selectedItem);
+					var responder:com.j_nid.utils.Responder =
+						new com.j_nid.utils.Responder(orderDeleteResultHandler);
+					ServiceUtils.send("/orders/" + order.id + "/",
+						"DELETE", responder);
+				}
+			}
+            
+            private function searchChange(e:Event):void {
+				loadCustomers(personSearchField.text);
+            }
+            
+            private function itemListKeyDown(e:KeyboardEvent):void {
+                /*if (e.keyCode == Keyboard.DELETE) {
+                    Utils.showConfirm("ต้องการลบข้อมูลหรือไม่", "ยืนยันการลบ",
+						deleteOrderItemConfirmCloseHandler);
+                }*/
+            }
+			
+			private function deleteOrderItemConfirmCloseHandler(e:CloseEvent):void {
+				var item:XML = XML(orderItemList.selectedItem);
+				if (e.detail == Alert.OK) {
+					if (orderItems.length > 1) {
+						
+					} else {
+						
+					}
+				}
+			}
+            
+            private function tabBarClick(e:ItemClickEvent):void {
+            	if (orderTabBar.selectedIndex == 0) {
+                    currentState = "TodayOrder";
+                    initTodayOrder();
+                } else if (orderTabBar.selectedIndex == 1) {
+                    currentState = "";
+					loadCustomers();
+                    initOrderByDate();
+                } else if (orderTabBar.selectedIndex == 2) {
+                    currentState = "TodayOrder";
+                    initOrderByDate();
+                }
+            }
+            
+            private function addOrderItemClick(e:MouseEvent):void {
+                var form:ProductSelectForm =
+                        ProductSelectForm(Utils.showPopUp(ProductSelectForm));
+                form.addEventListener(Event.REMOVED_FROM_STAGE,
+					productSelectFormRemove);
+            }
+            
+            private function productSelectFormRemove(e:Event):void {
+                /*var product:Product = Product(e.data);
+                var orderItem:OrderItem = new OrderItem();
+                orderItem.productID = product.id;
+                orderItem.unit = product.unit;
+                orderItem.pricePerUnit = product.pricePerUnit;
+                orderItem.costPerUnit = product.costPerUnit;
+                for each (var obj:OrderItem in orderItemList.dataProvider) {
+                    if (orderItem.productID == obj.productID) {
+                        obj.unit += orderItem.unit;
+                        obj.save();
+                        return;
+                    }
+                }
+                orderItem.orderID = Order(orderList.selectedItem).id;
+                orderItem.save();
+                orderItemList.dataProvider.addItem(orderItem);
+                orderItemList.verticalScrollPosition = 
+                    orderItemList.maxVerticalScrollPosition;*/
+            }
+            
+            private function saveBtnClick(e:MouseEvent):void {
+            	selectedOrder.notation = notationTA.text;
+				selectedOrder.created = Utils.formatDate(new Date(Date.parse(selectedOrder.created)));
+				var responder:com.j_nid.utils.Responder =
+					new com.j_nid.utils.Responder(putOrderResultHandler);
+				ServiceUtils.send("/orders/" + selectedOrder.id + "/",
+					"PUT", responder, selectedOrder);
+            }
+			
+			private function putOrderResultHandler(data:Object):void {
+				loadOrders();
+			}
+            
+            private function orderListChange(e:ListEvent):void {
+            	selectedOrder = XML(orderList.selectedItem);
+            	total = selectedOrder.total;
+                paid = selectedOrder.paid;
+				loadOrderItems(selectedOrder.id);
+            }
+            
+            private function orderItemsChange(e:CollectionEvent):void {
+				total = Utils.sum(orderItems, "total");
+            }
+			
+			private function getCreatedString(value:String):String {
+				var created:Date = new Date(Date.parse(value));
+				return Utils.formatDate(created, "DD/MM/YY J:NN:SS");
+			}
+        ]]>
+    </mx:Script>
+    
+    <mx:states>
+        <mx:State name="TodayOrder">
+            
+			<mx:RemoveChild target="{searchBox}"/>
+            
+			<mx:RemoveChild target="{customerField}"/>
+        </mx:State>
+    </mx:states>
+    
+    <mx:TabBar id="orderTabBar"
+        dataProvider="{menuList}" itemClick="tabBarClick(event)"/>
+    
+    <mx:HBox width="100%" height="100%">
+        
+        <mx:Panel id="customerPnl"
+            title="ค้นหา" verticalGap="5" paddingTop="5" paddingBottom="5"
+            width="220" height="100%">
+            
+            <mx:HBox id="searchBox"
+                paddingLeft="5" paddingRight="5" verticalAlign="middle"
+				width="100%">
+                
+                <mx:Label text="ค้นหาชื่อลูกค้า:"/>
+            
+                <mx:TextInput id="personSearchField"
+                    change="searchChange(event)" width="100%"/>
+            </mx:HBox>
+            
+            <mx:List id="customerField"
+                labelField="name" borderThickness="0"
+				width="100%" height="100%"/>
+                
+            <mx:VBox id="dateRangeBox" horizontalAlign="left" width="100%">
+                
+                <mx:HBox horizontalAlign="right" width="190">
+                    
+                    <mx:Label text="เริ่มจากวันที่:"/>
+                    
+                    <mx:DateField id="startDateField" change="loadOrders()"/>
+                </mx:HBox>
+                
+                <mx:HBox horizontalAlign="right" width="190">
+                    
+                    <mx:Label text="ถึงวันที่:"/>
+                    
+                    <mx:DateField id="endDateField" change="loadOrders()"/>
+                </mx:HBox>
+            </mx:VBox>
+                
+            <mx:VBox paddingLeft="5" paddingBottom="5" paddingRight="5"
+				width="100%">
+                
+                <mx:CheckBox id="outstandingField" label="ค้างจ่าย"
+					change="loadOrders()"/>
+                
+                <mx:CheckBox id="paidField" label="จ่ายแล้ว"
+					change="loadOrders()"/>
+            </mx:VBox>
+        </mx:Panel>
+        
+        <mx:Panel title="รายการขาย" layout="absolute" width="250" height="100%">
+            
+            <mx:List id="orderList"
+                change="orderListChange(event)"
+				itemRenderer="com.j_nid.ui.OrderRenderer"
+                width="100%" height="100%"/>
+        </mx:Panel>
+        
+        <mx:Panel title="รายละเอียด" layout="vertical"
+            paddingTop="5" paddingRight="5"
+            paddingBottom="5" paddingLeft="5"
+            width="100%" height="100%">
+            
+            <mx:HBox horizontalAlign="right"
+                paddingTop="5" paddingRight="5" 
+                width="100%" height="35">
+                
+                <mx:Label id="customerNameField"
+                    text="{selectedOrder.person_name}"/>
+                
+                <mx:Label id="createdDateField"
+                    text="{getCreatedString(selectedOrder.created)}"/>
+            </mx:HBox>
+            
+            <mx:DataGrid id="orderItemList"
+				dataProvider="{orderItems}"
+                keyDown="itemListKeyDown(event)"
+				headerStyleName="centerHeader"
+                textAlign="center" editable="true"
+                width="100%" height="100%">
+                
+                <mx:columns>
+                    <mx:DataGridColumn headerText="จำนวน" dataField="quantity"
+                        itemRenderer="com.j_nid.ui.OrderItemRenderer"
+						itemEditor="com.j_nid.ui.OrderItemEditor"
+                        editorDataField="value" width="60"/>
+                    
+                    <mx:DataGridColumn headerText="ชื่อ" dataField="name"
+                        itemRenderer="com.j_nid.ui.OrderItemRenderer"
+                        editable="false"/>
+                    
+                    <mx:DataGridColumn headerText="หน่วย" dataField="unit"
+                        textAlign="right" editorDataField="value"
+                        itemRenderer="com.j_nid.ui.OrderItemRenderer"
+						itemEditor="com.j_nid.ui.OrderItemEditor"
+                        width="60"/>
+                    
+                    <mx:DataGridColumn headerText="ราคาต่อหน่วย"
+						dataField="price_per_unit" textAlign="right"
+                        labelFunction="Utils.priceLabelFunction"
+                        itemRenderer="com.j_nid.ui.OrderItemRenderer"
+						itemEditor="com.j_nid.ui.OrderItemEditor"
+						editorDataField="value" width="90"/>
+                    
+                    <mx:DataGridColumn headerText="รวม" dataField="total"
+						labelFunction="Utils.priceLabelFunction"
+                        itemRenderer="com.j_nid.ui.OrderItemRenderer"
+						textAlign="right" editable="false" width="90"/>
+                </mx:columns>
+            </mx:DataGrid>
+            
+            <mx:HBox paddingRight="5" width="100%" height="50">
+                
+                <mx:Label text="หมายเหตุ:"/>
+                	
+                <mx:TextArea id="notationTA"
+                	text="{selectedOrder.notation}"
+					editable="false"
+                	width="360" height="100%"/>
+                	
+                <mx:Button label="บันทึก" click="saveBtnClick(event)"
+					enabled="{selectedOrder != null}" visible="false"/>
+                	
+                <mx:Spacer width="100%"/>
+                
+                <mx:Label id="summaryField"
+                    text="รวมทั้งสิ้น {total} (จ่ายแล้ว {paid})"/>
+            </mx:HBox>
+            
+            <mx:ControlBar horizontalAlign="right">
+                
+                <!--<mx:Button label="เพิ่ม" click="addOrderItemClick(event)"
+					enabled="{orderList.selectedItem != null}"/>-->
+            
+                <mx:Button label="ลบ" click="deleteOrderClick(event)"
+                    enabled="{orderList.selectedItem != null}"/>
+                
+                <mx:Button label="พิมพ์" click="printOrder(event)"
+                    enabled="{orderList.selectedItem != null}"/>
+            </mx:ControlBar>
+        </mx:Panel>
+    </mx:HBox>
+</mx:VBox>

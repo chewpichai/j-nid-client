@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml"
+    title="ข้อมูลชนิดสินค้า" layout="absolute"
+	width="400" height="400">
+	
+    <mx:Script>
+        <![CDATA[
+			import com.j_nid.utils.ServiceUtils;
+			import com.j_nid.utils.Utils;
+			
+			import mx.controls.LinkButton;
+			import mx.events.FlexEvent;
+			import mx.utils.StringUtil;
+            
+            [Bindable]
+            public var productType:XML;
+            private var closeBtn:LinkButton;
+            private var errMsg:String;
+            
+            override protected function createChildren():void {
+                super.createChildren();
+                closeBtn = new LinkButton();
+                closeBtn.label = "x";
+                closeBtn.addEventListener(MouseEvent.CLICK, closeBtnClick);
+                rawChildren.addChild(closeBtn);
+            }
+            
+            override protected function updateDisplayList(unscaledWidth:Number,
+                                            unscaledHeight:Number):void    {
+                
+                super.updateDisplayList(unscaledWidth, unscaledHeight);    
+                var margin:int = 4;    
+                var pixelsFromTop:int = 5;
+                var pixelsFromRight:int = 10;
+                closeBtn.setActualSize(30 + margin, 20 + margin);
+                var buttonWidth:int = closeBtn.width;
+                var xPos:int = unscaledWidth - buttonWidth - pixelsFromRight;
+                var yPos:int = pixelsFromTop;
+                closeBtn.move(xPos, yPos);
+            }
+            
+            private function saveProductTypeListener(e:MouseEvent):void {
+				var productType:XML = productType.copy();
+                if (isValid()) {
+                    productType.name = nameField.text;
+                    productType.color = colorField.selectedColor;
+					var responder:com.j_nid.utils.Responder =
+						new com.j_nid.utils.Responder(resultHandler);
+					if (int(productType.id) > 0) {
+						ServiceUtils.send("/producttypes/" + productType.id + "/",
+							"PUT", responder, productType);
+					} else {
+						ServiceUtils.send("/producttypes/", "POST", responder, productType);
+					}
+                } else {
+                    Utils.showMessage(errMsg, "พบข้อผิดพลาด");
+                }
+            }
+			
+			private function resultHandler(data:Object):void {
+				closeBtnClick(null);
+			}
+            
+            private function isValid():Boolean {
+                errMsg = "";
+                var typeName:String = StringUtil.trim(nameField.text);
+                if (typeName.length < 1) {
+                    errMsg += "กรุณาใส่ชื่อชนิดสินค้า\n";
+                }
+				return errMsg.length == 0;
+            }
+            
+            private function closeBtnClick(e:MouseEvent):void {
+                Utils.hidePopUp(this);
+            }
+        ]]>
+    </mx:Script>
+    
+    <mx:Form width="100%" height="100%">
+        
+        <mx:FormItem label="ชื่อ:" required="true">
+            
+            <mx:TextInput id="nameField"
+                text="{productType.name}"
+                width="100%" height="30"/>
+        </mx:FormItem>
+        
+        <mx:FormItem label="สี:">
+            
+            <mx:ColorPicker id="colorField"
+                selectedColor="{productType.color}"/>
+        </mx:FormItem>
+        
+        <mx:FormItem>
+            <mx:Button id="saveBtn"
+                label="บันทึก" click="saveProductTypeListener(event)"/>
+        </mx:FormItem>
+    </mx:Form>
+</mx:TitleWindow>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml"
+	paddingLeft="10">
+
+	<mx:Script>
+		<![CDATA[
+			import mx.core.Application;
+			
+			private function changeHandler(e:Event):void {
+				var products:XML = JNid(Application.application).productsToUpdate;
+				var product:XML = getProduct();
+				if (product) {
+					product.is_sale = int(checkBox.selected);
+				} else {
+					data.is_sale = int(checkBox.selected);
+					products.appendChild(data);
+				}
+			}
+			
+			private function getProduct():XML {
+				var products:XML = JNid(Application.application).productsToUpdate;
+                for each (var product:XML in products.children()) {
+                    if (product.id == data.id)
+                       return product;
+                }
+                return null;
+			}
+		]]>
+	</mx:Script>
+	
+	<mx:Label text="{data.name}"
+        color="{data.color}" textAlign="left" paddingLeft="20"
+        width="100%"/>
+
+	<mx:CheckBox id="checkBox"
+		selected="{Boolean(int(data.is_sale))}"
+		change="changeHandler(event)"/>
+</mx:HBox>

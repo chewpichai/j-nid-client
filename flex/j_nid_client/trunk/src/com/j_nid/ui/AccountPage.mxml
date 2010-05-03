@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml"
+    creationComplete="creationCompleteHandler(event)"
+    horizontalAlign="center" paddingBottom="10"
+    width="100%" height="100%">
+    
+    <mx:Script>
+        <![CDATA[
+			import com.j_nid.ui.popups.OrderDetailForm;
+			import com.j_nid.ui.popups.PaymentForm;
+			import com.j_nid.utils.PrintUtils;
+			import com.j_nid.utils.ServiceUtils;
+			import com.j_nid.utils.Utils;
+			
+			import mx.collections.ArrayCollection;
+			import mx.collections.ListCollectionView;
+			import mx.collections.XMLListCollection;
+			import mx.controls.Alert;
+			import mx.events.CalendarLayoutChangeEvent;
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			
+            [Bindable]
+            private var customer:XML;
+            
+            private function creationCompleteHandler(e:FlexEvent):void {
+				initData();
+				loadCustomers();
+            }
+			
+			private function loadCustomers():void {
+				var responder:com.j_nid.utils.Responder =
+					new com.j_nid.utils.Responder(customerResultHandler);
+				var attrs:String = "attrs=id,name,outstanding_total," +
+					"num_outstanding_orders,latest_order_date,phone_number";
+				var filters:String = "filters=is_customer=1";
+				var name:String = searchField.text;
+				if (name.length > 0)
+					filters += ",name=" + name;
+				ServiceUtils.send("/people/?" + attrs + "&" + filters,
+					"GET", responder);
+			}
+			
+			private function customerResultHandler(data:Object):void {
+				var customers:XMLListCollection = new XMLListCollection();
+				for each (var customer:XML in data.result.children()) {
+					if (noneOutstandingField.selected &&
+						Number(customer.outstanding_total) < 0)
+						continue;
+					if (outstandingField.selected &&
+						Number(customer.outstanding_total) >= 0)
+						continue;
+					customers.addItem(customer);	
+				}
+				customerList.dataProvider =	customers;
+			}
+			
+			private function loadTransactions(personID:int):void {
+				var responder:com.j_nid.utils.Responder =
+					new com.j_nid.utils.Responder(transactionResultHandler);
+				var startDate:Date = startDateField.selectedDate;
+				var endDate:Date = endDateField.selectedDate;
+				var filters:String = "filters=date_range=" + Utils.formatDate(startDate, "YYYY-MM-DD") +
+					":" + Utils.formatDate(endDate, "YYYY-MM-DD");
+				ServiceUtils.send("/people/" + personID + "/transactions/?" + filters,
+					"GET", responder);
+			}
+			
+			private function transactionResultHandler(data:Object):void {
+				transactionList.dataProvider = data.result.children();
+			}
+            
+            private function initData():void {
+				var sixMonthsAgo:Date = Utils.moveDateByDay(new Date(), -180);
+                var tomorrow:Date = Utils.moveDateByDay(new Date(), 1);
+				startDateField.selectedDate = sixMonthsAgo;
+				startDateField.disabledRanges = [{rangeStart: tomorrow}];
+				endDateField.disabledRanges = [
+					{rangeEnd: sixMonthsAgo}, {rangeStart: tomorrow}];
+            }
+            
+            private function customerListDoubleClick(e:MouseEvent):void {
+				viewStack.selectedIndex = 1;
+				customer = XML(customerList.selectedItem);
+                loadTransactions(customer.id);
+            }
+			
+			private function showOrderDetailForm(transaction:XML):void {
+				var responder:com.j_nid.utils.Responder =
+					new com.j_nid.utils.Responder(orderResultHandler);
+				var attrs:String = "attrs=id,person_name,notation,created";
+				ServiceUtils.send("/orders/" + transaction.id + "/?" + attrs,
+					"GET", responder);
+			}
+			
+			private function orderResultHandler(data:Object):void {
+				var form:OrderDetailForm =
+					OrderDetailForm(Utils.showPopUp(OrderDetailForm));
+				form.order = data.result;
+			}
+            
+            private function payBtnClickListener(evt:MouseEvent):void {
+                var form:PaymentForm =
+					PaymentForm(Utils.showPopUp(PaymentForm));
+                form.person = customer;
+                form.addEventListener(Event.REMOVED_FROM_STAGE,
+					paymentFormCloseHandler);
+            }
+			
+			private function paymentFormCloseHandler(e:Event):void {
+				loadTransactions(customer.id);
+			}
+            
+            private function dateChange(e:CalendarLayoutChangeEvent):void {
+                var startDate:Date = new Date(startDateField.selectedDate.time);
+                var endDate:Date = new Date(endDateField.selectedDate.time);
+                var disabledRanges:Array = endDateField.disabledRanges;
+                disabledRanges[0] = {rangeEnd: startDate};
+                endDateField.disabledRanges = disabledRanges;
+                disabledRanges = startDateField.disabledRanges;
+                disabledRanges[0] = {rangeStart: endDate};
+                startDateField.disabledRanges = disabledRanges;
+				loadTransactions(customer.id);
+            }
+            
+            private function printBtnClick(e:MouseEvent):void {
+				var transactions:ListCollectionView =
+					ListCollectionView(transactionList.dataProvider);
+				if (transactions.length > 0)
+                PrintUtils.printTransaction(customer, transactions,
+					startDateField.selectedDate, endDateField.selectedDate);
+            }
+            
+            private function transactionListKeyDown(e:KeyboardEvent):void {
+                if (e.keyCode == Keyboard.DELETE &&
+                    transactionList.selectedItem != null) {
+                    
+                    Utils.showConfirm("ต้องการลบข้อมูลหรือไม่",
+                        "ยืนยันการลบ", closeHandler);
+                }
+            }
+            
+            private function closeHandler(e:CloseEvent):void {
+                var type:String = transactionList.selectedItem.type;
+				var id:int = transactionList.selectedItem.id;
+				var responder:com.j_nid.utils.Responder =
+					new com.j_nid.utils.Responder(deleteResultHandler);
+                if (e.detail == Alert.OK) {
+                    if (type == "order")
+						ServiceUtils.send("/orders/" + id + "/",
+							"DELETE", responder);
+                    else if (type == "payment")
+						ServiceUtils.send("/payments/" + id + "/",
+							"DELETE", responder);
+                }
+            }
+			
+			private function deleteResultHandler(data:Object):void {
+				loadTransactions(customer.id);
+			}
+            
+            private function transactionListDoubleClick(e:MouseEvent):void {
+            	var dg:DataGrid = DataGrid(e.currentTarget);
+            	showTransactionDetail(XML(dg.selectedItem));
+            }
+			
+			private function showTransactionDetail(transaction:XML):void {
+				if (transaction.type == "order")
+					showOrderDetailForm(transaction);
+			}
+			
+			private function formatDateForCustomer(item:Object,
+										column:DataGridColumn):String {
+				
+				if (String(item[column.dataField]).length > 0) {
+					var created:Date = new Date(Date.parse(item[column.dataField]));
+					return Utils.formatDate(created, "DD MMM YYYY");
+				}
+				return '';
+			}
+			
+			private function formatDateForTransaction(item:Object,
+									column:DataGridColumn):String {
+				
+				if (String(item[column.dataField]).length > 0) {
+					var created:Date = new Date(Date.parse(item[column.dataField]));
+					return Utils.formatDate(created, "DD MMM YYYY JJ:NN");
+				}
+				return '';
+			}
+			
+			private function priceLabelFunction(item:Object,
+												column:DataGridColumn):String {
+				
+				if (Number(item[column.dataField]) != 0)
+					return Utils.formatPrice(item[column.dataField]);
+				return '';
+			}
+        ]]>
+    </mx:Script>
+	
+	<mx:ViewStack id="viewStack" creationPolicy="all" width="100%" height="100%">
+	
+		<mx:VBox horizontalAlign="center" width="100%" height="100%">
+			
+			<mx:FormItem id="customerSearchField" label="ค้นหา">
+				
+				<mx:TextInput id="searchField"
+					change="loadCustomers()" width="250"/>
+			</mx:FormItem>
+			
+			<mx:HBox id="searchCustomer" width="100%" height="100%">
+				
+				<mx:DataGrid id="customerList"
+					headerStyleName="centerHeader" doubleClickEnabled="true"
+ 					doubleClick="customerListDoubleClick(event)"
+ 					width="100%" height="100%">
+					
+					<mx:columns>
+						<mx:DataGridColumn headerText="ชื่อ"
+							dataField="name"/>
+						
+						<mx:DataGridColumn headerText="ยอดค้างทั้งหมด"
+							dataField="outstanding_total"
+							itemRenderer="com.j_nid.ui.OutstandingRenderer"/>
+						
+						<mx:DataGridColumn headerText="จำนวนบิลค้างจ่าย"
+							dataField="num_outstanding_orders"/>
+						
+						<mx:DataGridColumn headerText="บิลล่าสุดที่ทำรายการ"
+							dataField="latest_order_date"
+							labelFunction="formatDateForCustomer"/>
+					</mx:columns>
+				</mx:DataGrid>
+				
+				<mx:VBox id="filterField">
+					
+					<mx:CheckBox id="noneOutstandingField"
+						label="ลูกค้าที่ไม่มียอดค้าง" change="loadCustomers()"/>
+					
+					<mx:CheckBox id="outstandingField"
+						label="ลูกค้าที่มียอดค้าง" selected="true"
+						change="loadCustomers()"/>
+				</mx:VBox>
+			</mx:HBox>
+		</mx:VBox>
+		
+		<mx:VBox horizontalAlign="center" width="100%" height="100%">
+			
+			<mx:HBox horizontalAlign="left" verticalAlign="middle" width="100%">
+			    
+			    <mx:Button label="ย้อนกลับ" click="viewStack.selectedIndex = 0"/>
+			        
+			    <mx:Spacer width="200"/>
+			    
+			    <mx:Label text="ชื่อ"/>
+			    
+			    <mx:Label text="{customer.name}" width="200"/>
+			        
+			    <mx:Label text="เบอร์โทรศัพท์"/>
+			                    
+			    <mx:Label text="{customer.phone_number}" width="200"/>
+			        
+			    <mx:Button label="ชำระเงิน" click="payBtnClickListener(event)"/>
+			</mx:HBox>
+				
+			<mx:DataGrid id="transactionList"
+			    keyDown="transactionListKeyDown(event)"
+			    headerStyleName="centerHeader" doubleClickEnabled="true"
+			    doubleClick="transactionListDoubleClick(event)"
+			    rowHeight="30" width="100%" height="100%">
+			    
+			    <mx:columns>
+			        <mx:DataGridColumn headerText="วันที่" dataField="created"
+						labelFunction="formatDateForTransaction" width="150"/>
+			        
+			        <mx:DataGridColumn headerText="ค้างจ่าย" dataField="outstanding"
+			            labelFunction="priceLabelFunction"
+						textAlign="right" paddingRight="5"/>
+			        
+			        <mx:DataGridColumn headerText="จ่ายเงิน" dataField="paid"
+						labelFunction="priceLabelFunction"
+			            textAlign="right" paddingRight="5"/>
+			            
+			        <mx:DataGridColumn headerText="คงเหลือ" dataField="balance"
+						itemRenderer="com.j_nid.ui.OutstandingRenderer"
+						textAlign="right" paddingRight="5"/>
+			        
+			        <mx:DataGridColumn headerText="หมายเหตุ" dataField="note"/>
+			    </mx:columns>
+			</mx:DataGrid>
+			                
+			<mx:HBox width="100%">
+			        
+			    <mx:Spacer width="100%"/>
+				
+			    <mx:Label text="เริ่มจากวันที่"/>
+			    
+			    <mx:DateField id="startDateField"
+			        formatString="DD-MM-YYYY" change="dateChange(event)"/>
+			        
+			    <mx:Label text="ถึงวันที่"/>
+			    
+			    <mx:DateField id="endDateField"
+			        selectedDate="{new Date()}" formatString="DD-MM-YYYY"
+			        change="dateChange(event)"/>
+			        
+			    <mx:Spacer width="30"/>
+			    
+			    <mx:Button label="พิมพ์" click="printBtnClick(event)"/>
+			</mx:HBox>
+		</mx:VBox>
+	</mx:ViewStack>
+</mx:VBox>

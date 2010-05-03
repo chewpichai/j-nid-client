@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Panel xmlns:mx="http://www.adobe.com/2006/mxml"
+	title="ค้นหาลูกค้า" horizontalAlign="center"
+	width="400"	height="500">
+	
+	<mx:Script>
+		<![CDATA[
+			import mx.collections.XMLListCollection;
+			import com.j_nid.utils.Utils;
+			import mx.controls.LinkButton;
+			import mx.collections.Sort;
+			import mx.utils.ArrayUtil;
+			import mx.controls.TileList;
+			import mx.collections.ArrayCollection;
+			import mx.events.FlexEvent;
+			import mx.events.ListEvent;
+			
+			private var _people:XMLListCollection;
+			[Bindable]
+			private var _firstChars:ArrayCollection;
+			private var closeBtn:LinkButton;
+			public var selectedPerson:XML;
+			
+			override protected function createChildren():void {
+                super.createChildren();
+                closeBtn = new LinkButton();
+                closeBtn.label = "x";
+                closeBtn.addEventListener(MouseEvent.CLICK, closeBtnClick);
+                rawChildren.addChild(closeBtn);
+            }
+            
+            override protected function updateDisplayList(unscaledWidth:Number,
+                                            unscaledHeight:Number):void {
+                
+                super.updateDisplayList(unscaledWidth, unscaledHeight);    
+                var margin:int = 4;    
+                var pixelsFromTop:int = 5;
+                var pixelsFromRight:int = 10;
+                closeBtn.setActualSize(30 + margin, 20 + margin);
+                var buttonWidth:int = closeBtn.width;
+                var xPos:int = unscaledWidth - buttonWidth - pixelsFromRight;
+                var yPos:int = pixelsFromTop;
+                closeBtn.move(xPos, yPos);
+            }
+            
+            private function closeBtnClick(e:MouseEvent):void {
+                Utils.hidePopUp(this);
+            }
+			
+			private function charListChangeHandler(e:ListEvent):void {
+				var tileList:TileList = TileList(e.currentTarget);
+				people.filterFunction = filterFunction;
+				people.refresh();
+				personList.scrollToIndex(0);
+			}
+			
+			private function filterFunction(person:XML):Boolean {
+				return person.name.charAt(0) == firstCharList.selectedItem;
+			}
+			
+			private function personListDoubleClick(e:MouseEvent):void {
+				var tileList:TileList = TileList(e.currentTarget);
+				selectedPerson = XML(tileList.selectedItem);
+				Utils.hidePopUp(this);
+			}
+			
+			[Bindable]
+			public function set people(obj:XMLListCollection):void {
+				_people = obj;
+				var objs:Object = {};
+	            for each (var person:XML in _people) {
+	                objs[person.name.charAt(0)] = 1;
+	            }
+	            _firstChars = new ArrayCollection();
+	            for (var char:String in objs) {
+	                _firstChars.addItem(char);
+	            }
+	            _firstChars.sort = new Sort();
+	            _firstChars.refresh();
+	        }
+	        
+	        public function get people():XMLListCollection {
+	        	return _people;
+	        }
+		]]>
+	</mx:Script>
+	
+	<mx:TileList id="firstCharList"
+		dataProvider="{_firstChars}" columnCount="8"
+		columnWidth="35" rowHeight="35" borderStyle="none"
+		change="charListChangeHandler(event)"
+		itemRenderer="com.j_nid.ui.FirstCharRenderer"/>
+	
+	<mx:TileList id="personList"
+		dataProvider="{people}"	labelField="name" textAlign="left"
+		columnCount="2" columnWidth="150" doubleClickEnabled="true"
+		doubleClick="personListDoubleClick(event)"
+		width="100%" height="100%"/>
+</mx:Panel>

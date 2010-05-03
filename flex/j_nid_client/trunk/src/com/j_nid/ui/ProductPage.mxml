@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
+	creationComplete="creationCompleteHandler(event)"
+	width="100%" height="100%">
+	
+	<mx:Script>
+		<![CDATA[
+			import com.j_nid.ui.popups.ProductForm;
+			import com.j_nid.ui.popups.ProductTypeForm;
+			import com.j_nid.ui.popups.BasketForm;
+			import com.j_nid.utils.Responder;
+			import com.j_nid.utils.ServiceUtils;
+			import com.j_nid.utils.Utils;
+			
+			import mx.events.FlexEvent;
+			import mx.events.ListEvent;
+			import mx.rpc.events.ResultEvent;
+            
+            private function creationCompleteHandler(e:FlexEvent):void {
+                loadProductTypes();
+				loadProducts();
+				loadBaskets();
+            }
+			
+			private function loadBaskets():void {
+				var responder:com.j_nid.utils.Responder =
+					new com.j_nid.utils.Responder(baasketResultHandler);
+				ServiceUtils.send("/baskets/", "GET", responder);
+			}
+			
+			private function baasketResultHandler(data:Object):void {
+				basketList.dataProvider = data.result.children();
+			}
+			
+			private function loadProducts(typeID:int=0):void {
+				var responder:com.j_nid.utils.Responder =
+					new com.j_nid.utils.Responder(productResultHandler);
+				var attrs:String = "attrs=id,name,type,unit,cost_per_unit,price_per_unit,is_sale";
+				if (typeID == 0) {
+					ServiceUtils.send("/products/?" + attrs, "GET", responder);
+				} else {
+					var filters:String = "filters=type_id=" + typeID;
+					ServiceUtils.send("/products/?" + attrs + "&" + filters,
+						"GET", responder);
+				}
+			}
+			
+			private function productResultHandler(data:Object):void {
+				var resultEvent:ResultEvent = ResultEvent(data);
+				productList.dataProvider = resultEvent.result.children();
+			}
+			
+			private function loadProductTypes():void {
+				var responder:com.j_nid.utils.Responder =
+					new com.j_nid.utils.Responder(productTypeResultHandler);
+				ServiceUtils.send("/producttypes/", "GET", responder);
+			}
+			
+			private function productTypeResultHandler(data:Object):void {
+				var resultEvent:ResultEvent = ResultEvent(data);
+				productTypeCombo.dataProvider = resultEvent.result.children().copy();
+				productTypeCombo.dataProvider.addItemAt(Utils.getAllProductType(), 0);
+				productTypeCombo.selectedIndex = 0;
+				productTypeList.dataProvider = resultEvent.result.children();
+			}
+            
+            private function productTypeComboChange(e:ListEvent):void {
+				loadProducts(productTypeCombo.selectedItem.id);
+            }
+            
+            private function newProductBtnClick(e:MouseEvent):void {
+                var form:ProductForm = 
+					ProductForm(Utils.showPopUp(ProductForm));
+				form.product = <product/>;
+				form.addEventListener(Event.REMOVED_FROM_STAGE,
+					formRemoveHandler);
+            }
+			
+			private function formRemoveHandler(e:Event):void {
+				if (e.currentTarget is ProductTypeForm)
+					loadProductTypes();
+				else if (e.currentTarget is ProductForm)
+					loadProducts();
+				else
+					loadBaskets();
+			}
+            
+            private function newProductTypeBtnClick(e:MouseEvent):void {
+				var form:ProductTypeForm = 
+					ProductTypeForm(Utils.showPopUp(ProductTypeForm));
+				form.productType = <product_type/>;
+				form.addEventListener(Event.REMOVED_FROM_STAGE,
+					formRemoveHandler);
+            }
+            
+            private function productTypeDgDoubleClick(e:MouseEvent):void {
+				var form:ProductTypeForm = 
+					ProductTypeForm(Utils.showPopUp(ProductTypeForm));
+				form.productType = XML(productTypeList.selectedItem);
+				form.addEventListener(Event.REMOVED_FROM_STAGE,
+					formRemoveHandler);
+            }
+            
+            private function productDgDoubleClick(e:MouseEvent):void {
+               	var form:ProductForm = 
+					ProductForm(Utils.showPopUp(ProductForm));
+				form.product = XML(productList.selectedItem);
+				form.addEventListener(Event.REMOVED_FROM_STAGE,
+					formRemoveHandler);
+            }
+			
+			private function newBasketBtnClickHandler(e:MouseEvent):void {
+				var form:BasketForm = 
+					BasketForm(Utils.showPopUp(BasketForm));
+				form.basket = <basket/>;
+				form.addEventListener(Event.REMOVED_FROM_STAGE,
+					formRemoveHandler);
+			}
+			
+			private function basketDgDoubleClick(e:MouseEvent):void {
+				var form:BasketForm = 
+					BasketForm(Utils.showPopUp(BasketForm));
+				form.basket = XML(basketList.selectedItem);
+				form.addEventListener(Event.REMOVED_FROM_STAGE,
+					formRemoveHandler);
+			}
+        ]]>
+    </mx:Script>
+    
+    <mx:TabNavigator creationPolicy="all" width="100%" height="100%">
+        
+        <mx:VBox label="สินค้า" width="100%" height="100%">
+            
+            <mx:HBox verticalAlign="middle" width="100%">
+                
+                <mx:Label text="ชนิดสินค้า:"/>
+                
+                <mx:ComboBox id="productTypeCombo"
+					labelField="name" change="productTypeComboChange(event)"
+                    itemRenderer="com.j_nid.ui.ProductTypeComboRenderer"
+					width="200"/>
+                    
+                <mx:Spacer width="100%"/>
+                    
+                <mx:Button label="เพิ่ม" click="newProductBtnClick(event)"/>
+            </mx:HBox>
+                
+            <mx:DataGrid id="productList"
+                doubleClickEnabled="true"
+                doubleClick="productDgDoubleClick(event)"
+                headerStyleName="centerHeader"
+                width="100%" height="100%">
+                
+                <mx:columns>
+                    <mx:DataGridColumn headerText="ชื่อ" dataField="name"/>
+                        
+                    <mx:DataGridColumn headerText="ชนิดสินค้า" dataField="type"/>
+                        
+                    <mx:DataGridColumn headerText="หน่วย" dataField="unit"/>
+					
+					<mx:DataGridColumn headerText="ราคาทุนต่อหน่วย"
+						dataField="cost_per_unit"/>
+                        
+                    <mx:DataGridColumn headerText="ราคาต่อหน่วย"
+                        dataField="price_per_unit"/>
+                        
+                    <mx:DataGridColumn headerText="มีขาย" dataField="is_sale"
+                        itemRenderer="com.j_nid.ui.ProductIsSaleRenderer"/>
+                </mx:columns>
+            </mx:DataGrid>
+        </mx:VBox>
+        
+        <mx:VBox label="ชนิดสินค้า" width="100%" height="100%">
+            
+            <mx:HBox horizontalAlign="right" width="100%">
+                
+                <mx:Button label="เพิ่ม"
+                    click="newProductTypeBtnClick(event)"/>
+            </mx:HBox>
+            
+            <mx:DataGrid id="productTypeList"
+                doubleClickEnabled="true"
+                doubleClick="productTypeDgDoubleClick(event)"
+                headerStyleName="centerHeader"
+                width="100%" height="100%">
+                
+                <mx:columns>
+                    <mx:DataGridColumn headerText="ชื่อ"
+						itemRenderer="com.j_nid.ui.ProductTypeNameRenderer"/>                    
+                    
+					<mx:DataGridColumn headerText="สี"
+						itemRenderer="com.j_nid.ui.ProductTypeColorRenderer"/>
+                </mx:columns>
+            </mx:DataGrid>
+        </mx:VBox>
+		
+		<mx:VBox label="ลังมัดจำ" width="100%" height="100%">
+			
+			<mx:HBox horizontalAlign="right" width="100%">
+				
+				<mx:Button label="เพิ่ม"
+					click="newBasketBtnClickHandler(event)"/>
+			</mx:HBox>
+			
+			<mx:DataGrid id="basketList"
+				doubleClickEnabled="true"
+				doubleClick="basketDgDoubleClick(event)"
+				headerStyleName="centerHeader"
+				width="100%" height="100%">
+				
+				<mx:columns>
+					<mx:DataGridColumn headerText="ชื่อ" dataField="name"/>
+					
+					<mx:DataGridColumn headerText="หน่วย" dataField="unit"/>
+					
+					<mx:DataGridColumn headerText="ราคาต่อหน่วย"
+						dataField="price_per_unit"/>
+				</mx:columns>
+			</mx:DataGrid>
+		</mx:VBox>
+    </mx:TabNavigator>
+</mx:Canvas>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Label xmlns:mx="http://www.adobe.com/2006/mxml">
+	
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.dataGridClasses.DataGridListData;
+			
+			override public function set data(obj:Object):void {
+				super.data = obj;
+				var index:int = int(DataGridListData(listData).dataField);
+				if (data.phone_numbers.phone_number[index])
+					text = data.phone_numbers.phone_number[index].number;
+				else
+					text = "";
+			}
+		]]>
+	</mx:Script>
+</mx:Label>

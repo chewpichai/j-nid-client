@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml"
+	doubleClick="doubleClickHandler(event)"
+	doubleClickEnabled="true" fontSize="15"
+	horizontalScrollPolicy="off" verticalScrollPolicy="off"
+	width="100%" height="100%">
+	
+	<mx:Script>
+		<![CDATA[
+			import mx.core.Application;
+			import com.j_nid.utils.Utils;
+		    
+		    private function doubleClickHandler(e:MouseEvent):void {
+		    	var productPriceEditor:ProductPriceEditor =
+                    ProductPriceEditor(Utils.showPopUp(ProductPriceEditor));
+                productPriceEditor.data = data;
+                productPriceEditor.x = e.stageX;
+                var app:JNid = JNid(Application.application);
+                var height:Number = app.height;
+                var width:Number = app.width;
+                if (e.stageX + productPriceEditor.width > width) {
+                    productPriceEditor.x = width - (productPriceEditor.width + 10);
+                }
+                productPriceEditor.y = e.stageY;
+                if (e.stageY + productPriceEditor.height > height) {
+                    productPriceEditor.y = height - (productPriceEditor.height + 10);
+                }
+		    }
+        ]]>
+    </mx:Script>
+    
+    <mx:Fade id="fadeIn" alphaFrom="0" alphaTo="0.8"/>
+    
+    <mx:Fade id="fadeOut" alphaFrom="0.8" alphaTo="0"/>
+    
+    <mx:Label text="{data.name}"
+        color="{data.color}" textAlign="left" paddingLeft="20"
+        width="100%"/>
+        
+    <mx:Label id="costLbl"
+        text="{data.cost_per_unit}" textAlign="right" alpha="0"
+        rollOverEffect="{fadeIn}" rollOutEffect="{fadeOut}"/>
+    
+    <mx:Label id="priceLbl"
+        text="{data.price_per_unit}" textAlign="right"/>
+</mx:HBox>

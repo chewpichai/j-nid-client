@@ -10,11 +10,19 @@
 }
 
 global {
-	fontFamily: Tahoma;
-   	fontSize: 12;
+	font-family: Tahoma;
+   	font-size: 14;
    	font-anti-alias-type: advanced;
    	font-grid-fit-type: none;
    	font-sharpness: -300;
+}
+
+Alert {
+    button-style-name: alertButton;
+}
+
+.alertButton {
+    font-size: 12;
 }
 
 .centerHeader {
@@ -24,15 +32,21 @@ global {
 .printDataGrid {
 	header-background-skin: Embed(source="../assets/printHeaderSkin.png");
 	header-separator-skin: Embed(source="../assets/printHeaderSkin.png");
-	header-style-name: centerHeader;
+	header-style-name: printDataGridHeader;
 	border-style: none;
 	vertical-grid-lines: false;
 	horizontal-grid-lines: false;
-	
+	font-size: 12;
+}
+
+.printDataGridHeader {
+	text-align: center;
+	vertical-grid-lines: false;
+	horizontal-grid-lines: false;
 }
 
 .cartItemList {
-   	alternatingItemColors: #ffffff, #ffff99;
+   	alternating-item-colors: #ffffff, #ffff99;
 }
 
 .copyright {
@@ -49,36 +63,6 @@ global {
     text-align: right;
 }
 
-/*
-WindowedApplication {
-	padding-top: 0;
-	padding-bottom: 0;
+.personFormHeader {
+	font-size: 13;
 }
-
-Accordion {
-	headerHeight: 40;
-   	headerStyleName: "accordionHeader";
-}
-
-Button {
-	corner-radius: 0;
-}
-
-.accordionHeader {
-   fontFamily: Tahoma;
-   fontSize: 14;
-}
-
-TextInput {
-	corner-radius: 4;
-	border-style: solid;
-}
-
-.list {
-	borderStyle: none;
-}
-
-.panel {
-   borderStyle: solid;
-   roundedBottomCorners: true;
-}*/

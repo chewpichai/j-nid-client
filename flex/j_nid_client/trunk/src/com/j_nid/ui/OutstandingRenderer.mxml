@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Label xmlns:mx="http://www.adobe.com/2006/mxml">
+	
+	<mx:Script>
+		<![CDATA[
+			import com.j_nid.utils.Utils;
+			
+			import mx.controls.dataGridClasses.DataGridListData;
+			
+			override public function set data(obj:Object):void {
+				super.data = obj;
+				if (data) {
+					var dataField:String = DataGridListData(listData).dataField;
+					text = Utils.formatPrice(Math.abs(data[dataField]));
+					if (data[dataField] < 0) {
+						setStyle("color", 0xFF0000);
+					} else {
+						setStyle("color", 0x0000FF);
+					}
+				}
+			}
+		]]>
+	</mx:Script>
+</mx:Label>

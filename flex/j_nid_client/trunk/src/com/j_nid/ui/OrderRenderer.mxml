@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Label xmlns:mx="http://www.adobe.com/2006/mxml">
+	
+	<mx:Script>
+		<![CDATA[
+			import com.j_nid.utils.Utils;
+			override public function set data(value:Object):void {
+				super.data = value;
+				if (data) {
+					var created:Date = new Date(Date.parse(data.created));
+					text = data.person_name + " " + Utils.formatDate(created, "DD-MMM-YYYY JJ:NN");
+					if (Number(data.paid) >= Number(data.total))
+						setStyle("color", 0x0000FF);
+					else
+						setStyle("color", 0xFF0000);
+				}
+			}
+		]]>
+	</mx:Script>
+</mx:Label>

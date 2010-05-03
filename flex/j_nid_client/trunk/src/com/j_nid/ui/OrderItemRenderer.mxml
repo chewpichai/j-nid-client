@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Label xmlns:mx="http://www.adobe.com/2006/mxml">
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.DataGrid;
+			import mx.controls.dataGridClasses.DataGridColumn;
+			
+			override protected function updateDisplayList(unscaleWidth:Number,
+											unscaleHeight:Number):void {
+				
+				super.updateDisplayList(unscaleWidth, unscaleHeight);
+                var dg:DataGrid = DataGrid(listData.owner);
+                var column:DataGridColumn = dg.columns[listData.columnIndex];
+				graphics.clear();
+				if (Boolean(int(data["is_deleted"]))) {
+					graphics.lineStyle(1, 0xFF0000);
+                    graphics.moveTo(0, unscaleHeight / 2);
+                    graphics.lineTo(unscaleWidth, unscaleHeight / 2);
+                    setStyle("color", 0xFF0000);
+                    column.editable = false;
+                } else {
+                	setStyle("color", 0x000000);
+                	if ((data.name() == "basket_order" && column.dataField == "quantity") ||
+						column.dataField == "name" ||
+						column.dataField == "total") {
+                		
+						column.editable = false;
+                	} else {
+                	   column.editable = true;
+                	}
+                }
+			}
+		]]>
+	</mx:Script>
+</mx:Label>

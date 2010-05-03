@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml"
+    title="ข้อมูลสินค้า" creationComplete="creationCompleteHandler(event)"
+    layout="absolute" width="400" height="400">
+    
+    <mx:Script>
+        <![CDATA[
+			import com.j_nid.utils.Responder;
+			import com.j_nid.utils.ServiceUtils;
+			import com.j_nid.utils.Utils;
+			
+			import mx.controls.LinkButton;
+			import mx.events.FlexEvent;
+			import mx.rpc.events.ResultEvent;
+			import mx.utils.StringUtil;
+        	
+            [Bindable]
+            public var product:XML;
+			[Bindable]
+			private var productTypes:XMLList;
+            private var closeBtn:LinkButton;
+            private var errMsg:String;
+            
+            
+            private function creationCompleteHandler(e:FlexEvent):void {
+				loadProductTypes();
+            }
+			
+			private function loadProductTypes():void {
+				var responder:com.j_nid.utils.Responder =
+					new com.j_nid.utils.Responder(productTypeResultHandler);
+				ServiceUtils.send("/producttypes/", "GET", responder);
+			}
+			
+			private function productTypeResultHandler(data:Object):void {
+				var resultEvent:ResultEvent = ResultEvent(data);
+				productTypes = resultEvent.result.children();
+				typeField.selectedIndex = getTypeIndex(product.type);
+			}
+            
+            override protected function createChildren():void {
+                super.createChildren();
+                closeBtn = new LinkButton();
+                closeBtn.label = "x";
+                closeBtn.addEventListener(MouseEvent.CLICK, closeBtnClick);
+                rawChildren.addChild(closeBtn);
+            }
+            
+            override protected function updateDisplayList(unscaledWidth:Number, 
+                                            unscaledHeight:Number):void    {
+                
+                super.updateDisplayList(unscaledWidth, unscaledHeight);    
+                var margin:int = 4;    
+                var pixelsFromTop:int = 5;
+                var pixelsFromRight:int = 10;
+                closeBtn.setActualSize(30 + margin, 20 + margin);
+                var buttonWidth:int = closeBtn.width;
+                var xPos:int = unscaledWidth - buttonWidth - pixelsFromRight;
+                var yPos:int = pixelsFromTop;
+                closeBtn.move(xPos, yPos);
+            }
+        
+            private function saveProductListener(e:MouseEvent):void {
+				var product:XML = product.copy();
+                if (isValid()) {
+                    product.name = nameField.text;
+                    product.type_id = int(typeField.selectedItem.id);
+                    product.unit = unitField.value;
+					product.cost_per_unit = costPerUnitField.value;
+                    product.price_per_unit = pricePerUnitField.value;
+                    product.is_sale = int(isSaleField.selected);
+					var responder:com.j_nid.utils.Responder =
+						new com.j_nid.utils.Responder(resultHandler);
+					if (int(product.id) > 0) {
+						ServiceUtils.send("/products/" + product.id + "/",
+							"PUT", responder, product);
+					} else {
+						ServiceUtils.send("/products/",	"POST", responder, product);
+					}
+                } else {
+                    Utils.showMessage(errMsg, "พบข้อผิดพลาด");
+                }
+            }
+			
+			private function resultHandler(data:Object):void {
+				close();
+			}
+            
+            private function isValid():Boolean {
+                errMsg = "";
+                var productName:String = StringUtil.trim(nameField.text);
+                if (productName.length < 1) {
+                    errMsg += "กรุณาใส่ชื่อสินค้า\n";
+                }
+                if (typeField.selectedIndex < 0) {
+                    errMsg += "กรุณาใส่ชื่อชนิดสินค้า\n";
+                }
+                return errMsg.length == 0;
+            }
+            
+            private function closeBtnClick(e:MouseEvent):void {
+                close();
+            }
+            
+            private function close():void {
+				Utils.hidePopUp(this);
+            }
+			
+			private function getTypeIndex(type:String):int {
+				for (var i:int = 0; i < productTypes.length(); i++)
+					if (productTypes[i].name == type)
+						return i;
+				return -1;
+			}
+        ]]>
+    </mx:Script>
+    
+    <mx:Form width="100%" height="100%">
+        
+        <mx:FormItem label="ชื่อ:" required="true" width="100%">
+            
+            <mx:TextInput id="nameField" text="{product.name}"
+                width="100%" height="30"/>
+        </mx:FormItem>
+        
+        <mx:FormItem label="ชนิดสินค้า:" width="100%">
+            
+            <mx:ComboBox id="typeField"
+				dataProvider="{productTypes}"
+				labelField="name"
+                itemRenderer="com.j_nid.ui.ProductTypeComboRenderer"
+                width="100%" height="30"/>
+        </mx:FormItem>
+        
+        <mx:FormItem label="หน่วย:" width="100%">
+            
+            <mx:NumericStepper id="unitField"
+                value="{product.unit}"
+                minimum="1" maximum="100000"
+                width="100%" height="30"/>
+        </mx:FormItem>
+		
+		<mx:FormItem label="ราคาทุนต่อหน่วย:" width="100%">
+			
+			<mx:NumericStepper id="costPerUnitField"
+				value="{product.cost_per_unit}"
+				minimum="0.25" maximum="100000" stepSize="0.25"
+				width="100%" height="30"/>
+		</mx:FormItem>
+        
+        <mx:FormItem label="ราคาต่อหน่วย:" width="100%">
+            
+            <mx:NumericStepper id="pricePerUnitField"
+                value="{product.price_per_unit}"
+                minimum="0.25" maximum="100000" stepSize="0.25"
+                width="100%" height="30"/>
+        </mx:FormItem>
+        
+        <mx:FormItem label="มีขาย:">
+            
+            <mx:CheckBox id="isSaleField"
+				selected="{Boolean(int(product.is_sale))}"/>
+        </mx:FormItem>
+        
+        <mx:FormItem>
+            <mx:Button id="saveBtn"
+                label="บันทึก" click="saveProductListener(event)"/>
+        </mx:FormItem>
+    </mx:Form>
+</mx:TitleWindow>

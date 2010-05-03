@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Panel xmlns:mx="http://www.adobe.com/2006/mxml"
+	title="เข้าสู่ระบบ" creationComplete="creationCompleteHandler(event)">
+	
+	<mx:Script>
+		<![CDATA[
+			import com.j_nid.utils.Responder;
+			import com.j_nid.utils.ServiceUtils;
+			import com.j_nid.utils.Utils;
+			
+			import mx.events.FlexEvent;
+			
+			private function creationCompleteHandler(e:FlexEvent):void {
+				readSettingFile();
+			}
+			
+			private function submitBtnClickHandler(e:MouseEvent):void {
+				ServiceUtils.serverAddr = serverField.text;
+				var responder:com.j_nid.utils.Responder =
+				    new com.j_nid.utils.Responder(resultHandler);
+				var xml:XML = <session/>;
+	            xml.username = usernameField.text;
+	            xml.password = passwordField.text;
+	            ServiceUtils.send("/sessions/", "POST", responder, xml);
+			}
+			
+			private function resultHandler(data:Object):void {
+				saveSettingFile();
+				Utils.hidePopUp(this);
+				Utils.showMainPage();
+			}
+			
+			private function saveSettingFile():void {
+				var file:File = File.applicationStorageDirectory;
+				file = file.resolvePath("settings");
+				var fileStream:FileStream = new FileStream();
+				fileStream.open(file, FileMode.WRITE);
+				fileStream.writeUTF(serverField.text);
+				fileStream.close();
+			}
+			
+			private function readSettingFile():void {
+				var file:File = File.applicationStorageDirectory;
+				file = file.resolvePath("settings");
+				if (file.exists) {
+					var fileStream:FileStream = new FileStream();
+					fileStream.open(file, FileMode.READ);
+					serverField.text = fileStream.readUTF();
+					fileStream.close();
+				}
+			}
+		]]>
+	</mx:Script>
+    
+    <mx:Form>
+        <mx:FormItem label="ชื่อผู้ใช้:" width="100%">
+            
+            <mx:TextInput id="usernameField"
+                text="admin" width="100%"/>
+        </mx:FormItem>
+        
+        <mx:FormItem label="รหัสผ่าน:" width="100%">
+            
+            <mx:TextInput id="passwordField"
+                text="123456" displayAsPassword="true" width="100%"/>
+        </mx:FormItem>
+        
+        <mx:FormItem label="Server Address:" width="100%">
+            
+            <mx:TextInput id="serverField"
+                text="127.0.0.1:8000" width="100%"/>
+        </mx:FormItem>
+    </mx:Form>
+    
+    <mx:ControlBar>
+        
+        <mx:Spacer width="100%"/>
+        
+        <mx:Button id="submitBtn"
+        	label="ตกลง"	click="submitBtnClickHandler(event)"/>
+    </mx:ControlBar>
+</mx:Panel>

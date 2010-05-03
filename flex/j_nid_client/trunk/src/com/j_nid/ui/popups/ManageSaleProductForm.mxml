@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Panel xmlns:mx="http://www.adobe.com/2006/mxml"
+	title="กำหนดรายการสินค้าที่มีขาย"	layout="vertical"
+	horizontalAlign="center" paddingBottom="5" paddingTop="5"
+	creationComplete="creationCompleteHandler(event)"
+	mouseDownOutside="mouseDownOutsideHandler(event)"
+	width="800" height="600">
+	
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.core.Application;
+			import mx.events.ListEvent;
+			import mx.rpc.events.ResultEvent;
+			import com.j_nid.utils.ServiceUtils;
+			import mx.events.FlexEvent;
+			import com.j_nid.utils.Utils;
+			import com.j_nid.utils.Responder;
+			
+			private function creationCompleteHandler(e:FlexEvent):void {
+				loadProductTypes();
+				loadProducts();
+			}
+			
+			private function loadProductTypes():void {
+				var responder:com.j_nid.utils.Responder =
+                    new com.j_nid.utils.Responder(productTypeResultHandler);
+                ServiceUtils.send("/producttypes/", "GET", responder);
+			}
+			
+			private function productTypeResultHandler(data:Object):void {
+				var resultEvent:ResultEvent = ResultEvent(data);
+				productTypeList.dataProvider = resultEvent.result.children();
+				productTypeList.dataProvider.addItemAt(Utils.getAllProductType(), 0);
+				productTypeList.selectedIndex = 0;
+			}
+			
+			private function loadProducts(typeID:int=0):void {
+                var responder:com.j_nid.utils.Responder =
+                    new com.j_nid.utils.Responder(productResultHandler);
+                var attrs:String = "attrs=id,name,color,is_sale";
+                if (typeID == 0) {
+                    ServiceUtils.send("/products/?" + attrs, "GET", responder);
+                } else {
+	                var filters:String = "filters=type_id=" + typeID;
+	                ServiceUtils.send("/products/?" + attrs + "&" + filters,
+	                    "GET", responder);
+	            }
+            }
+			
+			private function productResultHandler(data:Object):void {
+                var resultEvent:ResultEvent = ResultEvent(data);
+                productList.dataProvider = resultEvent.result.children();
+            }
+            
+            private function changeHandler(e:ListEvent):void {
+                loadProducts(int(productTypeList.selectedItem.id));
+            }
+			
+			private function mouseDownOutsideHandler(e:MouseEvent):void {
+				close();
+			}
+			
+			private function cancelBtnClickHandler(e:MouseEvent):void {
+				close();
+			}
+			
+			private function close():void {
+				var productsToUpdate:XML = 
+				    JNid(Application.application).productsToUpdate;
+				if (productsToUpdate.children().length() > 0) {
+					Utils.showConfirm("พบการแก้ไขข้อมูลต่องการยกเลิกใช่หรือไม่",
+					   "ยืนยันการยกเลิกการแก้ไขข้อมูล", closeHandler);
+				} else {
+				    closeHandler(null);
+                }
+			}
+			
+			private function closeHandler(e:CloseEvent):void {
+				if (e && !(e.detail == Alert.OK))
+				    return;
+                var productsToUpdate:XML = 
+                    JNid(Application.application).productsToUpdate;
+                productsToUpdate = <products/>;
+                Utils.hidePopUp(this);
+                Utils.showMainPage();
+			}
+			
+			private function saveBtnClickHandler(e:MouseEvent):void {
+				var responder:com.j_nid.utils.Responder =
+                    new com.j_nid.utils.Responder(saveProductsResultHandler);
+				var productsToUpdate:XML = 
+                    JNid(Application.application).productsToUpdate;
+				ServiceUtils.send("/products/", "PUT", responder, productsToUpdate);
+			}
+			
+			private function saveProductsResultHandler(data:Object):void {
+				closeHandler(null);
+			}
+		]]>
+	</mx:Script>
+	
+	<mx:ComboBox id="productTypeList"
+		labelField="name" change="changeHandler(event)">
+		
+		<mx:itemRenderer>
+			<mx:Component>
+<mx:Label text="{data.name}" color="{data.color}"/>
+			</mx:Component>
+		</mx:itemRenderer>
+	</mx:ComboBox>
+	
+	<mx:TileList id="productList"
+	   labelField="name" selectable="false"
+	   itemRenderer="com.j_nid.ui.SetSaleProductRenderer"
+	   columnWidth="250" rowHeight="40"
+	   borderStyle="none"
+	   width="100%" height="100%"/>
+	   
+    <mx:HBox horizontalAlign="center" horizontalGap="15" width="100%">
+	    
+	    <mx:Button label="บันทึก" click="saveBtnClickHandler(event)"
+	    	width="100"/>
+	    
+	    <mx:Button label="ไม่บันทึก" click="cancelBtnClickHandler(event)"
+	    	width="100"/>
+    </mx:HBox>
+</mx:Panel>

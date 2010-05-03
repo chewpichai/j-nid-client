@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
+	creationComplete="creationCompleteHandler(event)"
+	backgroundColor="0xffffff"
+	width="150" height="50">
+	
+	<mx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			
+			private var timer:Timer;
+			private var count:uint;
+			
+			private function creationCompleteHandler(e:FlexEvent):void {
+				loadingLabl.text = "กรุณารอสักครู่...";
+				timer = new Timer(500);
+				timer.addEventListener(TimerEvent.TIMER, timerHandler);
+				timer.start();
+			}
+			
+			private function timerHandler(e:TimerEvent):void {
+				count++;
+				if (count == 3) {
+				    loadingLabl.text = "กรุณารอสักครู่...";
+				    count = 0;
+				} else if (count == 2)
+				    loadingLabl.text = "กรุณารอสักครู่..";
+				else
+				    loadingLabl.text = "กรุณารอสักครู่.";
+			}
+		]]>
+	</mx:Script>
+	
+	<mx:Label id="loadingLabl"
+	   verticalCenter="0" horizontalCenter="0"
+	   width="100"/>
+</mx:Canvas>
