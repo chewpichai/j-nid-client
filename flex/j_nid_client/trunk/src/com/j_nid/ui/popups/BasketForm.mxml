@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml"
-    title="ข้อมูลลังมัดจำ" layout="absolute"
+    title="ข้อมูลลังมัดจำ" layout="absolute" showCloseButton="true"
+	close="close()"
 	width="400" height="400">
     
     <mx:Script>
@@ -9,43 +10,21 @@
 			import com.j_nid.utils.ServiceUtils;
 			import com.j_nid.utils.Utils;
 			
-			import mx.controls.LinkButton;
+			import mx.events.CloseEvent;
 			import mx.rpc.events.ResultEvent;
 			import mx.utils.StringUtil;
         	
             [Bindable]
             public var basket:XML;
-            private var closeBtn:LinkButton;
             private var errMsg:String;
             
-            override protected function createChildren():void {
-                super.createChildren();
-                closeBtn = new LinkButton();
-                closeBtn.label = "x";
-                closeBtn.addEventListener(MouseEvent.CLICK, closeBtnClick);
-                rawChildren.addChild(closeBtn);
-            }
-            
-            override protected function updateDisplayList(unscaledWidth:Number, 
-                                            unscaledHeight:Number):void    {
-                
-                super.updateDisplayList(unscaledWidth, unscaledHeight);    
-                var margin:int = 4;    
-                var pixelsFromTop:int = 5;
-                var pixelsFromRight:int = 10;
-                closeBtn.setActualSize(30 + margin, 20 + margin);
-                var buttonWidth:int = closeBtn.width;
-                var xPos:int = unscaledWidth - buttonWidth - pixelsFromRight;
-                var yPos:int = pixelsFromTop;
-                closeBtn.move(xPos, yPos);
-            }
-        
             private function saveProductListener(e:MouseEvent):void {
 				var basket:XML = this.basket.copy();
                 if (isValid()) {
                     basket.name = nameField.text;
 					basket.unit = unitField.value;
 					basket.price_per_unit = pricePerUnitField.value;
+                    basket.is_sale = int(isSaleField.selected);
                     var responder:com.j_nid.utils.Responder =
 						new com.j_nid.utils.Responder(resultHandler);
 					if (int(basket.id) > 0) {
@@ -70,10 +49,6 @@
                     errMsg += "กรุณาใส่ชื่อ\n";
                 }
                 return errMsg.length == 0;
-            }
-            
-            private function closeBtnClick(e:MouseEvent):void {
-                close();
             }
             
             private function close():void {
@@ -104,6 +79,12 @@
                 value="{basket.price_per_unit}"
                 minimum="0.25" maximum="100000" stepSize="0.25"
                 width="100%" height="30"/>
+        </mx:FormItem>
+        
+        <mx:FormItem label="มีขาย:">
+            
+            <mx:CheckBox id="isSaleField"
+                selected="{Boolean(int(basket.is_sale))}"/>
         </mx:FormItem>
         
         <mx:FormItem>

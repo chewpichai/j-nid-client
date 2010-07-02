@@ -43,7 +43,7 @@
                     filters += ",type_id=" + typeID;
                 }
                 if (typeID == -1) {
-                	ServiceUtils.send("/baskets/", "GET", responder);
+                	ServiceUtils.send("/baskets/?" + filters, "GET", responder);
                 } else {
 	                ServiceUtils.send("/products/?" + attrs + "&" + filters,
 	                    "GET", responder);

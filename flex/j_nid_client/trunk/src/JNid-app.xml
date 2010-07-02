@@ -14,17 +14,17 @@
 -->
 
 	<!-- The application identifier string, unique to this application. Required. -->
-	<id>Main</id>
+	<id>JNid</id>
 
 	<!-- Used as the filename for the application. Required. -->
-	<filename>Main</filename>
+	<filename>JNid</filename>
 
 	<!-- The name that is displayed in the AIR application installer. 
 	     May have multiple values for each language. See samples or xsd schema file. Optional. -->
-	<name>Main</name>
+	<name>JNid</name>
 
 	<!-- An application version designator (such as "v1", "2.5", or "Alpha 1"). Required. -->
-	<version>v1</version>
+	<version>beta 1.1</version>
 
 	<!-- Description, displayed in the AIR application installer.
 	     May have multiple values for each language. See samples or xsd schema file. Optional. -->

@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" 
 	title="รายละเอียด" layout="vertical" borderAlpha="0.8"
-	verticalScrollPolicy="off"
+	verticalScrollPolicy="off" showCloseButton="true"
+	close="close()"
 	width="800" height="600">
 	
 	<mx:Script>

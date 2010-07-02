@@ -74,15 +74,16 @@
 	
 	<mx:Text id="noteTxt"
 		text="{order.notation}"
-		bottom="85" left="12"/>
+		bottom="75" left="12"
+        width="280"/>
 		
 	<mx:Label id="quantityTotalTxt"
-		text="จำนวนรวม {Utils.sum(order.order_items.order_item, 'quantity')} ชิ้น"
+		text="จำนวนรวม {Utils.sum(order.order_items.children(), 'quantity')} ชิ้น"
 		bottom="45" left="12"
 		width="120" height="24"/>
 	
 	<mx:Label id="totalLbl"
-		text="{Utils.formatPrice(Utils.sum(order.order_items.order_item, 'total'))}"
+		text="{Utils.formatPrice(Utils.sum(order.order_items.children(), 'total'))}"
 		textAlign="right"
 		bottom="45" left="294"
 		height="24" width="85"/>

@@ -52,6 +52,8 @@
             }
             
             private function orderItemsChange(e:CollectionEvent):void {
+                totalQunatityTxt.text = "รวม " + 
+                    Utils.sum(e.currentTarget, "quantity") + " ชิ้น";
             	totalTxt.text = "รวมทั้งสิ้น " + 
             	   Utils.formatPrice(Utils.sum(e.currentTarget, "total"));
             }
@@ -120,6 +122,7 @@
                     order = <order/>;
                     order.person_id = int(customerField.selectedItem.id);
                     order.person_name = String(customerField.selectedItem.name);
+                    order.person_outstanding = Number(customerField.selectedItem.outstanding_total);
                     order.notation = notationField.text;
                     order.order_items = <order_items/>;
                     order.order_items.appendChild(orderItems.source);
@@ -128,10 +131,11 @@
                     var form:OrderProcessForm =
                         OrderProcessForm(Utils.showPopUp(OrderProcessForm));
                     if (int(order.person_id) <= 24) {
-                        order.paid = Utils.sum(orderItems, "total");
+						form.paidField.value = Utils.sum(orderItems, "total");
                         form.paidField.enabled = false;
                     }
                     form.order = order.copy();
+                    trace(order);
                 } else {
                     Utils.showMessage(errMsg, "พบข้อผิดพลาด");
                 }
@@ -199,23 +203,29 @@
             	} else {
             		outstandingLbl.setStyle("color", 0x0000ff);
             	}
-            	return "ยอดค้าง: " + Math.abs(outstanding);
+            	return "ยอดค้าง: " + Utils.formatPrice(Math.abs(outstanding));
             }
             
             private function notationDragDropHandler(e:DragEvent):void {
-            	var obj:XML = e.dragSource.dataForFormat("items")[0].copy();
+				var obj:XML = e.dragSource.dataForFormat("items")[0].copy();
             	obj.unit = 1;
+				var notation:String = notationField.text;
             	for each (var basket:XML in nonPledgeBaskets) {
             		if (basket.id == obj.id) {
                         basket.unit = int(basket.unit) + int(obj.unit);
-                        var pattern:RegExp = new RegExp(obj.name + "\\sx\\s\\d");
-                        var replace:String = basket.name + " x " + basket.unit;
-                        notationField.text = notationField.text.replace(pattern, replace);
+                        var pattern:RegExp = new RegExp("(" +
+								Utils.escapeRegexChars(obj.name) +
+								"\\s+x\\s+)\\d+");
+                        var replace:String = "$1" + basket.unit;
+                        notationField.text = notation.replace(pattern, replace);
                         return;
                     }
             	}
             	nonPledgeBaskets.addItem(obj);
-            	notationField.text += obj.name + " x 1\n";
+				if (notation.length > 0)
+					notation += "  ";
+				notation += obj.name + " x 1";
+				notationField.text = notation;
             	notationField.verticalScrollPosition = 
             	   notationField.maxVerticalScrollPosition;
             }
@@ -252,16 +262,16 @@
         
         <mx:columns>
             <mx:DataGridColumn headerText="จำนวน" dataField="quantity"
-            	itemRenderer="com.j_nid.ui.OrderItemEditor" width="70"/>
+            	itemRenderer="com.j_nid.ui.renderers.OrderItemEditor" width="70"/>
             
             <mx:DataGridColumn headerText="ชื่อ" dataField="name"
             	editable="false" width="150"/>
                 
             <mx:DataGridColumn headerText="หน่วย" dataField="unit"
-            	itemRenderer="com.j_nid.ui.OrderItemEditor" width="70"/>
+            	itemRenderer="com.j_nid.ui.renderers.OrderItemEditor" width="70"/>
             	
             <mx:DataGridColumn headerText="ราคาต่อหน่วย" dataField="price_per_unit" 
-                itemRenderer="com.j_nid.ui.OrderItemEditor" width="85"/>
+                itemRenderer="com.j_nid.ui.renderers.OrderItemEditor" width="85"/>
                 
             <mx:DataGridColumn headerText="รวม" dataField="total"
             	textAlign="right" labelFunction="Utils.priceLabelFunction"
@@ -269,16 +279,22 @@
         </mx:columns>
     </mx:DataGrid>
     
-    <mx:Text id="totalTxt" 
-        text="รวมทั้งสิ้น 0.00" textAlign="right" paddingRight="10"
-        width="100%" height="30"/>
+    <mx:HBox width="100%">
+        
+        <mx:Text id="totalQunatityTxt"
+            text="รวม 0 ชิ้น" width="100%" height="30"/>
+        
+        <mx:Text id="totalTxt" 
+            text="รวมทั้งสิ้น 0.00" textAlign="right" paddingRight="10"
+            width="100%" height="30"/>
+    </mx:HBox>
     
     <mx:ControlBar>
         
         <mx:TextArea id="notationField"
         	dragDrop="notationDragDropHandler(event)"
         	dragEnter="dragEnterListener(event)"
-            width="100%" height="60"/>
+            width="100%" height="100"/>
         
         <mx:Button label="ล้างข้อมูล" buttonDown="clearHandler(event)"/>
         

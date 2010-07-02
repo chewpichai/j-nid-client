@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml"
+	paddingLeft="5" paddingRight="5">
+	
+	<mx:Script>
+		<![CDATA[
+			import mx.events.NumericStepperEvent;
+			override public function set data(value:Object):void {
+				if (value) {
+					super.data = value;
+					if (quantityField) {
+						quantityField.value = value.quantity;
+						quantityField.maximum = value.maximum;
+					}
+					if (nameLbl) {
+						nameLbl.text = value.name;
+						if (Boolean(int(data.is_pledge)))
+							nameLbl.setStyle("color", 0x0000ff);
+						else
+							nameLbl.setStyle("color", 0xff0000);
+					}
+				}
+			}
+
+			protected function changeHandler(event:NumericStepperEvent):void {
+				data.quantity = quantityField.value;
+			}
+
+		]]>
+	</mx:Script>
+	
+	<mx:Label id="nameLbl" width="100%"/>
+	
+	<mx:NumericStepper id="quantityField" stepSize="1" minimum="1" change="changeHandler(event)"/>
+</mx:HBox>

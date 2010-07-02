@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Label xmlns:mx="http://www.adobe.com/2006/mxml">
+
+	<mx:Script>
+		<![CDATA[
+			override public function set data(value:Object):void {
+				if (value) {
+					super.data = value;
+					text = value.name + " x " + value.quantity;
+					if (Boolean(int(data.is_pledge)))
+						setStyle("color", 0x0000ff);
+					else
+						setStyle("color", 0xff0000);
+				}
+			}
+		]]>
+	</mx:Script>
+</mx:Label>

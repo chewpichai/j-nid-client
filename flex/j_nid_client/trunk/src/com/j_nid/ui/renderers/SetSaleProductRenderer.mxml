@@ -28,11 +28,11 @@
 		]]>
 	</mx:Script>
 	
-	<mx:Label text="{data.name}"
-        color="{data.color}" textAlign="left" paddingLeft="20"
-        width="100%"/>
-
 	<mx:CheckBox id="checkBox"
 		selected="{Boolean(int(data.is_sale))}"
 		change="changeHandler(event)"/>
+    
+    <mx:Label text="{data.name}"
+        color="{data.color}" textAlign="left"
+        width="100%"/>
 </mx:HBox>

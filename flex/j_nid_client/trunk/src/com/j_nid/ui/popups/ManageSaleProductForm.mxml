@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:Panel xmlns:mx="http://www.adobe.com/2006/mxml"
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml"
 	title="กำหนดรายการสินค้าที่มีขาย"	layout="vertical"
 	horizontalAlign="center" paddingBottom="5" paddingTop="5"
 	creationComplete="creationCompleteHandler(event)"
-	mouseDownOutside="mouseDownOutsideHandler(event)"
+	showCloseButton="true" close="close()"
 	width="800" height="600">
 	
 	<mx:Script>
@@ -58,10 +58,6 @@
                 loadProducts(int(productTypeList.selectedItem.id));
             }
 			
-			private function mouseDownOutsideHandler(e:MouseEvent):void {
-				close();
-			}
-			
 			private function cancelBtnClickHandler(e:MouseEvent):void {
 				close();
 			}
@@ -113,7 +109,7 @@
 	
 	<mx:TileList id="productList"
 	   labelField="name" selectable="false"
-	   itemRenderer="com.j_nid.ui.SetSaleProductRenderer"
+	   itemRenderer="com.j_nid.ui.renderers.SetSaleProductRenderer"
 	   columnWidth="250" rowHeight="40"
 	   borderStyle="none"
 	   width="100%" height="100%"/>
@@ -126,4 +122,4 @@
 	    <mx:Button label="ไม่บันทึก" click="cancelBtnClickHandler(event)"
 	    	width="100"/>
     </mx:HBox>
-</mx:Panel>
+</mx:TitleWindow>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:Panel xmlns:mx="http://www.adobe.com/2006/mxml"
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml"
 	title="เข้าสู่ระบบ" creationComplete="creationCompleteHandler(event)">
 	
 	<mx:Script>
@@ -79,4 +79,4 @@
         <mx:Button id="submitBtn"
         	label="ตกลง"	click="submitBtnClickHandler(event)"/>
     </mx:ControlBar>
-</mx:Panel>
+</mx:TitleWindow>

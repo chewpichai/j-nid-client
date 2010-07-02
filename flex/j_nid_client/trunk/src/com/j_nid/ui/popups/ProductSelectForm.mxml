@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml"
 	creationComplete="creationCompleteHandler(event)"
+	showCloseButton="true" close="close()"
 	layout="horizontal" width="800" height="400">
 	
 	 <mx:Script>
@@ -44,7 +45,7 @@
 					filters += ",type_id=" + typeID;
 				}
 				if (typeID == -1) {
-					ServiceUtils.send("/baskets/", "GET", responder);
+					ServiceUtils.send("/baskets/?" + filters, "GET", responder);
 				} else {
 					ServiceUtils.send("/products/?" + attrs + "&" + filters,
 						"GET", responder);
@@ -62,6 +63,10 @@
 						
 			private function productDoubleClick(e:MouseEvent):void {
 				selectedProduct = XML(productList.selectedItem);
+				close();
+			}
+			
+			private function close():void {
 				Utils.hidePopUp(this);
 			}
 		]]>

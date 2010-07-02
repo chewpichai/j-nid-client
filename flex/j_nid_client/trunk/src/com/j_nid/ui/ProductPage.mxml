@@ -131,13 +131,13 @@
         
         <mx:VBox label="สินค้า" width="100%" height="100%">
             
-            <mx:HBox verticalAlign="middle" width="100%">
+            <mx:HBox verticalAlign="middle" paddingRight="5" width="100%">
                 
                 <mx:Label text="ชนิดสินค้า:"/>
                 
                 <mx:ComboBox id="productTypeCombo"
 					labelField="name" change="productTypeComboChange(event)"
-                    itemRenderer="com.j_nid.ui.ProductTypeComboRenderer"
+                    itemRenderer="com.j_nid.ui.renderers.ProductTypeComboRenderer"
 					width="200"/>
                     
                 <mx:Spacer width="100%"/>
@@ -165,14 +165,14 @@
                         dataField="price_per_unit"/>
                         
                     <mx:DataGridColumn headerText="มีขาย" dataField="is_sale"
-                        itemRenderer="com.j_nid.ui.ProductIsSaleRenderer"/>
+                        itemRenderer="com.j_nid.ui.renderers.ProductIsSaleRenderer"/>
                 </mx:columns>
             </mx:DataGrid>
         </mx:VBox>
         
         <mx:VBox label="ชนิดสินค้า" width="100%" height="100%">
             
-            <mx:HBox horizontalAlign="right" width="100%">
+            <mx:HBox horizontalAlign="right" paddingRight="5" width="100%">
                 
                 <mx:Button label="เพิ่ม"
                     click="newProductTypeBtnClick(event)"/>
@@ -186,17 +186,17 @@
                 
                 <mx:columns>
                     <mx:DataGridColumn headerText="ชื่อ"
-						itemRenderer="com.j_nid.ui.ProductTypeNameRenderer"/>                    
+						itemRenderer="com.j_nid.ui.renderers.ProductTypeNameRenderer"/>                    
                     
 					<mx:DataGridColumn headerText="สี"
-						itemRenderer="com.j_nid.ui.ProductTypeColorRenderer"/>
+						itemRenderer="com.j_nid.ui.renderers.ProductTypeColorRenderer"/>
                 </mx:columns>
             </mx:DataGrid>
         </mx:VBox>
 		
 		<mx:VBox label="ลังมัดจำ" width="100%" height="100%">
 			
-			<mx:HBox horizontalAlign="right" width="100%">
+			<mx:HBox horizontalAlign="right" paddingRight="5" width="100%">
 				
 				<mx:Button label="เพิ่ม"
 					click="newBasketBtnClickHandler(event)"/>
@@ -215,6 +215,9 @@
 					
 					<mx:DataGridColumn headerText="ราคาต่อหน่วย"
 						dataField="price_per_unit"/>
+                    
+                    <mx:DataGridColumn headerText="มีขาย" dataField="is_sale"
+                        itemRenderer="com.j_nid.ui.renderers.BasketIsSaleRenderer"/>
 				</mx:columns>
 			</mx:DataGrid>
 		</mx:VBox>

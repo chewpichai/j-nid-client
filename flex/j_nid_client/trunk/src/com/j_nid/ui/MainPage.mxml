@@ -50,7 +50,7 @@
     <mx:TileList id="productList"
         columnWidth="320" rowHeight="40"
         selectable="false" direction="vertical"
-        itemRenderer="com.j_nid.ui.MainProductRenderer"
+        itemRenderer="com.j_nid.ui.renderers.MainProductRenderer"
         width="100%" height="100%"/>
         
     <mx:ButtonBar id="subMenu"

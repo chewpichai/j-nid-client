@@ -174,5 +174,13 @@ package com.j_nid.utils {
         public static function showMessage(msg:String, title:String=""):void {
             Alert.show(msg, title);
         }
+		
+		public static function escapeRegexChars(s:String):String {
+			var escaped:String = 
+				s.replace(
+					new RegExp("([{}\(\)\^$&.\*\?\/\+\|\[\\\\]|\]|\-)","g"),
+					"\\$1");
+			return escaped;
+		}
 	}
 }

@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:NumericStepper xmlns:mx="http://www.adobe.com/2006/mxml"
 	creationComplete="creationCompleteHandler(event)"
-	change="changeHandler(event)" maximum="{Number.MAX_VALUE}">
+	show="showHandler(event)" change="changeHandler(event)"
+	hide="hideHandler(event)" maximum="{Number.MAX_VALUE}">
 	
 	<mx:Script>
 		<![CDATA[
 			import mx.binding.utils.ChangeWatcher;
 			import mx.collections.XMLListCollection;
 			import mx.controls.DataGrid;
+			import mx.controls.dataGridClasses.DataGridColumn;
 			import mx.controls.dataGridClasses.DataGridListData;
 			import mx.events.FlexEvent;
 			import mx.events.NumericStepperEvent;
@@ -16,9 +18,14 @@
 			private var timer:Timer;
 			
 			private function creationCompleteHandler(e:FlexEvent):void {
+				showHandler(e);
+			}
+			
+			private function showHandler(e:FlexEvent):void {
+				enabled = true;
 				dataField = DataGridListData(listData).dataField;
 				if (dataField == "price_per_unit")
-				    stepSize = 0.25;
+					stepSize = 0.25;
 				if (dataField != "quantity")
 					minimum = 1;
 				if (dataField == "quantity" && data.type == "basket") {
@@ -27,6 +34,13 @@
 					timer = new Timer(100);
 					timer.addEventListener(TimerEvent.TIMER, timerHandler);
 					timer.start();
+				}
+			}
+			
+			private function hideHandler(e:FlexEvent):void {
+				if (timer) {
+					timer.stop();
+					timer.removeEventListener(TimerEvent.TIMER, timerHandler);
 				}
 			}
 			
@@ -42,6 +56,14 @@
 				else if (dataField == "unit" && (data.type != "basket" && data.name() != "basket_order"))
 				    data["quantity"] = Math.ceil(int(data["unit"]) / int(data["unit_per_quantity"]));
 				data["total"] = Number(data["unit"]) * Number(data["price_per_unit"]);
+			}
+			
+			override protected function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void {
+				super.updateDisplayList(unscaledWidth, unscaledHeight);
+				if (data.hasOwnProperty("is_deleted") && Boolean(int(data.is_deleted)))
+					enabled = false;
+				else
+					enabled = true;
 			}
 		]]>
 	</mx:Script>

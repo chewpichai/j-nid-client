@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" 
 	title="รายละเอียด" layout="vertical" borderAlpha="0.8"
-	verticalScrollPolicy="off"
+	verticalScrollPolicy="off" showCloseButton="true"
+	close="close()"
 	width="800" height="600">
 	
 	<mx:Script>
@@ -17,6 +18,7 @@
 			public var order:XML;
 			
 			private function submitBtnClickListener(e:MouseEvent):void {
+				var order:XML = order.copy();
 				var orderItems:XML = <order_items/>;
 				var pledgeBaskets:XML = <pledge_baskets/>;
 				var nonPledgeBaskets:XML = <non_pledge_baskets/>;
@@ -31,7 +33,9 @@
 				order.pledge_baskets = pledgeBaskets;
 				order.order_items = orderItems;
 				for each (var basket:XML in order.non_pledge_baskets.basket) {
-					var pattern:RegExp = new RegExp(basket.name + "\\sx\\s(\\d)", "g");
+					var pattern:RegExp = new RegExp(
+						Utils.escapeRegexChars(basket.name) +
+						"\\s+x\\s+(\\d+)", "g");
 					var result:Object = pattern.exec(order.notation);
 					if (result) {
 						basket.unit = result[1];
@@ -41,10 +45,10 @@
 				order.non_pledge_baskets = nonPledgeBaskets;
 				if (paidField.value > 0)
 					order.paid = paidField.value;
-				postOrder();
+				postOrder(order);
 			}
 			
-			private function postOrder():void {
+			private function postOrder(order:XML):void {
                 var responder:com.j_nid.utils.Responder =
                     new com.j_nid.utils.Responder(orderResultHandler);
                 ServiceUtils.send("/orders/", "POST", responder, order);
@@ -63,6 +67,15 @@
 			private function close():void {
 				Utils.hidePopUp(this);
 			}
+            
+            private function getOutstanding(outstanding:Number):String {
+                if (outstanding < 0) {
+                    outstandingLbl.setStyle("color", 0xff0000);
+                } else {
+                    outstandingLbl.setStyle("color", 0x0000ff);
+                }
+                return "ยอดค้าง: " + Utils.formatPrice(Math.abs(outstanding)) + " บาท";
+            }
 		]]>
 	</mx:Script>
 	
@@ -104,23 +117,27 @@
 		</mx:columns>
 	</mx:DataGrid>
 	
-	<mx:FormItem label="หมายเหตุ:" width="100%">
-		
-		<mx:Text text="{order.notation}" width="100%"/>
-	</mx:FormItem>
 	
 	<mx:HBox horizontalAlign="right" width="100%">
 		
-		<mx:Label text="จำนวนรวม {Utils.sum(order.order_items.order_item, 'quantity')} รวมทั้งสิ้น {Utils.formatPrice(Utils.sum(order.order_items.order_item, 'total'))} บาท"
+    	<mx:FormItem label="หมายเหตุ:" width="100%">
+    		
+    		<mx:Text text="{order.notation}" width="280"/>
+    	</mx:FormItem>
+        
+		<mx:Label text="จำนวนรวม {Utils.sum(order.order_items.order_item, 'quantity')} ชิ้น    รวมทั้งสิ้น {Utils.formatPrice(Utils.sum(order.order_items.order_item, 'total'))} บาท"
 			textAlign="right"/>
 	</mx:HBox>
+    
+    <mx:Label id="outstandingLbl" text="{getOutstanding(order.person_outstanding)}"
+        textAlign="right" width="100%"/>
 	
 	<mx:HBox horizontalAlign="right" width="100%">
 	    
 	    <mx:FormItem label="ชำระเงิน:">
 	        
 	        <mx:NumericStepper id="paidField"
-	            value="{order.paid}" minimum="0" maximum="1000000"
+	            minimum="0" maximum="1000000"
 	            stepSize="0.25" width="100"/>
 	    </mx:FormItem>
 	</mx:HBox>

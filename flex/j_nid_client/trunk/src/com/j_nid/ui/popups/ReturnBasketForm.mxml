@@ -2,6 +2,7 @@
 <mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml"
 	title="รายการคืนลัง"	layout="vertical"
 	creationComplete="creationCompleteHandler(event)"
+	showCloseButton="true" close="close()"
 	width="800" height="600">
 	
 	<mx:Script>
@@ -24,6 +25,7 @@
 			[Bindable]
 			private var returnBaskets:XMLListCollection;
 			private var sort:Sort;
+			private var baskets:XMLList;
 			
 			private function creationCompleteHandler(e:FlexEvent):void {
 				sort = new Sort();
@@ -61,13 +63,43 @@
 			}
 			
 			private function basketResultHandler(data:Object):void {
-				for each (var basket:XML in data.result.children())
-					if (Boolean(int(basket.is_pledge)))
-						pledgeBaskets.addItem(basket);
-					else
-						nonPledgeBaskets.addItem(basket);
+				baskets = data.result.children();
+				for each (var basket:XML in baskets)
+					if (Boolean(int(basket.is_pledge))) {
+						var pledgeBasket:XML = getPledgeBasket(basket);
+						if (pledgeBasket) {
+							pledgeBasket.quantity = int(pledgeBasket.quantity) + 1;
+						} else {
+							pledgeBasket = basket.copy();
+							pledgeBasket.quantity = 1;
+							pledgeBaskets.addItem(pledgeBasket);
+						}
+					} else {
+						var nonPledgeBasket:XML = getNonPledgeBasket(basket);
+						if (nonPledgeBasket) {
+							nonPledgeBasket.quantity = int(nonPledgeBasket.quantity) + 1;
+						} else {
+							nonPledgeBasket = basket.copy();
+							nonPledgeBasket.quantity = 1;
+							nonPledgeBaskets.addItem(nonPledgeBasket);
+						}
+					}
 				pledgeBaskets.refresh();
 				nonPledgeBaskets.refresh();
+			}
+			
+			private function getPledgeBasket(basket:XML):XML {
+				for each (var pb:XML in pledgeBaskets)
+					if (pb.name == basket.name)
+						return pb;
+				return null;
+			}
+			
+			private function getNonPledgeBasket(basket:XML):XML {
+				for each (var npb:XML in nonPledgeBaskets)
+					if (npb.name == basket.name)
+						return npb;
+				return null;
 			}
 			
 			private function close():void {
@@ -93,32 +125,33 @@
 			}
 			
 			private function dragDropHandler(e:DragEvent):void {
+				returnList.hideDropFeedback(e);
 				var basket:XML = e.dragSource.dataForFormat("items")[0];
-				if (Boolean(int(basket.is_pledge)))
-					pledgeBaskets.removeItemAt(pledgeBaskets.getItemIndex(basket));
-				else
-					nonPledgeBaskets.removeItemAt(nonPledgeBaskets.getItemIndex(basket));
+				var returnBasket:XML = getReturnBasket(basket);
+				if (returnBasket) {
+					returnBasket.quantity = int(returnBasket.quantity) + 1;
+				} else {
+					returnBasket = basket.copy();
+					returnBasket.quantity = 1;
+					returnBasket.maximum = int(basket.quantity);
+					returnBaskets.addItem(returnBasket);
+				}
+				e.preventDefault();
 			}
 			
-			private function removeReturnBasket(basket:XML):void {
-				if (Boolean(int(basket.is_pledge))) {
-					pledgeBaskets.addItem(basket);
-					pledgeBaskets.refresh();
-				} else {
-					nonPledgeBaskets.addItem(basket);
-					nonPledgeBaskets.refresh();
-				}
+			private function getReturnBasket(basket:XML):XML {
+				for each (var rb:XML in returnBaskets)
+					if (rb.name == basket.name)
+						return rb;
+				return null;
 			}
 			
 			private function deleteBtnDownHandler(e:FlexEvent):void {
 				var basket:XML = XML(returnList.selectedItem);
-				removeReturnBasket(basket);
 				returnBaskets.removeItemAt(returnBaskets.getItemIndex(basket));
 			}
 			
 			private function clearBtnDownHandler(e:FlexEvent):void {
-				for each (var basket:XML in returnBaskets)
-					removeReturnBasket(basket);
 				returnBaskets.removeAll();
 			}
 			
@@ -126,12 +159,26 @@
 				if (returnBaskets.length > 0) {
 					var basketOrders:XML = <basket_orders/>;
 					for each (var basket:XML in returnBaskets)
-						basket.is_return = 1;
-					basketOrders.appendChild(returnBaskets.source);
+						basketOrders.appendChild(getReturnBaskets(basket));
 					var responder:com.j_nid.utils.Responder =
 						new com.j_nid.utils.Responder(basketOrderResultHandler);
 					ServiceUtils.send("/basketorders/",	"PUT", responder, basketOrders);
 				}
+			}
+			
+			private function getReturnBaskets(basket:XML):XMLList {
+				var returnBaskets:XML = <baskets/>;
+				for each (var b:XML in baskets) {
+					var length:int = returnBaskets.children().length();
+					if (b.name == basket.name &&
+						basket.is_pledge == b.is_pledge &&
+						length < int(basket.quantity)) {
+						
+						b.is_return = 1;
+						returnBaskets.appendChild(b);
+					}
+				}
+				return returnBaskets.children();
 			}
 			
 			private function basketOrderResultHandler(data:Object):void {
@@ -158,8 +205,8 @@
 				<mx:Label text="ลังมัดจำ"/>
 				
 				<mx:List id="pledgeList" labelField="name"
-					dataProvider="{pledgeBaskets}"
-					dragEnabled="true"
+					dataProvider="{pledgeBaskets}" dragEnabled="true"
+					itemRenderer="com.j_nid.ui.renderers.BasketRenderer"
 					width="100%" height="100%"/>
 			</mx:VBox>
 			
@@ -167,8 +214,8 @@
 				<mx:Label text="ลังไม่มัดจำ"/>
 				
 				<mx:List id="nonPledgeList" labelField="name"
-					dataProvider="{nonPledgeBaskets}"
-					dragEnabled="true"
+					dataProvider="{nonPledgeBaskets}" dragEnabled="true"
+					itemRenderer="com.j_nid.ui.renderers.BasketRenderer"
 					width="100%" height="100%"/>
 			</mx:VBox>
 		</mx:VBox>
@@ -177,8 +224,9 @@
 			<mx:Label text="คืนลัง"/>
 			
 			<mx:List id="returnList" labelField="name"
-				dataProvider="{returnBaskets}"
-				dropEnabled="true" dragDrop="dragDropHandler(event)"
+				dataProvider="{returnBaskets}" dropEnabled="true"
+				dragDrop="dragDropHandler(event)"
+				itemRenderer="com.j_nid.ui.renderers.ReturnBasketRenderer"
 				width="100%" height="100%"/>
 			
 			<mx:HBox horizontalAlign="center" width="100%">

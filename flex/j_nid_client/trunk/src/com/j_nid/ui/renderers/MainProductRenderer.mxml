@@ -34,7 +34,7 @@
     <mx:Fade id="fadeOut" alphaFrom="0.8" alphaTo="0"/>
     
     <mx:Label text="{data.name}"
-        color="{data.color}" textAlign="left" paddingLeft="20"
+        color="{data.color}" textAlign="left"
         width="100%"/>
         
     <mx:Label id="costLbl"
@@ -42,5 +42,5 @@
         rollOverEffect="{fadeIn}" rollOutEffect="{fadeOut}"/>
     
     <mx:Label id="priceLbl"
-        text="{data.price_per_unit}" textAlign="right"/>
+        text="{data.price_per_unit}" textAlign="right" paddingRight="20"/>
 </mx:HBox>

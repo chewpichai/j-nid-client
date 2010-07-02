@@ -85,19 +85,19 @@
                     <mx:DataGridColumn headerText="ชื่อ" dataField="name"/>
                         
                     <mx:DataGridColumn headerText="เบอร์โทรศัพท์ 1" dataField="0"
-						itemRenderer="com.j_nid.ui.PersonPhoneNumberRenderer"
+						itemRenderer="com.j_nid.ui.renderers.PersonPhoneNumberRenderer"
 						width="200"/>
 					
 					<mx:DataGridColumn headerText="เบอร์โทรศัพท์ 2" dataField="1"
-						itemRenderer="com.j_nid.ui.PersonPhoneNumberRenderer"
+						itemRenderer="com.j_nid.ui.renderers.PersonPhoneNumberRenderer"
 						width="200"/>
 					
 					<mx:DataGridColumn headerText="เบอร์โทรศัพท์ 3" dataField="2"
-						itemRenderer="com.j_nid.ui.PersonPhoneNumberRenderer"
+						itemRenderer="com.j_nid.ui.renderers.PersonPhoneNumberRenderer"
 						width="200"/>
 					
 					<mx:DataGridColumn headerText="เบอร์โทรศัพท์ 4" dataField="3"
-						itemRenderer="com.j_nid.ui.PersonPhoneNumberRenderer"
+						itemRenderer="com.j_nid.ui.renderers.PersonPhoneNumberRenderer"
 						width="200"/>
                 </mx:columns>
             </mx:DataGrid>
@@ -117,15 +117,15 @@
                         width="250"/>
                         
                     <mx:DataGridColumn headerText="ลูกค้า" textAlign="center"
-                        itemRenderer="com.j_nid.ui.PersonTypeRenderer"
+                        itemRenderer="com.j_nid.ui.renderers.PersonTypeRenderer"
 						dataField="is_customer" width="40"/>
                     
                     <mx:DataGridColumn headerText="ผู้ขาย" textAlign="center"
-						itemRenderer="com.j_nid.ui.PersonTypeRenderer"
+						itemRenderer="com.j_nid.ui.renderers.PersonTypeRenderer"
 						dataField="is_supplier" width="40"/>
 					
                     <mx:DataGridColumn headerText="ทั่วไป" textAlign="center"
-						itemRenderer="com.j_nid.ui.PersonTypeRenderer"
+						itemRenderer="com.j_nid.ui.renderers.PersonTypeRenderer"
 						dataField="is_general" width="40"/>
 				</mx:columns>
             </mx:DataGrid>
