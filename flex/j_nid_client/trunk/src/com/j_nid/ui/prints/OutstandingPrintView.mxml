@@ -19,6 +19,8 @@
             public var startDate:Date;
             [Bindable]
             public var endDate:Date;
+            [Bindable]
+            public var total:Number;
             
 			private function formatCreated(item:Object,
                                            column:DataGridColumn):String {
@@ -95,7 +97,7 @@
         height="24" width="100"/>
 	
 	<mx:Label id="totalLbl"
-		text="{Utils.formatPrice(Utils.sum(orders, 'outstanding'))}"
+		text="{Utils.formatPrice(total)}"
 		textAlign="right"
 		bottom="45" left="279"
 		height="24" width="100"/>

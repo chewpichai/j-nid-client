@@ -23,7 +23,7 @@
         	
         	[Bindable]
         	private var orderItems:XMLListCollection;
-        	private var nonPledgeBaskets:XMLListCollection;
+        	private var nonDepositBaskets:XMLListCollection;
         	private var errMsg:String;
 			private var order:XML;
             
@@ -31,7 +31,7 @@
             	orderItems = new XMLListCollection();
                 orderItems.addEventListener(CollectionEvent.COLLECTION_CHANGE,
                     orderItemsChange);
-                nonPledgeBaskets = new XMLListCollection();
+                nonDepositBaskets = new XMLListCollection();
                 loadCustomers(customerResultHandler);
             }
             
@@ -75,7 +75,7 @@
                 var orderItem:XML = <order_item/>;
                 orderItem.type = obj.name();
                 orderItem.name = obj.name;
-                orderItem.unit_per_quantity = int(obj.unit);
+                orderItem.unit_per_quantity = Number(obj.unit);
                 orderItem.unit = obj.unit;
                 orderItem.price_per_unit = obj.price_per_unit;
                 orderItem.cost_per_unit = obj.cost_per_unit;
@@ -91,12 +91,12 @@
 					if ((orderItem.type == "basket" && orderItem.id == item.id) ||
 						(orderItem.type == "product" && orderItem.product_id == item.product_id)) {
                         
-						item.unit = int(item.unit) + int(orderItem.unit);
+						item.unit = Number(item.unit) + Number(orderItem.unit);
 						if (item.type == "basket")
 							item.quantity = 0;
 						else
                         	item.quantity = int(item.quantity) + 1;
-                        item.total = Number(item.price_per_unit) * int(item.unit);
+                        item.total = Number(item.price_per_unit) * Number(item.unit);
                         return;
                     }
                 }
@@ -126,8 +126,8 @@
                     order.notation = notationField.text;
                     order.order_items = <order_items/>;
                     order.order_items.appendChild(orderItems.source);
-					order.non_pledge_baskets = <non_pledge_baskets/>;
-					order.non_pledge_baskets.appendChild(nonPledgeBaskets.source);
+					order.non_deposit_baskets = <non_deposit_baskets/>;
+					order.non_deposit_baskets.appendChild(nonDepositBaskets.source);
                     var form:OrderProcessForm =
                         OrderProcessForm(Utils.showPopUp(OrderProcessForm));
                     if (int(order.person_id) <= 24) {
@@ -135,7 +135,6 @@
                         form.paidField.enabled = false;
                     }
                     form.order = order.copy();
-                    trace(order);
                 } else {
                     Utils.showMessage(errMsg, "พบข้อผิดพลาด");
                 }
@@ -210,7 +209,7 @@
 				var obj:XML = e.dragSource.dataForFormat("items")[0].copy();
             	obj.unit = 1;
 				var notation:String = notationField.text;
-            	for each (var basket:XML in nonPledgeBaskets) {
+            	for each (var basket:XML in nonDepositBaskets) {
             		if (basket.id == obj.id) {
                         basket.unit = int(basket.unit) + int(obj.unit);
                         var pattern:RegExp = new RegExp("(" +
@@ -221,7 +220,7 @@
                         return;
                     }
             	}
-            	nonPledgeBaskets.addItem(obj);
+            	nonDepositBaskets.addItem(obj);
 				if (notation.length > 0)
 					notation += "  ";
 				notation += obj.name + " x 1";

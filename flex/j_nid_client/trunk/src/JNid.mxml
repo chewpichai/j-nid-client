@@ -7,26 +7,54 @@
 	
 	<mx:Script>
 		<![CDATA[
-			import com.j_nid.ui.popups.LogInForm;
-			import com.j_nid.utils.Responder;
-			import com.j_nid.utils.ServiceUtils;
-			import com.j_nid.utils.Utils;
-			
-			import mx.events.FlexEvent;
-			import mx.events.ItemClickEvent;
-			import mx.rpc.events.FaultEvent;
+            import air.update.ApplicationUpdaterUI;
+            import air.update.events.UpdateEvent;
+            
+            import com.j_nid.ui.popups.LogInForm;
+            import com.j_nid.utils.Responder;
+            import com.j_nid.utils.ServiceUtils;
+            import com.j_nid.utils.Utils;
+            
+            import mx.controls.Alert;
+            import mx.events.FlexEvent;
+            import mx.events.ItemClickEvent;
+            import mx.rpc.events.FaultEvent;
 			
 			public var productsToUpdate:XML = <products/>;
+            private var appUpdater:ApplicationUpdaterUI;
 			
             [Bindable]
 			public var mainMenuList:Array = [
                 "หน้าหลัก", "ทำรายการขาย", "ข้อมูลสินค้า",
-                "ข้อมูลบุคคล", "รายการขาย", "รายการบัญชี"];
+                "ข้อมูลบุคคล", "รายการขาย", "รายการบัญชี",
+                "รายงาน"];
                 
             private function applicationCompleteHanler(e:FlexEvent):void {
-            	Utils.showPopUp(LogInForm);
-				var currentYear:int = new Date().fullYear;
-            	status = "Copyright (c) 2008-" + currentYear + " ChewLab. All rights reserved."
+                var currentYear:int = new Date().fullYear;
+            	status = "Copyright (c) 2008-" + currentYear + " ChewLab. All rights reserved.";
+                checkForUpdate();
+            }
+            
+            private function checkForUpdate():void {
+                appUpdater = new ApplicationUpdaterUI();
+                appUpdater.updateURL = "http://www.chewlab.com/apps/j-nid/update.xml";
+                appUpdater.isCheckForUpdateVisible = false;
+                appUpdater.addEventListener(UpdateEvent.INITIALIZED, onUpdate);
+                appUpdater.addEventListener(ErrorEvent.ERROR, onError);
+                appUpdater.initialize();
+            }
+            
+            private function onUpdate(e:UpdateEvent):void {
+                appUpdater.checkNow();
+                startApp();
+            }
+            
+            private function onError(e:ErrorEvent):void {
+                startApp();
+            }
+            
+            private function startApp():void {
+                Utils.showPopUp(LogInForm);
             }
             
             private function logOutBtnClickHandler(e:MouseEvent):void {
@@ -61,6 +89,9 @@
 					case 5:
 						Utils.showAccountPage();
 						break;
+                    case 6:
+                        Utils.showReportPage();
+                        break;
                 }
             }
 		]]>
@@ -69,8 +100,7 @@
 	<mx:Style source="css/styles.css"/>
 	
 	<mx:ApplicationControlBar
-		paddingTop="0" paddingRight="0"
-		paddingBottom="0" paddingLeft="0"
+		paddingTop="0" paddingRight="0"	paddingBottom="0" paddingLeft="0"
 		dock="true"	height="40">
 		
 		<mx:ToggleButtonBar id="mainMenu"

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml"
+    xmlns:jn="com.j_nid.components.*"
     title="การจ่ายเงิน" layout="absolute"
 	showCloseButton="true" close="close()"
 	width="350" height="300">
@@ -21,6 +22,7 @@
                     var payment:XML = <payment/>;
                     payment.amount = amountField.value;
                     payment.notation = notationField.text;
+                    payment.created = createdField.dateString;
                     payment.person_id = int(person.id);
 					var responder:com.j_nid.utils.Responder =
 						new com.j_nid.utils.Responder(paymentResultHandler);
@@ -42,6 +44,8 @@
                         errMsg += result.errorMessage + "\n";
                     }
                 }
+                if (createdField.dateString.length == 0)
+                    errMsg += "กรุณาตรวจสอบวันที่ให้ถูกต้อง";
                 return errMsg.length == 0;
             }
             
@@ -63,6 +67,13 @@
             
             <mx:Label text="{Math.abs(Number(person.outstanding_total))}"
 				color="{getColor(person.outstanding_total)}"/>
+        </mx:FormItem>
+        
+        <mx:FormItem label="วันที่" width="100%">
+            
+            <jn:DateTimeInput id="createdField"
+                text="{Utils.formatDate(new Date(), 'DD-MM-YYYY JJ:NN')}"
+                textAlign="left"/>
         </mx:FormItem>
         
         <mx:FormItem label="ชำระจำนวน" width="100%">

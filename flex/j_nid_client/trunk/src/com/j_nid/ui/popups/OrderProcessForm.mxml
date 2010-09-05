@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" 
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml"
+    xmlns:jn="com.j_nid.components.*"
 	title="รายละเอียด" layout="vertical" borderAlpha="0.8"
 	verticalScrollPolicy="off" showCloseButton="true"
 	close="close()"
@@ -7,46 +8,54 @@
 	
 	<mx:Script>
 		<![CDATA[
-			import com.j_nid.utils.PrintUtils;
-			import com.j_nid.utils.Responder;
-			import com.j_nid.utils.ServiceUtils;
-			import com.j_nid.utils.Utils;
-			
-			import mx.events.FlexEvent;
+            import com.j_nid.utils.PrintUtils;
+            import com.j_nid.utils.Responder;
+            import com.j_nid.utils.ServiceUtils;
+            import com.j_nid.utils.Utils;
+            
+            import mx.events.FlexEvent;
+            import mx.events.ValidationResultEvent;
 			
 			[Bindable]
 			public var order:XML;
 			
 			private function submitBtnClickListener(e:MouseEvent):void {
-				var order:XML = order.copy();
-				var orderItems:XML = <order_items/>;
-				var pledgeBaskets:XML = <pledge_baskets/>;
-				var nonPledgeBaskets:XML = <non_pledge_baskets/>;
-				for each (var item:XML in order.order_items.children()) {
-					if (item.type == "basket") {
-						item.setName("basket");
-						pledgeBaskets.appendChild(item);
-						continue;
-					}
-					orderItems.appendChild(item);
-				}
-				order.pledge_baskets = pledgeBaskets;
-				order.order_items = orderItems;
-				for each (var basket:XML in order.non_pledge_baskets.basket) {
-					var pattern:RegExp = new RegExp(
-						Utils.escapeRegexChars(basket.name) +
-						"\\s+x\\s+(\\d+)", "g");
-					var result:Object = pattern.exec(order.notation);
-					if (result) {
-						basket.unit = result[1];
-						nonPledgeBaskets.appendChild(basket);
-					}	
-				}
-				order.non_pledge_baskets = nonPledgeBaskets;
-				if (paidField.value > 0)
-					order.paid = paidField.value;
-				postOrder(order);
+                if (isValid()) {
+    				var order:XML = order.copy();
+    				var orderItems:XML = <order_items/>;
+    				var depositedBaskets:XML = <deposited_baskets/>;
+    				var nonDepositBaskets:XML = <non_deposit_baskets/>;
+    				for each (var item:XML in order.order_items.children()) {
+    					if (item.type == "basket") {
+    						item.setName("basket");
+    						depositedBaskets.appendChild(item);
+    						continue;
+    					}
+    					orderItems.appendChild(item);
+    				}
+    				order.deposited_baskets = depositedBaskets;
+    				order.order_items = orderItems;
+    				for each (var basket:XML in order.non_deposit_baskets.basket) {
+    					var pattern:RegExp = new RegExp(
+    						Utils.escapeRegexChars(basket.name) +
+    						"\\s+x\\s+(\\d+)", "g");
+    					var result:Object = pattern.exec(order.notation);
+    					if (result) {
+    						basket.unit = result[1];
+    						nonDepositBaskets.appendChild(basket);
+    					}	
+    				}
+    				order.non_deposit_baskets = nonDepositBaskets;
+    				if (paidField.value > 0)
+    					order.paid = paidField.value;
+                    order.created = createdField.dateString;
+                    postOrder(order);
+                }
 			}
+            
+            private function isValid():Boolean {
+                return createdField.dateString.length > 0;
+            }
 			
 			private function postOrder(order:XML):void {
                 var responder:com.j_nid.utils.Responder =
@@ -59,6 +68,7 @@
 			}
 			
 			private function orderResultHandler(data:Object):void {
+                order.created = Utils.formatDate(createdField.date, 'DD/MM/YY JJ:NN');
 				PrintUtils.printOrder(order);
 				close();
 				Utils.showMakeOrderPage();
@@ -88,7 +98,7 @@
 		<mx:Spacer width="100%"/>
 		
 		<mx:FormItem label="วันที่:">
-			<mx:Label text="{Utils.formatDate(new Date(), 'DD-MM-YYYY JJ:NN')}"/>
+			<jn:DateTimeInput id="createdField" text="{Utils.formatDate(new Date(), 'DD-MM-YYYY JJ:NN')}"/>
 		</mx:FormItem>
 	</mx:HBox>
 	
@@ -104,7 +114,7 @@
 			<mx:DataGridColumn headerText="ชื่อ" dataField="name"/>
 			
 			<mx:DataGridColumn headerText="หน่วย"	dataField="unit"
-				width="70"/>
+                labelFunction="Utils.unitLabelFunction" width="70"/>
 			
 			<mx:DataGridColumn headerText="ราคาต่อหน่วย"
 				dataField="price_per_unit"
@@ -138,7 +148,7 @@
 	        
 	        <mx:NumericStepper id="paidField"
 	            minimum="0" maximum="1000000"
-	            stepSize="0.25" width="100"/>
+	            stepSize="0.5" width="100"/>
 	    </mx:FormItem>
 	</mx:HBox>
 	

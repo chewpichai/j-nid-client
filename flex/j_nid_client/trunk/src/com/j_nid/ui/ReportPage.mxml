@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml"
+    width="100%" height="100%">
+    
+    <mx:Script>
+        <![CDATA[
+            import com.j_nid.ui.popups.OrderDetailForm;
+            import com.j_nid.utils.ServiceUtils;
+            import com.j_nid.utils.Utils;
+            
+            private function formatDateForTransaction(item:Object,
+                                    column:DataGridColumn):String {
+                
+                if (String(item[column.dataField]).length > 0) {
+                    var created:Date = new Date(Date.parse(item[column.dataField]));
+                    return Utils.formatDate(created, "DD MMM YYYY JJ:NN");
+                }
+                return "";
+            }
+            
+            private function priceLabelFunction(item:Object,
+                                    column:DataGridColumn):String {
+                
+                if (Number(item[column.dataField]) != 0)
+                    return Utils.formatPrice(item[column.dataField]);
+                return "";
+            }
+            
+            private function transactionListKeyDown(e:KeyboardEvent):void {
+                
+            }
+            
+            private function transactionListDoubleClick(e:MouseEvent):void {
+                var dg:DataGrid = DataGrid(e.currentTarget);
+                showTransactionDetail(XML(dg.selectedItem));
+            }
+            
+            private function showTransactionDetail(transaction:XML):void {
+                if (transaction.type == "order")
+                    showOrderDetailForm(transaction);
+            }
+            
+            private function showOrderDetailForm(transaction:XML):void {
+                var responder:com.j_nid.utils.Responder =
+                    new com.j_nid.utils.Responder(orderResultHandler);
+                var attrs:String = "attrs=id,person_name,notation,created";
+                ServiceUtils.send("/orders/" + transaction.id + "/?" + attrs,
+                    "GET", responder);
+            }
+            
+            private function orderResultHandler(data:Object):void {
+                var form:OrderDetailForm =
+                    OrderDetailForm(Utils.showPopUp(OrderDetailForm));
+                form.order = data.result;
+            }
+            
+            private function submitBtnClick(e:MouseEvent):void {
+                loadTransactions();
+            }
+            
+            private function loadTransactions():void {
+                var responder:com.j_nid.utils.Responder =
+                    new com.j_nid.utils.Responder(transactionResultHandler);
+                var startDate:Date = startDateField.selectedDate;
+                var endDate:Date = endDateField.selectedDate;
+                var filters:String = "filters=date_range=" + Utils.formatDate(startDate, "YYYY-MM-DD") +
+                    ":" + Utils.formatDate(endDate, "YYYY-MM-DD");
+                ServiceUtils.send("/transactions/?" + filters,
+                    "GET", responder);
+            }
+            
+            private function transactionResultHandler(data:Object):void {
+                transactionList.dataProvider = data.result.children();
+            }
+        ]]>
+    </mx:Script>
+    
+    <mx:HBox width="100%">
+        
+        <mx:Label text="เริ่มจากวันที่"/>
+        
+        <mx:DateField id="startDateField"
+            selectedDate="{new Date()}" formatString="DD-MM-YYYY"/>
+        
+        <mx:Label text="ถึงวันที่"/>
+        
+        <mx:DateField id="endDateField"
+            selectedDate="{new Date()}" formatString="DD-MM-YYYY"/>
+        
+        <mx:Button label="ตกลง" click="submitBtnClick(event)"/>
+    </mx:HBox>
+    
+    <mx:DataGrid id="transactionList"
+        keyDown="transactionListKeyDown(event)" variableRowHeight="true"
+        headerStyleName="centerHeader" doubleClickEnabled="true"
+        doubleClick="transactionListDoubleClick(event)"
+        rowHeight="30" width="100%" height="100%">
+        
+        <mx:columns>
+            <mx:DataGridColumn headerText="วันที่" dataField="created"
+                labelFunction="formatDateForTransaction" width="150"/>
+            
+            <mx:DataGridColumn headerText="รายการขาย" dataField="outstanding"
+                labelFunction="priceLabelFunction"
+                textAlign="right" paddingRight="5"/>
+            
+            <mx:DataGridColumn headerText="จ่ายเงิน" dataField="paid"
+                labelFunction="priceLabelFunction"
+                textAlign="right" paddingRight="5"/>
+            
+            <mx:DataGridColumn headerText="หมายเหตุ" dataField="note"/>
+        </mx:columns>
+    </mx:DataGrid>
+</mx:VBox>

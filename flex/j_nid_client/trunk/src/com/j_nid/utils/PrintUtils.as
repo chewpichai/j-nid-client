@@ -79,6 +79,7 @@ package com.j_nid.utils {
                 	outstandingOrders.unshift({created: "ยอดค้างยกมา",
 						outstanding: Math.abs(balance)});
                 }
+                outstandingPrintView.total = Utils.sum(outstandingOrders, "outstanding");
                 var numOrders:int = outstandingOrders.length;
                 var numPages:int = Math.ceil(numOrders / NUM_ITEMS_PER_PAGE);
                 if (numPages > 1) {
@@ -122,6 +123,7 @@ package com.j_nid.utils {
                     payments.unshift({created: "ยอดจ่ายยกมา",
                        paid: Math.abs(balance)});
                 }
+                paymentPrintView.total = Utils.sum(payments, "paid");
                 paymentPrintView.outstandingSummary = 
                     Utils.sum(outstandingOrders, "outstanding") - Utils.sum(payments, "paid");
                 numOrders = payments.length;
@@ -170,6 +172,7 @@ package com.j_nid.utils {
                 if (transaction.type == "order")
 					orders.push(transaction);
             }
+            orders.sort(createdCompare);
             return orders;
 		}
 		
@@ -179,7 +182,18 @@ package com.j_nid.utils {
 				if (transaction.type == "payment")
 					payments.push(transaction);
 			}
+            payments.sort(createdCompare);
             return payments;
+        }
+        
+        private static function createdCompare(obj1:Object, obj2:Object):int {
+            var date1:Date = new Date(Date.parse(obj1["created"]));
+            var date2:Date = new Date(Date.parse(obj2["created"]));
+            if (date1 < date2)
+                return -1;
+            else if (date1 > date2)
+                return 1;
+            return 0;
         }
 	}
 }

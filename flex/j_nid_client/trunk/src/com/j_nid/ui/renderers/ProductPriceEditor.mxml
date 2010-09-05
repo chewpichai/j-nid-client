@@ -40,13 +40,13 @@
 		<mx:FormItem label="ราคาทุนต่อหน่วย:"	width="100%">
 			
 			<mx:NumericStepper id="costField" value="{data.cost_per_unit}" 
-				textAlign="right" stepSize="0.25" maximum="10000"/>
+				textAlign="right" stepSize="0.5" maximum="10000"/>
 		</mx:FormItem>
 		
 		<mx:FormItem label="ราคาต่อหน่วย:" width="100%">
 			
 			<mx:NumericStepper id="priceField" value="{data.price_per_unit}" 
-				textAlign="right" stepSize="0.25" maximum="10000"/>
+				textAlign="right" stepSize="0.5" maximum="10000"/>
 		</mx:FormItem>
 	</mx:Form>
 	

@@ -1,12 +1,13 @@
 package com.j_nid.utils {
 	
 	import com.j_nid.ui.AccountPage;
-	import com.j_nid.ui.popups.Loading;
 	import com.j_nid.ui.MainPage;
 	import com.j_nid.ui.MakeOrderPage;
 	import com.j_nid.ui.OrderPage;
 	import com.j_nid.ui.PersonPage;
 	import com.j_nid.ui.ProductPage;
+	import com.j_nid.ui.ReportPage;
+	import com.j_nid.ui.popups.Loading;
 	
 	import flash.display.DisplayObject;
 	
@@ -46,16 +47,33 @@ package com.j_nid.utils {
 		public static function priceLabelFunction(item:Object,
 									column:DataGridColumn):String {
 		                                          	
-            return Utils.formatPrice(item[column.dataField]);			
+            return Utils.formatPrice(item[column.dataField]);
 		}
 		
 		public static function formatPrice(num:Number):String {
-		    if (numberFormatter == null) {
+		    /*if (numberFormatter == null) {
 		        numberFormatter = new NumberFormatter();
 		    }
 			numberFormatter.precision = 2;
-			return numberFormatter.format(num);
+			return numberFormatter.format(num);*/
+            return formatUnit(num);
 		}
+        
+        public static function unitLabelFunction(item:Object,
+                                    column:DataGridColumn):String {
+            
+            return Utils.formatUnit(item[column.dataField]);			
+        }
+        
+        public static function formatUnit(num:Number):String {
+            if (numberFormatter == null)
+                numberFormatter = new NumberFormatter();
+            if (num % 1 == 0)
+                numberFormatter.precision = 0;
+            else
+                numberFormatter.precision = 2;
+            return numberFormatter.format(num);
+        }
 		
 		public static function sum(obj:Object, field:String):Number {
 			var sum:Number = 0;
@@ -135,6 +153,10 @@ package com.j_nid.utils {
 		public static function showAccountPage():void {
 			addToMainContainer(new AccountPage());
 		}
+        
+        public static function showReportPage():void {
+            addToMainContainer(new ReportPage());
+        }
 		
 		public static function addToMainContainer(displayObj:DisplayObject):void {
 			clearMainContainer();

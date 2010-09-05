@@ -7,7 +7,7 @@
 				if (value) {
 					super.data = value;
 					text = value.name + " x " + value.quantity;
-					if (Boolean(int(data.is_pledge)))
+					if (Boolean(int(data.is_deposit)))
 						setStyle("color", 0x0000ff);
 					else
 						setStyle("color", 0xff0000);

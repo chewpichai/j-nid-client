@@ -4,8 +4,11 @@
 	
 	<mx:Script>
 		<![CDATA[
-			import mx.events.NumericStepperEvent;
-			override public function set data(value:Object):void {
+            import com.j_nid.events.DiffEvent;
+            
+            import mx.events.NumericStepperEvent;
+			
+            override public function set data(value:Object):void {
 				if (value) {
 					super.data = value;
 					if (quantityField) {
@@ -14,7 +17,7 @@
 					}
 					if (nameLbl) {
 						nameLbl.text = value.name;
-						if (Boolean(int(data.is_pledge)))
+						if (Boolean(int(data.is_deposit)))
 							nameLbl.setStyle("color", 0x0000ff);
 						else
 							nameLbl.setStyle("color", 0xff0000);
@@ -22,8 +25,14 @@
 				}
 			}
 
-			protected function changeHandler(event:NumericStepperEvent):void {
+			protected function changeHandler(e:NumericStepperEvent):void {
+                var diff:int = int(quantityField.value) - int(data.quantity);
+                diff *= data.price_per_unit;
 				data.quantity = quantityField.value;
+                if (Boolean(int(data.is_deposit))) {
+                    var diffEvent:DiffEvent = new DiffEvent(diff);
+                    dispatchEvent(diffEvent);
+                }
 			}
 
 		]]>

@@ -80,7 +80,7 @@
 				if (e.currentTarget is ProductTypeForm)
 					loadProductTypes();
 				else if (e.currentTarget is ProductForm)
-					loadProducts();
+					loadProducts(productTypeCombo.selectedItem.id);
 				else
 					loadBaskets();
 			}
@@ -156,13 +156,14 @@
                         
                     <mx:DataGridColumn headerText="ชนิดสินค้า" dataField="type"/>
                         
-                    <mx:DataGridColumn headerText="หน่วย" dataField="unit"/>
+                    <mx:DataGridColumn headerText="หน่วย" dataField="unit"
+                        labelFunction="Utils.unitLabelFunction"/>
 					
 					<mx:DataGridColumn headerText="ราคาทุนต่อหน่วย"
-						dataField="cost_per_unit"/>
+						dataField="cost_per_unit" labelFunction="Utils.priceLabelFunction"/>
                         
                     <mx:DataGridColumn headerText="ราคาต่อหน่วย"
-                        dataField="price_per_unit"/>
+                        dataField="price_per_unit" labelFunction="Utils.priceLabelFunction"/>
                         
                     <mx:DataGridColumn headerText="มีขาย" dataField="is_sale"
                         itemRenderer="com.j_nid.ui.renderers.ProductIsSaleRenderer"/>

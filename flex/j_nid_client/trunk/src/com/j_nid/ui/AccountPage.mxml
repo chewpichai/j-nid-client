@@ -6,19 +6,20 @@
     
     <mx:Script>
         <![CDATA[
-			import com.j_nid.ui.popups.OrderDetailForm;
-			import com.j_nid.ui.popups.PaymentForm;
-			import com.j_nid.utils.PrintUtils;
-			import com.j_nid.utils.ServiceUtils;
-			import com.j_nid.utils.Utils;
-			
-			import mx.collections.ArrayCollection;
-			import mx.collections.ListCollectionView;
-			import mx.collections.XMLListCollection;
-			import mx.controls.Alert;
-			import mx.events.CalendarLayoutChangeEvent;
-			import mx.events.CloseEvent;
-			import mx.events.FlexEvent;
+            import com.j_nid.ui.popups.OrderDetailForm;
+            import com.j_nid.ui.popups.PaymentDetailForm;
+            import com.j_nid.ui.popups.PaymentForm;
+            import com.j_nid.utils.PrintUtils;
+            import com.j_nid.utils.ServiceUtils;
+            import com.j_nid.utils.Utils;
+            
+            import mx.collections.ArrayCollection;
+            import mx.collections.ListCollectionView;
+            import mx.collections.XMLListCollection;
+            import mx.controls.Alert;
+            import mx.events.CalendarLayoutChangeEvent;
+            import mx.events.CloseEvent;
+            import mx.events.FlexEvent;
 			
             [Bindable]
             private var customer:XML;
@@ -84,6 +85,20 @@
 				customer = XML(customerList.selectedItem);
                 loadTransactions(customer.id);
             }
+            
+            private function showPaymentDetailForm(transaction:XML):void {
+                var responder:com.j_nid.utils.Responder =
+                    new com.j_nid.utils.Responder(paymentResultHandler);
+                var attrs:String = "attrs=id,amount,person_name,notation,created";
+                ServiceUtils.send("/payments/" + transaction.id + "/?" + attrs,
+                    "GET", responder);
+            }
+            
+            private function paymentResultHandler(data:Object):void {
+                var form:PaymentDetailForm =
+                    PaymentDetailForm(Utils.showPopUp(PaymentDetailForm));
+                form.payment = data.result;
+            }
 			
 			private function showOrderDetailForm(transaction:XML):void {
 				var responder:com.j_nid.utils.Responder =
@@ -126,9 +141,10 @@
             private function printBtnClick(e:MouseEvent):void {
 				var transactions:ListCollectionView =
 					ListCollectionView(transactionList.dataProvider);
-				if (transactions.length > 0)
-                PrintUtils.printTransaction(customer, transactions,
-					startDateField.selectedDate, endDateField.selectedDate);
+				if (transactions.length > 0) {
+                    PrintUtils.printTransaction(customer, transactions,
+    					startDateField.selectedDate, endDateField.selectedDate);
+                }
             }
             
             private function transactionListKeyDown(e:KeyboardEvent):void {
@@ -167,6 +183,8 @@
 			private function showTransactionDetail(transaction:XML):void {
 				if (transaction.type == "order")
 					showOrderDetailForm(transaction);
+                else
+                    showPaymentDetailForm(transaction);
 			}
 			
 			private function formatDateForCustomer(item:Object,
@@ -176,7 +194,7 @@
 					var created:Date = new Date(Date.parse(item[column.dataField]));
 					return Utils.formatDate(created, "DD MMM YYYY");
 				}
-				return '';
+				return "";
 			}
 			
 			private function formatDateForTransaction(item:Object,
@@ -186,15 +204,15 @@
 					var created:Date = new Date(Date.parse(item[column.dataField]));
 					return Utils.formatDate(created, "DD MMM YYYY JJ:NN");
 				}
-				return '';
+				return "";
 			}
 			
 			private function priceLabelFunction(item:Object,
-												column:DataGridColumn):String {
+                                    column:DataGridColumn):String {
 				
 				if (Number(item[column.dataField]) != 0)
 					return Utils.formatPrice(item[column.dataField]);
-				return '';
+				return "";
 			}
             
             private function backBtnClickHandler(e:MouseEvent):void {

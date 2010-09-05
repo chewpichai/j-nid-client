@@ -46,24 +46,25 @@
 			private function loadBasketsOrders():void {
 				var responder:com.j_nid.utils.Responder =
 					new com.j_nid.utils.Responder(basketOrderResultHandler);
-				var attrs:String = "attrs=id,name,quantity,price_per_unit,is_pledge";
+				var attrs:String = "attrs=id,name,quantity,price_per_unit,is_deposit";
 				ServiceUtils.send("/orders/" + order.id + "/baskets/?" + attrs,
 					"GET", responder);
 			}
 			
 			private function basketOrderResultHandler(data:Object):void {
-				for each (var basket:XML in data.result.children())
-				if (Boolean(int(basket.is_pledge))) {
-					var addedBasket:XML = getAddedBasket(basket);
-					if (addedBasket) {
-						addedBasket.unit = int(addedBasket.unit) + 1;
-						addedBasket.total = Number(addedBasket.price_per_unit) * int(addedBasket.unit);
-					} else {
-						basket.unit = 1;
-						basket.total = Number(basket.price_per_unit);
-						order.order_items.appendChild(basket);
-					}
-				}
+				for each (var basket:XML in data.result.children()) {
+    				if (Boolean(int(basket.is_deposit))) {
+    					var addedBasket:XML = getAddedBasket(basket);
+    					if (addedBasket) {
+    						addedBasket.unit = int(addedBasket.unit) + 1;
+    						addedBasket.total = Number(addedBasket.price_per_unit) * int(addedBasket.unit);
+    					} else {
+    						basket.unit = 1;
+    						basket.total = Number(basket.price_per_unit);
+    						order.order_items.appendChild(basket);
+    					}
+    				}
+                }
 			}
 			
 			private function getAddedBasket(basket:XML):XML {
@@ -117,7 +118,7 @@
 			<mx:DataGridColumn headerText="ชื่อ" dataField="name"/>
 			
 			<mx:DataGridColumn headerText="หน่วย"	dataField="unit"
-				width="70"/>
+                labelFunction="Utils.unitLabelFunction" width="70"/>
 			
 			<mx:DataGridColumn headerText="ราคาต่อหน่วย"
 				dataField="price_per_unit"

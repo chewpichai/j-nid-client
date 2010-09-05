@@ -95,7 +95,7 @@
 						wordWrap="true"/>
 					
 					<mx:DataGridColumn headerText="หน่วย" dataField="unit"
-						width="50"/>
+                        labelFunction="Utils.unitLabelFunction" width="50"/>
 					
 					<mx:DataGridColumn headerText="ราคาต่อหน่วย"
 						labelFunction="Utils.priceLabelFunction"
