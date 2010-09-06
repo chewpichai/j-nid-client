@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml"
                 xmlns:jn="com.j_nid.components.*"
-	title="รายการคืนลัง"	layout="vertical"
-	creationComplete="creationCompleteHandler(event)"
-	showCloseButton="true" close="close()"
-	width="800" height="600">
+                title="รายการคืนลัง"	layout="vertical"
+                creationComplete="creationCompleteHandler(event)"
+	            showCloseButton="true" close="close()"
+            	width="800" height="600">
 	
 	<mx:Script>
 		<![CDATA[
@@ -30,15 +30,24 @@
 			private var returnBaskets:XMLListCollection;
 			private var sort:Sort;
 			private var baskets:XMLList;
-            [Bindable]
-            private var customer:XML;
+            private var _customer:XML;
             private var errMsg:String;
 			
+            [Bindable]
+            public function get customer():XML {
+                return _customer;
+            }
+
+            public function set customer(val:XML):void {
+                _customer = val;
+                loadBaskets();
+            }
+
 			private function creationCompleteHandler(e:FlexEvent):void {
 				sort = new Sort();
 				sort.fields = [new SortField("name")];
-				loadCustomers();
                 addEventListener(DiffEvent.NUMBER_CHANGE, quantityChangeHandler);
+				loadCustomers();
 			}
 			
 			private function loadCustomers():void {
@@ -65,9 +74,7 @@
 					new com.j_nid.utils.Responder(basketResultHandler);
 				var attrs:String = "attrs=id,name,is_deposit,price_per_unit";
 				var filters:String = "filters=is_return=0";
-                customer = XML(customerField.selectedItem);
-				var customerID:int = customer.id;
-				ServiceUtils.send("/people/" + customerID + "/baskets/?" + attrs + "&" + filters,
+				ServiceUtils.send("/people/" + customer.id + "/baskets/?" + attrs + "&" + filters,
 					"GET", responder);
 			}
 			
@@ -130,7 +137,7 @@
 					personSelectFormCloseHandler);
 				if (form.selectedPerson) {
 					customerField.selectedItem = form.selectedPerson;
-					loadBaskets();
+					customer = XML(customerField.selectedItem);
 				}
 			}
 			
@@ -229,25 +236,31 @@
             }
 		]]>
 	</mx:Script>
+    
+    <mx:states>
+        <mx:State name="payment">
+            <mx:RemoveChild target="{customerGroup}"/>
+        </mx:State>
+    </mx:states>
 	
-	<mx:HBox horizontalAlign="center" verticalAlign="middle" width="100%">
-		
+	<mx:HBox id="customerGroup" horizontalAlign="center" verticalAlign="middle"
+             width="100%">
 		<mx:Label text="ชื่อลูกค้า:"/>
-		
 		<mx:ComboBox id="customerField" labelField="name"
-			change="loadBaskets()" width="250"/>
-		
+                     change="customer=XML(customerField.selectedItem)"
+                     width="250"/>
 		<mx:Button label="เลือก" buttonDown="selectCustomerBtnDown(event)"/>
 	</mx:HBox>
     
     <mx:Form width="100%">
         <mx:FormItem label="ยอดค้างชำระ">
-            <mx:Label text="{customer.outstanding_total}" width="150"/>
+            <mx:Label text="{Utils.formatPrice(Math.abs(Number(customer.outstanding_total)))}"
+                      color="{getColor(customer.outstanding_total)}"/>
         </mx:FormItem>
         <mx:FormItem label="วันที่">
             <jn:DateTimeInput id="createdField"
-                text="{Utils.formatDate(new Date(), 'DD-MM-YYYY JJ:NN')}"
-                width="150"/>
+                              text="{Utils.formatDate(new Date(), 'DD-MM-YYYY JJ:NN')}"
+                              textAlign="left" width="150"/>
         </mx:FormItem>
         <mx:FormItem label="จำนวนเงินที่ชำระ">
             <mx:NumericStepper id="paymentField" maximum="1000000" width="150"/>
@@ -255,56 +268,42 @@
     </mx:Form>
 	
 	<mx:HBox width="100%" height="100%">
-		
 		<mx:VBox width="50%" height="100%">
-			
 			<mx:VBox width="100%" height="50%">
 				<mx:Label text="ลังมัดจำ"/>
-				
 				<mx:List id="depositedList" labelField="name"
 					dataProvider="{depositedBaskets}" dragEnabled="true"
 					itemRenderer="com.j_nid.ui.renderers.BasketRenderer"
 					width="100%" height="100%"/>
 			</mx:VBox>
-			
 			<mx:VBox width="100%" height="50%">
 				<mx:Label text="ลังไม่มัดจำ"/>
-				
 				<mx:List id="nonDepositList" labelField="name"
-					dataProvider="{nonDepositBaskets}" dragEnabled="true"
-					itemRenderer="com.j_nid.ui.renderers.BasketRenderer"
-					width="100%" height="100%"/>
+                         dataProvider="{nonDepositBaskets}" dragEnabled="true"
+                         itemRenderer="com.j_nid.ui.renderers.BasketRenderer"
+                         width="100%" height="100%"/>
 			</mx:VBox>
 		</mx:VBox>
-		
 		<mx:VBox width="50%" height="100%">
 			<mx:Label text="คืนลัง"/>
-			
 			<mx:List id="returnList" labelField="name"
-				dataProvider="{returnBaskets}" dropEnabled="true"
-				dragDrop="dragDropHandler(event)"
-				itemRenderer="com.j_nid.ui.renderers.ReturnBasketRenderer"
-				width="100%" height="100%"/>
-			
+                     dataProvider="{returnBaskets}" dropEnabled="true"
+                     dragDrop="dragDropHandler(event)"
+                     itemRenderer="com.j_nid.ui.renderers.ReturnBasketRenderer"
+                     width="100%" height="100%"/>
 			<mx:HBox horizontalAlign="center" width="100%">
-				
 				<mx:Button label="ล้าง" buttonDown="clearBtnDownHandler(event)"/>
-				
 				<mx:Button label="ลบ" enabled="{returnList.selectedItem}"
-					buttonDown="deleteBtnDownHandler(event)"/>
+                           buttonDown="deleteBtnDownHandler(event)"/>
 			</mx:HBox>
 		</mx:VBox>
 	</mx:HBox>
-    
     <mx:VBox width="100%">
         <mx:Label text="หมายเหตุ"/>
         <mx:TextArea id="notationField" width="100%"/>
     </mx:VBox>
-	
 	<mx:ControlBar horizontalAlign="right">
-		
 		<mx:Button id="saveBtn" label="บันทึก" buttonDown="saveBtnDown(event)"/>
-		
 		<mx:Button label="ยกเลิก" buttonDown="close()"/>
 	</mx:ControlBar>
 </mx:TitleWindow>
