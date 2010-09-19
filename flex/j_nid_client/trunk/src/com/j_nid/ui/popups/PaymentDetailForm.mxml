@@ -1,48 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" 
-	title="รายละเอียด" layout="vertical" borderAlpha="0.8"
-	verticalScrollPolicy="off" showCloseButton="true"
-	close="close()"
-	width="800" height="600">
-	
-	<mx:Script>
-		<![CDATA[
-			import com.j_nid.utils.PrintUtils;
-			import com.j_nid.utils.Responder;
-			import com.j_nid.utils.ServiceUtils;
-			import com.j_nid.utils.Utils;
-			
-			import mx.collections.XMLListCollection;
-			import mx.events.FlexEvent;
-			
-			private var _payment:XML;
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+               xmlns:s="library://ns.adobe.com/flex/spark"
+               xmlns:mx="library://ns.adobe.com/flex/mx"
+               title="รายละเอียด" borderAlpha="0.8"
+               close="close()"
+               width="800" height="600">
+    
+    <s:layout>
+        <s:VerticalLayout paddingBottom="10" paddingTop="10"/>
+    </s:layout>
+    
+    <fx:Script>
+        <![CDATA[
+            import com.j_nid.utils.PrintUtils;
+            import com.j_nid.utils.Responder;
+            import com.j_nid.utils.ServiceUtils;
+            import com.j_nid.utils.Utils;
+            
+            import mx.collections.XMLListCollection;
+            import mx.events.FlexEvent;
+            
+            private var _payment:XML;
             [Bindable]
             private var depositedBaskets:XMLListCollection;
             [Bindable]
             private var nonDepositBaskets:XMLListCollection;
-			
-			[Bindable]
-			public function set payment(obj:XML):void {
-				_payment = obj;
-				loadReturnBaskets();
-			}
-			
-			public function get payment():XML {
-				return _payment;
-			}
-			
-			private function loadReturnBaskets():void {
-				var responder:com.j_nid.utils.Responder =
-					new com.j_nid.utils.Responder(basketResultHandler);
-				var attrs:String = "attrs=id,name,price_per_unit,is_deposit";
-				ServiceUtils.send("/payments/" + payment.id + "/baskets/?" + attrs,
-					"GET", responder);
-			}
-			
-			private function basketResultHandler(data:Object):void {
+            
+            [Bindable]
+            public function set payment(obj:XML):void {
+                _payment = obj;
+                loadReturnBaskets();
+            }
+            
+            public function get payment():XML {
+                return _payment;
+            }
+            
+            private function loadReturnBaskets():void {
+                var responder:com.j_nid.utils.Responder =
+                    new com.j_nid.utils.Responder(basketResultHandler);
+                var attrs:String = "attrs=id,name,price_per_unit,is_deposit";
+                ServiceUtils.send("/payments/" + payment.id + "/baskets/?" + attrs,
+                    "GET", responder);
+            }
+            
+            private function basketResultHandler(data:Object):void {
                 depositedBaskets = new XMLListCollection();
                 nonDepositBaskets = new XMLListCollection();
-				for each (var basket:XML in data.result.children()) {
+                for each (var basket:XML in data.result.children()) {
                     if (Boolean(int(basket.is_deposit))) {
                         var depositedBasket:XML = getDepositedBasket(basket);
                         if (depositedBasket) {
@@ -63,7 +68,7 @@
                         }
                     }
                 }
-			}
+            }
             
             private function getDepositedBasket(basket:XML):XML {
                 for each (var pb:XML in depositedBaskets)
@@ -78,99 +83,101 @@
                     return npb;
                 return null;
             }
-			
-			private function formatDate(val:String):String {
-				var date:Date = new Date(Date.parse(val));
-				return Utils.formatDate(date, "DD-MM-YYYY JJ:NN");
-			}
-			
-			private function close():void {
-				Utils.hidePopUp(this);
-			}
-			
-			private function closeBtnDownHandler(e:FlexEvent):void {
-				close();
-			}
-		]]>
-	</mx:Script>
-		
-	<mx:HBox width="100%">
-		
-		<mx:FormItem label="ชื่อลูกค้า:">
-			<mx:Label text="{payment.person_name}"/>
-		</mx:FormItem>
-		
-		<mx:Spacer width="100%"/>
-		
-		<mx:FormItem label="วันที่:">
-			<mx:Label text="{formatDate(payment.created)}"/>
-		</mx:FormItem>
-	</mx:HBox>
-	
-    <mx:VBox width="100%" height="100%">
-        <mx:VBox width="100%" height="100%">
-            <mx:Label text="ลังมัดจำ"/>
-            <mx:DataGrid dataProvider="{depositedBaskets}"
-                width="100%" height="100%">
-                <mx:columns>
-                    <mx:DataGridColumn dataField="quantity" headerText="จำนวน" width="55"/>
-                    <mx:DataGridColumn dataField="name" headerText="ชื่อ"/>
-                    <mx:DataGridColumn dataField="price_per_unit" headerText="ราคาต่อหน่วย" width="110"/>
-                    <mx:DataGridColumn headerText="รวม" width="110">
-                        <mx:itemRenderer>
-                            <mx:Component>
-                                <mx:Label text="{Utils.formatPrice(Number(data.quantity)*Number(data.price_per_unit))}">
-                                    <mx:Script>
-                                        <![CDATA[
-                                            import com.j_nid.utils.Utils;
-                                        ]]>
-                                    </mx:Script>
-                                </mx:Label>
-
-                            </mx:Component>
-                        </mx:itemRenderer>
-                    </mx:DataGridColumn>
-                </mx:columns>
-            </mx:DataGrid>
-        </mx:VBox>
             
-        <mx:VBox width="100%" height="100%">
-            <mx:Label text="ลังไม่มัดจำ"/>
-            <mx:DataGrid dataProvider="{nonDepositBaskets}"
-                width="100%" height="100%">
+            private function formatDate(val:String):String {
+                var date:Date = new Date(Date.parse(val));
+                return Utils.formatDate(date, "DD-MM-YYYY JJ:NN");
+            }
+            
+            private function close():void {
+                Utils.hidePopUp(this);
+            }
+            
+            private function closeBtnDownHandler(e:FlexEvent):void {
+                close();
+            }
+        ]]>
+    </fx:Script>
+    
+    <s:HGroup verticalAlign="middle" paddingRight="5" width="100%">
+        <mx:FormItem label="ชื่อลูกค้า:">
+            <s:Label text="{payment.person_name}"/>
+        </mx:FormItem>
+        <s:Rect width="100%"/>
+        <mx:FormItem label="วันที่:">
+            <s:Label text="{formatDate(payment.created)}"/>
+        </mx:FormItem>
+    </s:HGroup>
+    
+    <s:VGroup width="100%" height="100%">
+        <s:VGroup width="100%" height="100%">
+            <s:Label text="ลังมัดจำ"/>
+            <mx:DataGrid dataProvider="{depositedBaskets}" borderStyle="none"
+                         width="100%" height="100%">
                 <mx:columns>
                     <mx:DataGridColumn dataField="quantity" headerText="จำนวน" width="55"/>
                     <mx:DataGridColumn dataField="name" headerText="ชื่อ"/>
                     <mx:DataGridColumn dataField="price_per_unit" headerText="ราคาต่อหน่วย" width="110"/>
                     <mx:DataGridColumn headerText="รวม" width="110">
                         <mx:itemRenderer>
-                            <mx:Component>
-                                <mx:Label text="{Utils.formatPrice(Number(data.quantity)*Number(data.price_per_unit))}">
-                                    <mx:Script>
+                            <fx:Component>
+                                <s:MXDataGridItemRenderer>
+                                    <fx:Script>
                                         <![CDATA[
                                             import com.j_nid.utils.Utils;
                                         ]]>
-                                    </mx:Script>
-                                </mx:Label>
-                                
-                            </mx:Component>
+                                    </fx:Script>
+                                    <s:Label text="{Utils.formatPrice(Number(data.quantity)*Number(data.price_per_unit))}"/>
+                                </s:MXDataGridItemRenderer>
+                            </fx:Component>
                         </mx:itemRenderer>
                     </mx:DataGridColumn>
                 </mx:columns>
             </mx:DataGrid>
-        </mx:VBox>
-    </mx:VBox>
-	
-	<mx:FormItem label="หมายเหตุ:" width="100%">
-		<mx:Text text="{payment.notation}" width="100%"/>
-	</mx:FormItem>
+        </s:VGroup>
+        
+        <s:VGroup width="100%" height="100%">
+            <s:Label text="ลังไม่มัดจำ"/>
+            <mx:DataGrid dataProvider="{nonDepositBaskets}" borderStyle="none"
+                         width="100%" height="100%">
+                <mx:columns>
+                    <mx:DataGridColumn dataField="quantity" headerText="จำนวน" width="55"/>
+                    <mx:DataGridColumn dataField="name" headerText="ชื่อ"/>
+                    <mx:DataGridColumn dataField="price_per_unit" headerText="ราคาต่อหน่วย" width="110"/>
+                    <mx:DataGridColumn headerText="รวม" width="110">
+                        <mx:itemRenderer>
+                            <fx:Component>
+                                <s:MXDataGridItemRenderer>
+                                    <fx:Script>
+                                        <![CDATA[
+                                            import com.j_nid.utils.Utils;
+                                        ]]>
+                                    </fx:Script>
+                                    <s:Label text="{Utils.formatPrice(Number(data.quantity)*Number(data.price_per_unit))}"/>
+                                </s:MXDataGridItemRenderer>
+                            </fx:Component>
+                        </mx:itemRenderer>
+                    </mx:DataGridColumn>
+                </mx:columns>
+            </mx:DataGrid>
+        </s:VGroup>
+    </s:VGroup>
     
-    <mx:HBox horizontalAlign="right" width="100%">
-        <mx:Label text="รวมทั้งสิ้น {Utils.formatPrice(payment.amount)} บาท"
-            textAlign="right"/>
-    </mx:HBox>
-	
-	<mx:ControlBar horizontalAlign="right">
-		<mx:Button label="ปิด" buttonDown="closeBtnDownHandler(event)"/>
-	</mx:ControlBar>
-</mx:TitleWindow>
+    <mx:FormItem label="หมายเหตุ:" width="100%">
+        <s:Label text="{payment.notation}" width="100%"/>
+    </mx:FormItem>
+    
+    <s:HGroup horizontalAlign="right" paddingRight="5" width="100%">
+        <s:Label text="รวมทั้งสิ้น {Utils.formatPrice(payment.amount)} บาท"
+                 textAlign="right"/>
+    </s:HGroup>
+    
+    <s:controlBarLayout>
+        <s:HorizontalLayout horizontalAlign="right" paddingRight="5"
+                            paddingBottom="5" paddingTop="5"/>
+    </s:controlBarLayout>
+    
+    <s:controlBarContent>
+        <s:Button label="ปิด" buttonDown="closeBtnDownHandler(event)"/>
+    </s:controlBarContent>
+</s:TitleWindow>

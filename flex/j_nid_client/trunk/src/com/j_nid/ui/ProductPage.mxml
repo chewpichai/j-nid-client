@@ -1,20 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
-	creationComplete="creationCompleteHandler(event)"
-	width="100%" height="100%">
+<s:VGroup xmlns:fx="http://ns.adobe.com/mxml/2009"
+         xmlns:s="library://ns.adobe.com/flex/spark"
+         xmlns:mx="library://ns.adobe.com/flex/mx"
+         creationComplete="creationCompleteHandler(event)"
+         width="100%" height="100%">
 	
-	<mx:Script>
+	<fx:Script>
 		<![CDATA[
-			import com.j_nid.ui.popups.ProductForm;
-			import com.j_nid.ui.popups.ProductTypeForm;
-			import com.j_nid.ui.popups.BasketForm;
-			import com.j_nid.utils.Responder;
-			import com.j_nid.utils.ServiceUtils;
-			import com.j_nid.utils.Utils;
-			
-			import mx.events.FlexEvent;
-			import mx.events.ListEvent;
-			import mx.rpc.events.ResultEvent;
+            import com.j_nid.ui.popups.BasketForm;
+            import com.j_nid.ui.popups.ProductForm;
+            import com.j_nid.ui.popups.ProductTypeForm;
+            import com.j_nid.utils.Responder;
+            import com.j_nid.utils.ServiceUtils;
+            import com.j_nid.utils.Utils;
+            
+            import mx.collections.XMLListCollection;
+            import mx.events.FlexEvent;
+            import mx.events.ListEvent;
+            import mx.rpc.events.ResultEvent;
+            
+            import spark.events.IndexChangeEvent;
             
             private function creationCompleteHandler(e:FlexEvent):void {
                 loadProductTypes();
@@ -29,7 +34,9 @@
 			}
 			
 			private function baasketResultHandler(data:Object):void {
-				basketList.dataProvider = data.result.children();
+                var resultEvent:ResultEvent = ResultEvent(data);
+				basketList.dataProvider =
+                    new XMLListCollection(resultEvent.result.children());
 			}
 			
 			private function loadProducts(typeID:int=0):void {
@@ -47,7 +54,8 @@
 			
 			private function productResultHandler(data:Object):void {
 				var resultEvent:ResultEvent = ResultEvent(data);
-				productList.dataProvider = resultEvent.result.children();
+				productList.dataProvider =
+                    new XMLListCollection(resultEvent.result.children());
 			}
 			
 			private function loadProductTypes():void {
@@ -58,13 +66,15 @@
 			
 			private function productTypeResultHandler(data:Object):void {
 				var resultEvent:ResultEvent = ResultEvent(data);
-				productTypeCombo.dataProvider = resultEvent.result.children().copy();
+				productTypeCombo.dataProvider =
+                    new XMLListCollection(resultEvent.result.children().copy());
 				productTypeCombo.dataProvider.addItemAt(Utils.getAllProductType(), 0);
 				productTypeCombo.selectedIndex = 0;
-				productTypeList.dataProvider = resultEvent.result.children();
+				productTypeList.dataProvider =
+                    new XMLListCollection(resultEvent.result.children());
 			}
             
-            private function productTypeComboChange(e:ListEvent):void {
+            private function productTypeComboChange(e:IndexChangeEvent):void {
 				loadProducts(productTypeCombo.selectedItem.id);
             }
             
@@ -125,102 +135,75 @@
 					formRemoveHandler);
 			}
         ]]>
-    </mx:Script>
+    </fx:Script>
     
-    <mx:TabNavigator creationPolicy="all" width="100%" height="100%">
-        
-        <mx:VBox label="สินค้า" width="100%" height="100%">
-            
-            <mx:HBox verticalAlign="middle" paddingRight="5" width="100%">
-                
-                <mx:Label text="ชนิดสินค้า:"/>
-                
-                <mx:ComboBox id="productTypeCombo"
-					labelField="name" change="productTypeComboChange(event)"
-                    itemRenderer="com.j_nid.ui.renderers.ProductTypeComboRenderer"
-					width="200"/>
-                    
-                <mx:Spacer width="100%"/>
-                    
-                <mx:Button label="เพิ่ม" click="newProductBtnClick(event)"/>
-            </mx:HBox>
-                
-            <mx:DataGrid id="productList"
-                doubleClickEnabled="true"
-                doubleClick="productDgDoubleClick(event)"
-                headerStyleName="centerHeader"
-                width="100%" height="100%">
-                
+    <s:TabBar dataProvider="{viewStack}"/>
+    
+    <mx:ViewStack id="viewStack" creationPolicy="all" width="100%" height="100%">
+        <s:NavigatorContent label="สินค้า" width="100%" height="100%">
+            <s:HGroup verticalAlign="middle" width="100%">
+                <s:Label text="ชนิดสินค้า:"/>
+                <s:DropDownList id="productTypeCombo" labelField="name"
+                                change="productTypeComboChange(event)"
+                                itemRenderer="com.j_nid.ui.renderers.ProductTypeComboRenderer"
+                                width="200"/>
+                <s:Rect width="100%"/>
+                <s:Button label="เพิ่ม" click="newProductBtnClick(event)"/>
+            </s:HGroup>
+            <mx:DataGrid id="productList" doubleClickEnabled="true"
+                         doubleClick="productDgDoubleClick(event)"
+                         headerStyleName="centerHeader"
+                         y="30" width="100%" height="100%">
                 <mx:columns>
                     <mx:DataGridColumn headerText="ชื่อ" dataField="name"/>
-                        
                     <mx:DataGridColumn headerText="ชนิดสินค้า" dataField="type"/>
-                        
                     <mx:DataGridColumn headerText="หน่วย" dataField="unit"
-                        labelFunction="Utils.unitLabelFunction"/>
-					
-					<mx:DataGridColumn headerText="ราคาทุนต่อหน่วย"
-						dataField="cost_per_unit" labelFunction="Utils.priceLabelFunction"/>
-                        
+                                       labelFunction="Utils.unitLabelFunction"/>
+                    <mx:DataGridColumn headerText="ราคาทุนต่อหน่วย"
+                                       dataField="cost_per_unit"
+                                       labelFunction="Utils.priceLabelFunction"/>
                     <mx:DataGridColumn headerText="ราคาต่อหน่วย"
-                        dataField="price_per_unit" labelFunction="Utils.priceLabelFunction"/>
-                        
+                                       dataField="price_per_unit"
+                                       labelFunction="Utils.priceLabelFunction"/>
                     <mx:DataGridColumn headerText="มีขาย" dataField="is_sale"
-                        itemRenderer="com.j_nid.ui.renderers.ProductIsSaleRenderer"/>
+                                       itemRenderer="com.j_nid.ui.renderers.ProductIsSaleRenderer"/>
                 </mx:columns>
             </mx:DataGrid>
-        </mx:VBox>
-        
-        <mx:VBox label="ชนิดสินค้า" width="100%" height="100%">
-            
-            <mx:HBox horizontalAlign="right" paddingRight="5" width="100%">
-                
-                <mx:Button label="เพิ่ม"
-                    click="newProductTypeBtnClick(event)"/>
-            </mx:HBox>
-            
-            <mx:DataGrid id="productTypeList"
-                doubleClickEnabled="true"
-                doubleClick="productTypeDgDoubleClick(event)"
-                headerStyleName="centerHeader"
-                width="100%" height="100%">
-                
+        </s:NavigatorContent>
+        <s:NavigatorContent label="ชนิดสินค้า" width="100%" height="100%">
+            <s:HGroup horizontalAlign="right" width="100%">
+                <s:Button label="เพิ่ม" click="newProductTypeBtnClick(event)"/>
+            </s:HGroup>
+            <mx:DataGrid id="productTypeList" doubleClickEnabled="true"
+                         doubleClick="productTypeDgDoubleClick(event)"
+                         headerStyleName="centerHeader"
+                         y="30" width="100%" height="100%">
                 <mx:columns>
                     <mx:DataGridColumn headerText="ชื่อ"
-						itemRenderer="com.j_nid.ui.renderers.ProductTypeNameRenderer"/>                    
-                    
-					<mx:DataGridColumn headerText="สี"
-						itemRenderer="com.j_nid.ui.renderers.ProductTypeColorRenderer"/>
+                                       itemRenderer="com.j_nid.ui.renderers.ProductTypeNameRenderer"/>
+                    <mx:DataGridColumn headerText="สี"
+                                       itemRenderer="com.j_nid.ui.renderers.ProductTypeColorRenderer"/>
                 </mx:columns>
             </mx:DataGrid>
-        </mx:VBox>
-		
-		<mx:VBox label="ลังมัดจำ" width="100%" height="100%">
-			
-			<mx:HBox horizontalAlign="right" paddingRight="5" width="100%">
-				
-				<mx:Button label="เพิ่ม"
-					click="newBasketBtnClickHandler(event)"/>
-			</mx:HBox>
-			
-			<mx:DataGrid id="basketList"
-				doubleClickEnabled="true"
-				doubleClick="basketDgDoubleClick(event)"
-				headerStyleName="centerHeader"
-				width="100%" height="100%">
-				
-				<mx:columns>
-					<mx:DataGridColumn headerText="ชื่อ" dataField="name"/>
-					
-					<mx:DataGridColumn headerText="หน่วย" dataField="unit"/>
-					
-					<mx:DataGridColumn headerText="ราคาต่อหน่วย"
-						dataField="price_per_unit"/>
-                    
+        </s:NavigatorContent>
+		<s:NavigatorContent label="ลังมัดจำ" width="100%" height="100%">
+			<s:HGroup horizontalAlign="right" width="100%">
+				<s:Button label="เพิ่ม" click="newBasketBtnClickHandler(event)"/>
+			</s:HGroup>
+            <mx:DataGrid id="basketList" doubleClickEnabled="true"
+                         doubleClick="basketDgDoubleClick(event)"
+                         headerStyleName="centerHeader"
+                         y="30" width="100%" height="100%">
+                <mx:columns>
+                    <mx:DataGridColumn headerText="ชื่อ" dataField="name"/>
+                    <mx:DataGridColumn headerText="หน่วย" dataField="unit"/>
+                    <mx:DataGridColumn headerText="ราคาต่อหน่วย"
+                                       dataField="price_per_unit"
+                                       labelFunction="Utils.priceLabelFunction"/>
                     <mx:DataGridColumn headerText="มีขาย" dataField="is_sale"
-                        itemRenderer="com.j_nid.ui.renderers.BasketIsSaleRenderer"/>
-				</mx:columns>
-			</mx:DataGrid>
-		</mx:VBox>
-    </mx:TabNavigator>
-</mx:Canvas>
+                                       itemRenderer="com.j_nid.ui.renderers.BasketIsSaleRenderer"/>
+                </mx:columns>
+            </mx:DataGrid>
+		</s:NavigatorContent>
+    </mx:ViewStack>
+</s:VGroup>

@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml"
-    title="เพิ่มข้อมูลบุคคล" creationComplete="creationCompleteHandler(event)"
-	showCloseButton="true" close="close()"
-    width="800" height="600">
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+               xmlns:s="library://ns.adobe.com/flex/spark"
+               xmlns:mx="library://ns.adobe.com/flex/mx"
+               title="เพิ่มข้อมูลบุคคล" creationComplete="creationCompleteHandler(event)"
+               close="close()"
+               width="400" height="500">
     
-    <mx:Script>
+    <fx:Script>
         <![CDATA[
         	import com.j_nid.utils.Responder;
         	import com.j_nid.utils.ServiceUtils;
@@ -44,7 +46,8 @@
             
             private function phoneTypeResultHandler(data:Object):void {
             	var resultEvent:ResultEvent = ResultEvent(data);
-                phoneTypeField.dataProvider = resultEvent.result.children();
+                phoneTypeField.dataProvider =
+                    new XMLListCollection(resultEvent.result.children());
             }
             
             private function loadBanks():void {
@@ -55,7 +58,8 @@
             
             private function bankResultHandler(data:Object):void {
                 var resultEvent:ResultEvent = ResultEvent(data);
-                bankNameField.dataProvider = resultEvent.result.children();
+                bankNameField.dataProvider =
+                    new XMLListCollection(resultEvent.result.children());
             }
             
             private function saveClickListener(e:MouseEvent):void {
@@ -191,147 +195,128 @@
                 }
             }
         ]]>
-    </mx:Script>
+    </fx:Script>
     
     <mx:Accordion headerStyleName="personFormHeader" creationPolicy="all"
-    	headerHeight="30" width="100%" height="100%">
-        
+                  headerHeight="30" width="100%" height="100%">
         <mx:Form label="ชื่อ" paddingTop="10" paddingRight="10"
-        	paddingBottom="10" paddingLeft="10"
-            width="100%" height="100%">
-            
-            <mx:FormItem label="ชื่อ:" required="true" width="100%">
-                
-                <mx:TextInput id="nameField"
-                	text="{person.name}" width="100%"/>
+                 paddingBottom="10" paddingLeft="10"
+                 width="100%" height="100%">
+            <mx:FormItem label="ชื่อ:" required="true"
+                         width="100%">
+                <s:TextInput id="nameField"
+                             text="{person.name}"
+                             width="100%"/>
             </mx:FormItem>
-            
             <mx:FormItem label="ชื่อเต็ม:" width="100%">
-                
-                <mx:TextInput id="firstNameField" 
-                    text="{person.first_name}" width="100%"/>
+                <s:TextInput id="firstNameField" 
+                             text="{person.first_name}"
+                             width="100%"/>
             </mx:FormItem>
-            
             <mx:FormItem label="นามสกุล:" width="100%">
-                
-                <mx:TextInput id="lastNameField" 
-                    text="{person.last_name}" width="100%"/>
+                <s:TextInput id="lastNameField" 
+                             text="{person.last_name}"
+                             width="100%"/>
             </mx:FormItem>
-            
             <mx:FormItem label="เลขที่บัตรประขาขน:" width="100%">
-                
-                <mx:TextInput id="idCardNumberFiled" 
-                    text="{person.id_card_number}" width="100%"/>
+                <s:TextInput id="idCardNumberFiled"
+                             text="{person.id_card_number}"
+                             width="100%"/>
             </mx:FormItem>
         </mx:Form>
-        
         <mx:Form label="ที่อยู่" paddingTop="10" paddingRight="10"
-            paddingBottom="10" paddingLeft="10"
-            width="100%" height="100%">
-            
+                 paddingBottom="10" paddingLeft="10"
+                 width="100%" height="100%">
             <mx:FormItem label="ที่อยู่:" width="100%">
-                
-                <mx:TextArea id="addressField" 
-                    text="{person.address}" width="100%"/>
+                <s:TextArea id="addressField" text="{person.address}"
+                            width="100%" height="50"/>
             </mx:FormItem>
-            
             <mx:FormItem label="รายลละเอียด 1:" width="100%">
-                
-                <mx:TextArea id="detail1Field" 
-                    text="{person.detail1}" width="100%"/>
+                <s:TextArea id="detail1Field" text="{person.detail1}"
+                            width="100%" height="50"/>
             </mx:FormItem>
-            
             <mx:FormItem label="รายลละเอียด 2:" width="100%">
-                
-                <mx:TextArea id="detail2Field" 
-                    text="{person.detail2}" width="100%"/>
+                <s:TextArea id="detail2Field" text="{person.detail2}"
+                            width="100%" height="50"/>
             </mx:FormItem>
         </mx:Form>
-        
-        <mx:VBox label="เบอร์โทรศัพท์ " width="100%" height="100%">
-            
+        <s:NavigatorContent label="เบอร์โทรศัพท์ " width="100%" height="100%">
+            <s:layout>
+                <s:VerticalLayout/>
+            </s:layout>
             <mx:DataGrid id="phoneNumberList"
-            	dataProvider="{phoneNumbers}"
-            	keyDown="deleteKeyDownHandler(event)"
-            	headerStyleName="centerHeader" width="100%">
-                
+                         dataProvider="{phoneNumbers}"
+                         keyDown="deleteKeyDownHandler(event)"
+                         headerStyleName="centerHeader"
+                         width="100%">
                 <mx:columns>
                     <mx:DataGridColumn dataField="number"
-                    	headerText="เบอร์โทรศัพท์"/>
-                    
+                                       headerText="เบอร์โทรศัพท์"/>
                     <mx:DataGridColumn dataField="type_id"
-                    	headerText="ประเภทเบอร์โทรศัพท์"
-                        labelFunction="getPhoneType"/>
+                                       headerText="ประเภทเบอร์โทรศัพท์"
+                                       labelFunction="getPhoneType"/>
                 </mx:columns>
             </mx:DataGrid>
-            
-            <mx:Spacer height="100%"/>
-            
+            <s:Rect height="100%"/>
             <mx:Form paddingTop="10" paddingRight="10"
-            	paddingBottom="10" paddingLeft="10" width="100%">
-                
+                     paddingBottom="10" paddingLeft="10"
+                     width="100%">
                 <mx:FormItem label="เบอร์โทรศัพท์:" width="100%">
-                    
-                    <mx:TextInput id="phoneNumberField" width="100%"/>
+                    <s:TextInput id="phoneNumberField" width="100%"/>
                 </mx:FormItem>
-                
                 <mx:FormItem label="ประเภทเบอร์โทรศัพท์:" width="100%">
-                    
-                    <mx:ComboBox id="phoneTypeField" labelField="name"
-                    	width="100%"/>
+                    <s:ComboBox id="phoneTypeField" labelField="name"
+                                width="100%"/>
                 </mx:FormItem>
-                
                 <mx:FormItem>
-                    <mx:Button label="เพิ่ม"
-                    	click="phoneNumberAddBtnClick(event)"/>
+                    <s:Button label="เพิ่ม"
+                              click="phoneNumberAddBtnClick(event)"/>
                 </mx:FormItem>
             </mx:Form>
-        </mx:VBox>
-        
-        <mx:VBox label="บัญชีธนาคาร" width="100%" height="100%">
-            
+        </s:NavigatorContent>
+        <s:NavigatorContent label="บัญชีธนาคาร" width="100%" height="100%">
+            <s:layout>
+                <s:VerticalLayout/>
+            </s:layout>
             <mx:DataGrid id="bankAccountList"
-            	dataProvider="{bankAccounts}"
-            	keyDown="deleteKeyDownHandler(event)"
-            	headerStyleName="centerHeader" width="100%">
-                
+                         dataProvider="{bankAccounts}"
+                         keyDown="deleteKeyDownHandler(event)"
+                         headerStyleName="centerHeader" width="100%">
                 <mx:columns>
                     <mx:DataGridColumn headerText="เลขที่บัญชี"
-						dataField="number"/>
-                    
+                                       dataField="number"/>
                     <mx:DataGridColumn headerText="ธนาคาร"
-						dataField="bank_id"
-						labelFunction="getBankName"/>
+                                       dataField="bank_id"
+                                       labelFunction="getBankName"/>
                 </mx:columns>
             </mx:DataGrid>
-            
-            <mx:Spacer height="100%"/>
-            
+            <s:Rect height="100%"/>
             <mx:Form paddingTop="10" paddingRight="10"
-            	paddingBottom="10" paddingLeft="10" width="100%">
-                
+                     paddingBottom="10" paddingLeft="10"
+                     width="100%">
                 <mx:FormItem label="เลขที่บัญชี:" width="100%">
-                    
-                    <mx:TextInput id="bankNumberField" width="100%"/>
+                    <s:TextInput id="bankNumberField" width="100%"/>
                 </mx:FormItem>
-                
                 <mx:FormItem label="ธนาคาร:" width="100%">
-                    
-                    <mx:ComboBox id="bankNameField" labelField="name"
-                    	width="100%"/>
+                    <s:ComboBox id="bankNameField" labelField="name"
+                                width="100%"/>
                 </mx:FormItem>
-                
                 <mx:FormItem>
-                    <mx:Button label="เพิ่ม"
-                    	click="bankAccountAddBtnClick(event)"/>
+                    <s:Button label="เพิ่ม"
+                              click="bankAccountAddBtnClick(event)"/>
                 </mx:FormItem>
             </mx:Form>
-        </mx:VBox>
+        </s:NavigatorContent>
     </mx:Accordion>
     
-    <mx:ControlBar horizontalAlign="right">
-                
-        <mx:Button id="saveBtn"
-            label="บันทึก" click="saveClickListener(event)"/>
-    </mx:ControlBar>
-</mx:TitleWindow>
+    <s:controlBarLayout>
+        <s:HorizontalLayout horizontalAlign="right"
+                            paddingTop="5" paddingRight="5"
+                            paddingBottom="5"/>
+    </s:controlBarLayout>
+    
+    <s:controlBarContent>
+        <s:Button id="saveBtn" label="บันทึก"
+                  click="saveClickListener(event)"/>
+    </s:controlBarContent>
+</s:TitleWindow>

@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml" 
-	title="รายละเอียด" layout="vertical" borderAlpha="0.8"
-	verticalScrollPolicy="off" showCloseButton="true"
-	close="close()"
-	width="800" height="600">
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+               xmlns:s="library://ns.adobe.com/flex/spark"
+               xmlns:mx="library://ns.adobe.com/flex/mx"
+               title="รายละเอียด" borderAlpha="0.8"
+               close="close()"
+               width="800" height="600">
+    <s:layout>
+        <s:VerticalLayout paddingBottom="10" paddingTop="10"/>
+    </s:layout>
 	
-	<mx:Script>
+	<fx:Script>
 		<![CDATA[
 			import com.j_nid.utils.PrintUtils;
 			import com.j_nid.utils.Responder;
@@ -91,61 +95,56 @@
 				PrintUtils.printOrder(order);
 			}
 		]]>
-	</mx:Script>
+	</fx:Script>
 		
-	<mx:HBox width="100%">
-		
+	<s:HGroup verticalAlign="middle" paddingRight="5" width="100%">
 		<mx:FormItem label="ชื่อลูกค้า:">
-			<mx:Label text="{order.person_name}"/>
+			<s:Label text="{order.person_name}"/>
 		</mx:FormItem>
-		
-		<mx:Spacer width="100%"/>
-		
+		<s:Rect width="100%"/>
 		<mx:FormItem label="วันที่:">
-			<mx:Label text="{formatDate(order.created)}"/>
+			<s:Label text="{formatDate(order.created)}"/>
 		</mx:FormItem>
-	</mx:HBox>
+	</s:HGroup>
 	
-	<mx:DataGrid id="orderItemList"
-		dataProvider="{order.order_items.children()}" wordWrap="true"
-		variableRowHeight="true" headerStyleName="centerHeader"
-		width="100%" height="100%">
-		
-		<mx:columns>
-			<mx:DataGridColumn headerText="จำนวน" dataField="quantity"
-				width="70"/>
-			
-			<mx:DataGridColumn headerText="ชื่อ" dataField="name"/>
-			
-			<mx:DataGridColumn headerText="หน่วย"	dataField="unit"
-                labelFunction="Utils.unitLabelFunction" width="70"/>
-			
-			<mx:DataGridColumn headerText="ราคาต่อหน่วย"
-				dataField="price_per_unit"
-				labelFunction="Utils.priceLabelFunction"
-				width="90"/>
-			
-			<mx:DataGridColumn headerText="รวม" dataField="total"
-				labelFunction="Utils.priceLabelFunction"
-				width="90"/>
-		</mx:columns>
+    <mx:DataGrid id="orderItemList" wordWrap="true"
+                 dataProvider="{new XMLListCollection(order.order_items.children())}"
+                 variableRowHeight="true" headerStyleName="centerHeader"
+                 borderStyle="none" width="100%" height="100%">
+        <mx:columns>
+            <mx:DataGridColumn headerText="จำนวน" dataField="quantity"
+                               width="70"/>
+            <mx:DataGridColumn headerText="ชื่อ" dataField="name"/>
+            <mx:DataGridColumn headerText="หน่วย"	dataField="unit"
+                               labelFunction="Utils.unitLabelFunction"
+                               width="70"/>
+            <mx:DataGridColumn headerText="ราคาต่อหน่วย"
+                               dataField="price_per_unit"
+                               labelFunction="Utils.priceLabelFunction"
+                               width="90"/>
+            <mx:DataGridColumn headerText="รวม" dataField="total"
+                               labelFunction="Utils.priceLabelFunction"
+                               width="90"/>
+        </mx:columns>
 	</mx:DataGrid>
 	
 	<mx:FormItem label="หมายเหตุ:" width="100%">
-		
-		<mx:Text text="{order.notation}" width="100%"/>
+		<s:Label text="{order.notation}" width="100%"/>
 	</mx:FormItem>
 	
-	<mx:HBox horizontalAlign="right" width="100%">
-		
-		<mx:Label text="จำนวนรวม {Utils.sum(order.order_items.children(), 'quantity')} รวมทั้งสิ้น {Utils.formatPrice(Utils.sum(order.order_items.children(), 'total'))} บาท"
-			textAlign="right"/>
-	</mx:HBox>
+    <s:HGroup verticalAlign="middle" horizontalAlign="right" paddingRight="5"
+              width="100%">
+        <s:Label text="จำนวนรวม {Utils.sum(order.order_items.children(), 'quantity')} รวมทั้งสิ้น {Utils.formatPrice(Utils.sum(order.order_items.children(), 'total'))} บาท"
+                 textAlign="right"/>
+    </s:HGroup>
 	
-	<mx:ControlBar horizontalAlign="right">
-		
-		<mx:Button label="พิมพ์" buttonDown="printBtnDownHandler(event)"/>
-		
-		<mx:Button label="ปิด" buttonDown="closeBtnDownHandler(event)"/>
-	</mx:ControlBar>
-</mx:TitleWindow>
+    <s:controlBarLayout>
+        <s:HorizontalLayout horizontalAlign="right" paddingRight="5"
+                            paddingBottom="5" paddingTop="5"/>
+    </s:controlBarLayout>
+    
+	<s:controlBarContent>
+		<s:Button label="พิมพ์" buttonDown="printBtnDownHandler(event)"/>
+		<s:Button label="ปิด" buttonDown="closeBtnDownHandler(event)"/>
+	</s:controlBarContent>
+</s:TitleWindow>

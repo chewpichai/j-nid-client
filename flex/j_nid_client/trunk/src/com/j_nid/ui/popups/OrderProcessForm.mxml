@@ -1,82 +1,87 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml"
-    xmlns:jn="com.j_nid.components.*"
-	title="รายละเอียด" layout="vertical" borderAlpha="0.8"
-	verticalScrollPolicy="off" showCloseButton="true"
-	close="close()"
-	width="800" height="600">
-	
-	<mx:Script>
-		<![CDATA[
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+               xmlns:s="library://ns.adobe.com/flex/spark"
+               xmlns:mx="library://ns.adobe.com/flex/mx"
+               xmlns:jn="com.j_nid.components.*"
+               title="รายละเอียด" borderAlpha="0.8"
+               close="close()"
+               width="800" height="600">
+    <s:layout>
+        <s:VerticalLayout gap="5" paddingTop="10" paddingBottom="10"/>
+    </s:layout>
+    
+    <fx:Script>
+        <![CDATA[
             import com.j_nid.utils.PrintUtils;
             import com.j_nid.utils.Responder;
             import com.j_nid.utils.ServiceUtils;
             import com.j_nid.utils.Utils;
             
+            import mx.collections.XMLListCollection;
             import mx.events.FlexEvent;
             import mx.events.ValidationResultEvent;
-			
-			[Bindable]
-			public var order:XML;
-			
-			private function submitBtnClickListener(e:MouseEvent):void {
+            
+            [Bindable]
+            public var order:XML;
+            
+            private function submitBtnClickListener(e:MouseEvent):void {
                 if (isValid()) {
-    				var order:XML = order.copy();
-    				var orderItems:XML = <order_items/>;
-    				var depositedBaskets:XML = <deposited_baskets/>;
-    				var nonDepositBaskets:XML = <non_deposit_baskets/>;
-    				for each (var item:XML in order.order_items.children()) {
-    					if (item.type == "basket") {
-    						item.setName("basket");
-    						depositedBaskets.appendChild(item);
-    						continue;
-    					}
-    					orderItems.appendChild(item);
-    				}
-    				order.deposited_baskets = depositedBaskets;
-    				order.order_items = orderItems;
-    				for each (var basket:XML in order.non_deposit_baskets.basket) {
-    					var pattern:RegExp = new RegExp(
-    						Utils.escapeRegexChars(basket.name) +
-    						"\\s+x\\s+(\\d+)", "g");
-    					var result:Object = pattern.exec(order.notation);
-    					if (result) {
-    						basket.unit = result[1];
-    						nonDepositBaskets.appendChild(basket);
-    					}	
-    				}
-    				order.non_deposit_baskets = nonDepositBaskets;
-    				if (paidField.value > 0)
-    					order.paid = paidField.value;
+                    var order:XML = order.copy();
+                    var orderItems:XML = <order_items/>;
+                    var depositedBaskets:XML = <deposited_baskets/>;
+                    var nonDepositBaskets:XML = <non_deposit_baskets/>;
+                    for each (var item:XML in order.order_items.children()) {
+                        if (item.type == "basket") {
+                            item.setName("basket");
+                            depositedBaskets.appendChild(item);
+                            continue;
+                        }
+                        orderItems.appendChild(item);
+                    }
+                    order.deposited_baskets = depositedBaskets;
+                    order.order_items = orderItems;
+                    for each (var basket:XML in order.non_deposit_baskets.basket) {
+                        var pattern:RegExp = new RegExp(
+                            Utils.escapeRegexChars(basket.name) +
+                            "\\s+x\\s+(\\d+)", "g");
+                        var result:Object = pattern.exec(order.notation);
+                        if (result) {
+                            basket.unit = result[1];
+                            nonDepositBaskets.appendChild(basket);
+                        }	
+                    }
+                    order.non_deposit_baskets = nonDepositBaskets;
+                    if (paidField.value > 0)
+                        order.paid = paidField.value;
                     order.created = createdField.dateString;
                     postOrder(order);
                 }
-			}
+            }
             
             private function isValid():Boolean {
                 return createdField.dateString.length > 0;
             }
-			
-			private function postOrder(order:XML):void {
+            
+            private function postOrder(order:XML):void {
                 var responder:com.j_nid.utils.Responder =
                     new com.j_nid.utils.Responder(orderResultHandler);
                 ServiceUtils.send("/orders/", "POST", responder, order);
             }
-			
-			private function cancelBtnClickListener(e:MouseEvent):void {
-				close();
-			}
-			
-			private function orderResultHandler(data:Object):void {
+            
+            private function cancelBtnClickListener(e:MouseEvent):void {
+                close();
+            }
+            
+            private function orderResultHandler(data:Object):void {
                 order.created = Utils.formatDate(createdField.date, 'DD/MM/YY JJ:NN');
-				PrintUtils.printOrder(order);
-				close();
-				Utils.showMakeOrderPage();
-			}
-			
-			private function close():void {
-				Utils.hidePopUp(this);
-			}
+                PrintUtils.printOrder(order);
+                close();
+                Utils.showMakeOrderPage();
+            }
+            
+            private function close():void {
+                Utils.hidePopUp(this);
+            }
             
             private function getOutstanding(outstanding:Number):String {
                 if (outstanding < 0) {
@@ -86,78 +91,69 @@
                 }
                 return "ยอดค้าง: " + Utils.formatPrice(Math.abs(outstanding)) + " บาท";
             }
-		]]>
-	</mx:Script>
-	
-	<mx:HBox width="100%">
-        
-        <mx:FormItem label="ชื่อลูกค้า:">
-			<mx:Label text="{order.person_name}"/>
-        </mx:FormItem>
-		
-		<mx:Spacer width="100%"/>
-		
-		<mx:FormItem label="วันที่:">
-			<jn:DateTimeInput id="createdField" text="{Utils.formatDate(new Date(), 'DD-MM-YYYY JJ:NN')}"/>
-		</mx:FormItem>
-	</mx:HBox>
-	
-	<mx:DataGrid id="orderItemList"
-		dataProvider="{order.order_items.order_item}" wordWrap="true"
-		variableRowHeight="true" headerStyleName="centerHeader"
-		width="100%" height="100%">
-		
-		<mx:columns>
-			<mx:DataGridColumn headerText="จำนวน" dataField="quantity"
-				width="70"/>
-			
-			<mx:DataGridColumn headerText="ชื่อ" dataField="name"/>
-			
-			<mx:DataGridColumn headerText="หน่วย"	dataField="unit"
-                labelFunction="Utils.unitLabelFunction" width="70"/>
-			
-			<mx:DataGridColumn headerText="ราคาต่อหน่วย"
-				dataField="price_per_unit"
-				labelFunction="Utils.priceLabelFunction"
-				width="90"/>
-			
-			<mx:DataGridColumn headerText="รวม" dataField="total"
-				labelFunction="Utils.priceLabelFunction"
-				width="90"/>
-		</mx:columns>
-	</mx:DataGrid>
-	
-	
-	<mx:HBox horizontalAlign="right" width="100%">
-		
-    	<mx:FormItem label="หมายเหตุ:" width="100%">
-    		
-    		<mx:Text text="{order.notation}" width="280"/>
-    	</mx:FormItem>
-        
-		<mx:Label text="จำนวนรวม {Utils.sum(order.order_items.order_item, 'quantity')} ชิ้น    รวมทั้งสิ้น {Utils.formatPrice(Utils.sum(order.order_items.order_item, 'total'))} บาท"
-			textAlign="right"/>
-	</mx:HBox>
+        ]]>
+    </fx:Script>
     
-    <mx:Label id="outstandingLbl" text="{getOutstanding(order.person_outstanding)}"
-        textAlign="right" width="100%"/>
-	
-	<mx:HBox horizontalAlign="right" width="100%">
-	    
-	    <mx:FormItem label="ชำระเงิน:">
-	        
-	        <mx:NumericStepper id="paidField"
-	            minimum="0" maximum="1000000"
-	            stepSize="0.5" width="100"/>
-	    </mx:FormItem>
-	</mx:HBox>
-	
-	<mx:ControlBar id="mainControlBar" horizontalAlign="right">
-		
-		<mx:Button id="submitBtn"
-			label="ยืนยัน"	click="submitBtnClickListener(event)"/>
-		
-		<mx:Button id="cancelBtn"
-			label="ยกเลิก"	click="cancelBtnClickListener(event)"/>
-	</mx:ControlBar>
-</mx:TitleWindow>
+    <s:HGroup verticalAlign="middle" paddingLeft="5" paddingRight="5"
+              width="100%">
+        <mx:FormItem label="ชื่อลูกค้า:">
+            <s:Label text="{order.person_name}"/>
+        </mx:FormItem>
+        <s:Rect width="100%"/>
+        <mx:FormItem label="วันที่:">
+            <jn:DateTimeInput id="createdField" text="{Utils.formatDate(new Date(), 'DD-MM-YYYY JJ:NN')}"/>
+        </mx:FormItem>
+    </s:HGroup>
+    
+    <mx:DataGrid id="orderItemList" wordWrap="true"
+                 dataProvider="{new XMLListCollection(order.order_items.order_item)}"
+                 variableRowHeight="true" headerStyleName="centerHeader"
+                 borderStyle="none" width="100%" height="100%">
+        <mx:columns>
+            <mx:DataGridColumn headerText="จำนวน" dataField="quantity"
+                               width="70"/>
+            <mx:DataGridColumn headerText="ชื่อ" dataField="name"/>
+            <mx:DataGridColumn headerText="หน่วย"	dataField="unit"
+                               labelFunction="Utils.unitLabelFunction"
+                               width="70"/>
+            <mx:DataGridColumn headerText="ราคาต่อหน่วย"
+                               dataField="price_per_unit"
+                               labelFunction="Utils.priceLabelFunction"
+                               width="90"/>
+            <mx:DataGridColumn headerText="รวม" dataField="total"
+                               labelFunction="Utils.priceLabelFunction"
+                               width="90"/>
+        </mx:columns>
+    </mx:DataGrid>
+    
+    <s:HGroup verticalAlign="middle" horizontalAlign="right" paddingLeft="5"
+              width="100%">
+        <mx:FormItem label="หมายเหตุ:" width="100%">
+            <s:Label text="{order.notation}" width="280"/>
+        </mx:FormItem>
+        <s:Label text="จำนวนรวม {Utils.sum(order.order_items.order_item, 'quantity')} ชิ้น    รวมทั้งสิ้น {Utils.formatPrice(Utils.sum(order.order_items.order_item, 'total'))} บาท"
+                 textAlign="right"/>
+    </s:HGroup>
+    
+    <s:Label id="outstandingLbl" text="{getOutstanding(order.person_outstanding)}"
+             textAlign="right" paddingRight="5" width="100%"/>
+    
+    <s:HGroup horizontalAlign="right" paddingRight="5" width="100%">
+        <mx:FormItem label="ชำระเงิน:">
+            <s:NumericStepper id="paidField" minimum="0" maximum="1000000"
+                              stepSize="0.5" width="100"/>
+        </mx:FormItem>
+    </s:HGroup>
+    
+    <s:controlBarLayout>
+        <s:HorizontalLayout horizontalAlign="right" paddingBottom="5"
+                            paddingTop="5" paddingRight="5"/>
+    </s:controlBarLayout>
+    
+    <s:controlBarContent>
+        <s:Button id="submitBtn" label="ยืนยัน"
+                  click="submitBtnClickListener(event)"/>
+        <s:Button id="cancelBtn" label="ยกเลิก"
+                  click="cancelBtnClickListener(event)"/>
+    </s:controlBarContent>
+</s:TitleWindow>

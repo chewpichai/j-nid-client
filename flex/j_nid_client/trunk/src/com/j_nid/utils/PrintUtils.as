@@ -1,83 +1,84 @@
 package com.j_nid.utils {
-	
-	import com.j_nid.ui.prints.OrderPrintView;
-	import com.j_nid.ui.prints.OutstandingPrintView;
-	import com.j_nid.ui.prints.PaymentPrintView;
-	
-	import mx.collections.ListCollectionView;
-	import mx.collections.XMLListCollection;
-	import mx.core.Application;
-	import mx.printing.FlexPrintJob;
-	
-	public class PrintUtils {
-		
-		private static const NUM_ITEMS_PER_PAGE:int = 14;
-		
-		public static function printOrder(order:XML):void {
-			var printJob:FlexPrintJob = new FlexPrintJob();
-			printJob.printAsBitmap = false;
+    
+    import com.j_nid.ui.prints.OrderPrintView;
+    import com.j_nid.ui.prints.OutstandingPrintView;
+    import com.j_nid.ui.prints.PaymentPrintView;
+    
+    import mx.collections.ListCollectionView;
+    import mx.collections.XMLListCollection;
+    import mx.core.Application;
+    import mx.core.FlexGlobals;
+    import mx.printing.FlexPrintJob;
+    
+    public class PrintUtils {
+        
+        private static const NUM_ITEMS_PER_PAGE:int = 14;
+        
+        public static function printOrder(order:XML):void {
+            var printJob:FlexPrintJob = new FlexPrintJob();
+            printJob.printAsBitmap = false;
             if (printJob.start()) {
                 // Create a print view control as a child of the current view.
                 var printView:OrderPrintView = new OrderPrintView();
-				Application.application.addChild(printView);
+                FlexGlobals.topLevelApplication.addElement(printView);
                 //Set the print view properties.
                 printView.width = printJob.pageWidth;
                 printView.height = printJob.pageHeight;
                 printView.order = order;
-				var orderItems:Array = new XMLListCollection(order.order_items.children()).toArray();
+                var orderItems:Array = new XMLListCollection(order.order_items.children()).toArray();
                 var numOrderItems:int = orderItems.length;
                 var numPages:int = Math.ceil(numOrderItems / NUM_ITEMS_PER_PAGE);
                 if (numPages > 1) {
-                	var pageNum:int = 1;
-                	printView.numPages = numPages;
-                	while(true) {
-                		var start:int = (pageNum - 1) * NUM_ITEMS_PER_PAGE;
+                    var pageNum:int = 1;
+                    printView.numPages = numPages;
+                    while(true) {
+                        var start:int = (pageNum - 1) * NUM_ITEMS_PER_PAGE;
                         var end:int = pageNum * NUM_ITEMS_PER_PAGE;
-                		printView.orderItems = orderItems.slice(start, end);
-                		printView.pageNum = pageNum;
-                		if (pageNum == numPages) {
-                            printView.currentState = null;
+                        printView.orderItems = orderItems.slice(start, end);
+                        printView.pageNum = pageNum;
+                        if (pageNum == numPages) {
+                            printView.currentState = "base";
                             printJob.addObject(printView);
                             break;
-                		} else {
-                			printView.currentState = "middle";
+                        } else {
+                            printView.currentState = "middle";
                             printJob.addObject(printView);
-                		}
-                		pageNum++;
-                	}
+                        }
+                        pageNum++;
+                    }
                 } else {
-                	printView.orderItems = orderItems;
-                	printView.numPages = 1;
-                	printView.pageNum = 1;
-                	printJob.addObject(printView);
+                    printView.orderItems = orderItems;
+                    printView.numPages = 1;
+                    printView.pageNum = 1;
+                    printJob.addObject(printView);
                 }
                 // All pages are queued remove the print view control to free memory.
-                Application.application.removeChild(printView);
+                FlexGlobals.topLevelApplication.removeElement(printView);
             }
             // Send the job to the printer.
             printJob.send();
-		}
-		
-		public static function printTransaction(person:XML, transactions:ListCollectionView,
-									startDate:Date, endDate:Date):void {
-			
-			var printJob:FlexPrintJob = new FlexPrintJob();
+        }
+        
+        public static function printTransaction(person:XML, transactions:ListCollectionView,
+                                                startDate:Date, endDate:Date):void {
+            
+            var printJob:FlexPrintJob = new FlexPrintJob();
             printJob.printAsBitmap = false;
             if (printJob.start()) {
-            	var outstandingPrintView:OutstandingPrintView = 
-                        new OutstandingPrintView();
-            	Application.application.addChild(outstandingPrintView);
+                var outstandingPrintView:OutstandingPrintView = 
+                    new OutstandingPrintView();
+                FlexGlobals.topLevelApplication.addElement(outstandingPrintView);
                 //Set the print view properties.
-            	outstandingPrintView.startDate = startDate;
-            	outstandingPrintView.endDate = endDate;
-            	outstandingPrintView.personName = person.name;
+                outstandingPrintView.startDate = startDate;
+                outstandingPrintView.endDate = endDate;
+                outstandingPrintView.personName = person.name;
                 outstandingPrintView.width = printJob.pageWidth;
                 outstandingPrintView.height = printJob.pageHeight;
                 var balance:Number = getBalance(transactions);
                 var outstandingOrders:Array = getOutstandingOrders(transactions);
                 if (balance < 0) {
-                	outstandingOrders.unshift({created: "ยอดค้างยกมา",
-						outstanding: Math.abs(balance)});
+                    outstandingOrders.unshift({created: "ยอดค้างยกมา",
+                        outstanding: Math.abs(balance)});
                 }
                 outstandingPrintView.total = Utils.sum(outstandingOrders, "outstanding");
                 var numOrders:int = outstandingOrders.length;
@@ -91,7 +92,7 @@ package com.j_nid.utils {
                         outstandingPrintView.orders = outstandingOrders.slice(start, end);
                         outstandingPrintView.pageNum = pageNum;
                         if (pageNum == numPages) {
-                            outstandingPrintView.currentState = null;
+                            outstandingPrintView.currentState = "base";
                             printJob.addObject(outstandingPrintView);
                             break;
                         } else {
@@ -101,17 +102,17 @@ package com.j_nid.utils {
                         pageNum++;
                     }
                 } else {
-                	outstandingPrintView.orders = outstandingOrders;
-                	outstandingPrintView.numPages = 1;
+                    outstandingPrintView.orders = outstandingOrders;
+                    outstandingPrintView.numPages = 1;
                     outstandingPrintView.pageNum = 1;
                     printJob.addObject(outstandingPrintView);
                 }
                 // All pages are queued remove the print view control to free memory.
-                Application.application.removeChild(outstandingPrintView);
+                FlexGlobals.topLevelApplication.removeElement(outstandingPrintView);
                 // Print paymnets.
                 var paymentPrintView:PaymentPrintView = 
-                           new PaymentPrintView();
-                Application.application.addChild(paymentPrintView);
+                    new PaymentPrintView();
+                FlexGlobals.topLevelApplication.addElement(paymentPrintView);
                 //Set the print view properties.
                 paymentPrintView.startDate = startDate;
                 paymentPrintView.endDate = endDate;
@@ -121,7 +122,7 @@ package com.j_nid.utils {
                 var payments:Array = getPayments(transactions);
                 if (balance > 0) {
                     payments.unshift({created: "ยอดจ่ายยกมา",
-                       paid: Math.abs(balance)});
+                        paid: Math.abs(balance)});
                 }
                 paymentPrintView.total = Utils.sum(payments, "paid");
                 paymentPrintView.outstandingSummary = 
@@ -137,7 +138,7 @@ package com.j_nid.utils {
                         paymentPrintView.payments = payments.slice(start, end);
                         paymentPrintView.pageNum = pageNum;
                         if (pageNum == numPages) {
-                            paymentPrintView.currentState = null;
+                            paymentPrintView.currentState = "base";
                             printJob.addObject(paymentPrintView);
                             break;
                         } else {
@@ -153,35 +154,35 @@ package com.j_nid.utils {
                     printJob.addObject(paymentPrintView);
                 }
                 // All pages are queued remove the FormPrintView control to free memory.
-                Application.application.removeChild(paymentPrintView);
+                FlexGlobals.topLevelApplication.removeElement(paymentPrintView);
             }
             // Send the job to the printer.
             printJob.send();
-		}
-		
-		private static function getBalance(transactions:ListCollectionView):Number {
-			var transaction:XML = XML(transactions.getItemAt(transactions.length - 1));
-			if (transaction.type == "balance")
-				return Number(transaction.balance);
-			return 0;
-		}
-		
-		private static function getOutstandingOrders(transactions:ListCollectionView):Array {
-			var orders:Array = new Array();
+        }
+        
+        private static function getBalance(transactions:ListCollectionView):Number {
+            var transaction:XML = XML(transactions.getItemAt(transactions.length - 1));
+            if (transaction.type == "balance")
+                return Number(transaction.balance);
+            return 0;
+        }
+        
+        private static function getOutstandingOrders(transactions:ListCollectionView):Array {
+            var orders:Array = new Array();
             for each (var transaction:XML in transactions) {
                 if (transaction.type == "order")
-					orders.push(transaction);
+                    orders.push(transaction);
             }
             orders.sort(createdCompare);
             return orders;
-		}
-		
-		public static function getPayments(transactions:ListCollectionView):Array {
+        }
+        
+        public static function getPayments(transactions:ListCollectionView):Array {
             var payments:Array = new Array();
-			for each (var transaction:XML in transactions) {
-				if (transaction.type == "payment")
-					payments.push(transaction);
-			}
+            for each (var transaction:XML in transactions) {
+                if (transaction.type == "payment")
+                    payments.push(transaction);
+            }
             payments.sort(createdCompare);
             return payments;
         }
@@ -195,5 +196,5 @@ package com.j_nid.utils {
                 return 1;
             return 0;
         }
-	}
+    }
 }

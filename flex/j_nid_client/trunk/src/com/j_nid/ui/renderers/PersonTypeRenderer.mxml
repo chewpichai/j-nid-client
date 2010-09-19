@@ -1,34 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:CheckBox xmlns:mx="http://www.adobe.com/2006/mxml"
-	creationComplete="creationCompleteHandler(event)"
-	change="changeListener(event)">
-	
-	<mx:Script>
-		<![CDATA[
-			import com.j_nid.utils.Responder;
-			import com.j_nid.utils.ServiceUtils;
-			
-			import mx.controls.dataGridClasses.DataGridListData;
-			import mx.events.FlexEvent;
-			
-			private var dataField:String;
-			
-			private function creationCompleteHandler(e:FlexEvent):void {
-				dataField = DataGridListData(listData).dataField;
-				selected = Boolean(int(data[dataField]));
-			}
-			
-			private function changeListener(e:Event):void {
-				data[dataField] = int(selected);
-				var responder:com.j_nid.utils.Responder =
-					new com.j_nid.utils.Responder(resultHandler);
-				ServiceUtils.send("/people/" + data.id + "/",
-					"PUT", responder, XML(data));
-			}
-			
-			private function resultHandler(data:Object):void {
-				
-			}
-		]]>
-	</mx:Script>
-</mx:CheckBox>
+<s:MXDataGridItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                          xmlns:s="library://ns.adobe.com/flex/spark"
+                          xmlns:mx="library://ns.adobe.com/flex/mx">
+    
+    <fx:Script>
+        <![CDATA[
+            import com.j_nid.utils.Responder;
+            import com.j_nid.utils.ServiceUtils;
+            
+            import mx.controls.dataGridClasses.DataGridListData;
+            
+            private var dataField:String;
+            
+            override public function set data(value:Object):void {
+                super.data = value;
+                dataField = DataGridListData(listData).dataField;
+                checkBox.selected = Boolean(int(super.data[dataField]));
+            }
+            
+            private function changeListener(e:Event):void {
+                data[dataField] = int(checkBox.selected);
+                var responder:com.j_nid.utils.Responder =
+                    new com.j_nid.utils.Responder(resultHandler);
+                ServiceUtils.send("/people/" + data.id + "/",
+                    "PUT", responder, XML(data));
+            }
+            
+            private function resultHandler(data:Object):void {
+                
+            }
+        ]]>
+    </fx:Script>
+    
+    <s:CheckBox id="checkBox" change="changeListener(event)" horizontalCenter="0"/>
+</s:MXDataGridItemRenderer>

@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml"
-    creationComplete="creationCompleteHandler(event)"
-    horizontalAlign="center" paddingBottom="10"
-    width="100%" height="100%">
+<s:VGroup xmlns:fx="http://ns.adobe.com/mxml/2009"
+         xmlns:s="library://ns.adobe.com/flex/spark"
+         xmlns:mx="library://ns.adobe.com/flex/mx"
+         creationComplete="creationCompleteHandler(event)"
+         horizontalAlign="center" paddingBottom="5"
+         width="100%" height="100%">
     
-    <mx:Script>
+    <fx:Script>
         <![CDATA[
             import com.j_nid.ui.popups.OrderDetailForm;
             import com.j_nid.ui.popups.PaymentDetailForm;
@@ -26,7 +28,6 @@
             private var customer:XML;
             
             private function creationCompleteHandler(e:FlexEvent):void {
-				initData();
 				loadCustomers();
             }
 			
@@ -61,9 +62,10 @@
 				var responder:com.j_nid.utils.Responder =
 					new com.j_nid.utils.Responder(transactionResultHandler);
 				var startDate:Date = startDateField.selectedDate;
-				var endDate:Date = endDateField.selectedDate;
-				var filters:String = "filters=date_range=" + Utils.formatDate(startDate, "YYYY-MM-DD") +
-					":" + Utils.formatDate(endDate, "YYYY-MM-DD");
+				var endDate:Date = new Date(endDateField.selectedDate.time);
+                endDate.date += 1;
+				var filters:String = "filters=date_range=" + Utils.formatDate(startDate, "YYYYMMDD") +
+					":" + Utils.formatDate(endDate, "YYYYMMDD");
 				ServiceUtils.send("/people/" + personID + "/transactions/?" + filters,
 					"GET", responder);
 			}
@@ -82,7 +84,8 @@
             }
             
             private function customerListDoubleClick(e:MouseEvent):void {
-				viewStack.selectedIndex = 1;
+				currentState = "personDetail";
+                initData();
 				customer = XML(customerList.selectedItem);
                 loadTransactions(customer.id);
             }
@@ -116,11 +119,6 @@
 			}
             
             private function payBtnClickListener(evt:MouseEvent):void {
-                /*var form:PaymentForm =
-					PaymentForm(Utils.showPopUp(PaymentForm));
-                form.person = customer;
-                form.addEventListener(Event.REMOVED_FROM_STAGE,
-					paymentFormCloseHandler);*/
                 var form:ReturnBasketForm = 
                     ReturnBasketForm(Utils.showPopUp(ReturnBasketForm));
                 form.customer = customer;
@@ -214,131 +212,99 @@
 				return "";
 			}
 			
-			private function priceLabelFunction(item:Object,
-                                    column:DataGridColumn):String {
-				
-				if (Number(item[column.dataField]) != 0)
-					return Utils.formatPrice(item[column.dataField]);
-				return "";
-			}
+            private function priceLabelFunction(item:Object,
+                                                column:DataGridColumn):String {
+                
+                if (Number(item[column.dataField]) != 0)
+                    return Utils.formatPrice(item[column.dataField]);
+                return "";
+            }
             
             private function backBtnClickHandler(e:MouseEvent):void {
-                viewStack.selectedIndex = 0;
+                currentState = "base";
                 loadCustomers();
             }
         ]]>
-    </mx:Script>
+    </fx:Script>
+    
+    <s:states>
+        <s:State name="base"/>
+        <s:State name="personDetail"/>
+    </s:states>
 	
-	<mx:ViewStack id="viewStack" creationPolicy="all" width="100%" height="100%">
-	
-		<mx:VBox horizontalAlign="center" width="100%" height="100%">
-			
-			<mx:FormItem id="customerSearchField" label="ค้นหา">
-				
-				<mx:TextInput id="searchField"
-					change="loadCustomers()" width="250"/>
-			</mx:FormItem>
-			
-			<mx:HBox id="searchCustomer" width="100%" height="100%">
-				
-				<mx:DataGrid id="customerList"
-					headerStyleName="centerHeader" doubleClickEnabled="true"
- 					doubleClick="customerListDoubleClick(event)"
- 					width="100%" height="100%">
-					
-					<mx:columns>
-						<mx:DataGridColumn headerText="ชื่อ"
-							dataField="name"/>
-						
-						<mx:DataGridColumn headerText="ยอดค้างทั้งหมด"
-							dataField="outstanding_total"
-							itemRenderer="com.j_nid.ui.renderers.OutstandingRenderer"/>
-						
-						<mx:DataGridColumn headerText="จำนวนบิลค้างจ่าย"
-							dataField="num_outstanding_orders"/>
-						
-						<mx:DataGridColumn headerText="บิลล่าสุดที่ทำรายการ"
-							dataField="latest_order_date"
-							labelFunction="formatDateForCustomer"/>
-					</mx:columns>
-				</mx:DataGrid>
-				
-				<mx:VBox id="filterField">
-					
-					<mx:CheckBox id="noneOutstandingField"
-						label="ลูกค้าที่ไม่มียอดค้าง" change="loadCustomers()"/>
-					
-					<mx:CheckBox id="outstandingField"
-						label="ลูกค้าที่มียอดค้าง" selected="true"
-						change="loadCustomers()"/>
-				</mx:VBox>
-			</mx:HBox>
-		</mx:VBox>
+	<mx:FormItem id="customerSearchField" label="ค้นหา" includeIn="base">
+		<s:TextInput id="searchField" change="loadCustomers()"
+                     width="250"/>
+	</mx:FormItem>
+	<s:HGroup id="searchCustomer" width="100%" height="100%" includeIn="base">
+        <mx:DataGrid id="customerList" headerStyleName="centerHeader"
+                     doubleClickEnabled="true" rowHeight="30"
+                     doubleClick="customerListDoubleClick(event)"
+                     width="100%" height="100%">
+			<mx:columns>
+                <mx:DataGridColumn headerText="ชื่อ"
+                                   dataField="name"/>
+                <mx:DataGridColumn headerText="ยอดค้างทั้งหมด"
+                                   dataField="outstanding_total"
+                                   itemRenderer="com.j_nid.ui.renderers.OutstandingRenderer"/>
+                <mx:DataGridColumn headerText="จำนวนบิลค้างจ่าย"
+                                   dataField="num_outstanding_orders"/>
+                <mx:DataGridColumn headerText="บิลล่าสุดที่ทำรายการ"
+                                   dataField="latest_order_date"
+                                   labelFunction="formatDateForCustomer"/>
+			</mx:columns>
+		</mx:DataGrid>
+		<s:VGroup id="filterField">
+            <s:CheckBox id="noneOutstandingField"
+                        label="ลูกค้าที่ไม่มียอดค้าง" change="loadCustomers()"/>
+            <s:CheckBox id="outstandingField"
+                        label="ลูกค้าที่มียอดค้าง" selected="true"
+                        change="loadCustomers()"/>
+		</s:VGroup>
+	</s:HGroup>
+        
 		
-		<mx:VBox horizontalAlign="center" width="100%" height="100%">
-			
-			<mx:HBox horizontalAlign="left" verticalAlign="middle" width="100%">
-			    
-			    <mx:Button label="ย้อนกลับ" click="backBtnClickHandler(event)"/>
-			        
-			    <mx:Spacer width="200"/>
-			    
-			    <mx:Label text="ชื่อ"/>
-			    
-			    <mx:Label text="{customer.name}" width="200"/>
-			        
-			    <mx:Label text="เบอร์โทรศัพท์"/>
-			                    
-			    <mx:Label text="{customer.phone_number}" width="200"/>
-			        
-			    <mx:Button label="ชำระเงิน" click="payBtnClickListener(event)"/>
-			</mx:HBox>
-				
-			<mx:DataGrid id="transactionList"
-			    keyDown="transactionListKeyDown(event)" variableRowHeight="true"
-			    headerStyleName="centerHeader" doubleClickEnabled="true"
-			    doubleClick="transactionListDoubleClick(event)"
-			    rowHeight="30" width="100%" height="100%">
-			    
-			    <mx:columns>
-			        <mx:DataGridColumn headerText="วันที่" dataField="created"
-						labelFunction="formatDateForTransaction" width="150"/>
-			        
-			        <mx:DataGridColumn headerText="ค้างจ่าย" dataField="outstanding"
-			            labelFunction="priceLabelFunction"
-						textAlign="right" paddingRight="5"/>
-			        
-			        <mx:DataGridColumn headerText="จ่ายเงิน" dataField="paid"
-						labelFunction="priceLabelFunction"
-			            textAlign="right" paddingRight="5"/>
-			            
-			        <mx:DataGridColumn headerText="คงเหลือ" dataField="balance"
-						itemRenderer="com.j_nid.ui.renderers.OutstandingRenderer"
-						textAlign="right" paddingRight="5"/>
-			        
-			        <mx:DataGridColumn headerText="หมายเหตุ" dataField="note"/>
-			    </mx:columns>
-			</mx:DataGrid>
-			                
-			<mx:HBox width="100%">
-			        
-			    <mx:Spacer width="100%"/>
-				
-			    <mx:Label text="เริ่มจากวันที่"/>
-			    
-			    <mx:DateField id="startDateField"
-			        formatString="DD-MM-YYYY" change="dateChange(event)"/>
-			        
-			    <mx:Label text="ถึงวันที่"/>
-			    
-			    <mx:DateField id="endDateField"
-			        selectedDate="{new Date()}" formatString="DD-MM-YYYY"
-			        change="dateChange(event)"/>
-			        
-			    <mx:Spacer width="30"/>
-			    
-			    <mx:Button label="พิมพ์" click="printBtnClick(event)"/>
-			</mx:HBox>
-		</mx:VBox>
-	</mx:ViewStack>
-</mx:VBox>
+	<s:HGroup horizontalAlign="left" verticalAlign="middle" width="100%" includeIn="personDetail">
+	    <s:Button label="ย้อนกลับ" click="backBtnClickHandler(event)"/>
+	    <s:Rect width="200"/>
+	    <s:Label text="ชื่อ"/>
+	    <s:Label text="{customer.name}" width="200"/>
+	    <s:Label text="เบอร์โทรศัพท์"/>
+	    <s:Label text="{customer.phone_number}" width="200"/>
+	    <s:Button label="ชำระเงิน" click="payBtnClickListener(event)"/>
+	</s:HGroup>
+    <mx:DataGrid id="transactionList"
+                 keyDown="transactionListKeyDown(event)"
+                 variableRowHeight="true" rowHeight="30"
+                 headerStyleName="centerHeader" doubleClickEnabled="true"
+                 doubleClick="transactionListDoubleClick(event)"
+                 y="30" width="100%" height="100%" includeIn="personDetail">
+	    <mx:columns>
+            <mx:DataGridColumn headerText="วันที่" dataField="created"
+                               labelFunction="formatDateForTransaction"
+                               width="150"/>
+            <mx:DataGridColumn headerText="ค้างจ่าย" dataField="outstanding"
+                               labelFunction="priceLabelFunction"
+                               textAlign="right" paddingRight="5"/>
+            <mx:DataGridColumn headerText="จ่ายเงิน" dataField="paid"
+                               labelFunction="priceLabelFunction"
+                               textAlign="right" paddingRight="5"/>
+            <mx:DataGridColumn headerText="คงเหลือ" dataField="balance"
+                               itemRenderer="com.j_nid.ui.renderers.OutstandingRenderer"
+                               textAlign="right" paddingRight="5"/>
+            <mx:DataGridColumn headerText="หมายเหตุ" dataField="note"/>
+        </mx:columns>
+	</mx:DataGrid>
+    <s:HGroup verticalAlign="middle" bottom="0" width="100%" height="30" includeIn="personDetail">
+        <s:Rect width="100%"/>
+        <s:Label text="เริ่มจากวันที่"/>
+        <mx:DateField id="startDateField" formatString="DD-MM-YYYY"
+                      change="dateChange(event)"/>
+        <s:Label text="ถึงวันที่"/>
+        <mx:DateField id="endDateField" selectedDate="{new Date()}"
+                      formatString="DD-MM-YYYY"
+                      change="dateChange(event)"/>
+        <s:Rect width="30"/>
+        <s:Button label="พิมพ์" click="printBtnClick(event)"/>
+    </s:HGroup>
+</s:VGroup>

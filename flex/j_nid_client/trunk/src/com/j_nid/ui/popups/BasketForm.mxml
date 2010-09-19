@@ -1,46 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml"
-    title="ข้อมูลลังมัดจำ" layout="absolute" showCloseButton="true"
-	close="close()"
-	width="400" height="400">
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+               xmlns:s="library://ns.adobe.com/flex/spark"
+               xmlns:mx="library://ns.adobe.com/flex/mx"
+               title="ข้อมูลลังมัดจำ"
+               close="close()"
+               width="400" height="400">
     
-    <mx:Script>
+    <fx:Script>
         <![CDATA[
-			import com.j_nid.utils.Responder;
-			import com.j_nid.utils.ServiceUtils;
-			import com.j_nid.utils.Utils;
-			
-			import mx.events.CloseEvent;
-			import mx.rpc.events.ResultEvent;
-			import mx.utils.StringUtil;
-        	
+            import com.j_nid.utils.Responder;
+            import com.j_nid.utils.ServiceUtils;
+            import com.j_nid.utils.Utils;
+            
+            import mx.events.CloseEvent;
+            import mx.rpc.events.ResultEvent;
+            import mx.utils.StringUtil;
+            
             [Bindable]
             public var basket:XML;
             private var errMsg:String;
             
             private function saveProductListener(e:MouseEvent):void {
-				var basket:XML = this.basket.copy();
+                var basket:XML = this.basket.copy();
                 if (isValid()) {
                     basket.name = nameField.text;
-					basket.unit = unitField.value;
-					basket.price_per_unit = pricePerUnitField.value;
+                    basket.unit = unitField.value;
+                    basket.price_per_unit = pricePerUnitField.value;
                     basket.is_sale = int(isSaleField.selected);
                     var responder:com.j_nid.utils.Responder =
-						new com.j_nid.utils.Responder(resultHandler);
-					if (int(basket.id) > 0) {
-						ServiceUtils.send("/baskets/" + basket.id + "/",
-							"PUT", responder, basket);
-					} else {
-						ServiceUtils.send("/baskets/",	"POST", responder, basket);
-					}
+                        new com.j_nid.utils.Responder(resultHandler);
+                    if (int(basket.id) > 0) {
+                        ServiceUtils.send("/baskets/" + basket.id + "/",
+                            "PUT", responder, basket);
+                    } else {
+                        ServiceUtils.send("/baskets/",	"POST", responder, basket);
+                    }
                 } else {
                     Utils.showMessage(errMsg, "พบข้อผิดพลาด");
                 }
             }
-			
-			private function resultHandler(data:Object):void {
-				close();
-			}
+            
+            private function resultHandler(data:Object):void {
+                close();
+            }
             
             private function isValid():Boolean {
                 errMsg = "";
@@ -52,44 +54,33 @@
             }
             
             private function close():void {
-				Utils.hidePopUp(this);
+                Utils.hidePopUp(this);
             }
         ]]>
-    </mx:Script>
+    </fx:Script>
     
     <mx:Form width="100%" height="100%">
-        
         <mx:FormItem label="ชื่อ:" required="true" width="100%">
-            
-            <mx:TextInput id="nameField" text="{basket.name}"
-                width="100%" height="30"/>
+            <s:TextInput id="nameField" text="{basket.name}"
+                         width="100%" height="30"/>
         </mx:FormItem>
-        
         <mx:FormItem label="หน่วย:" width="100%">
-            
-            <mx:NumericStepper id="unitField"
-                value="{basket.unit}"
-                minimum="1" maximum="100000"
-                width="100%" height="30"/>
+            <s:NumericStepper id="unitField" value="{basket.unit}" minimum="1"
+                              maximum="100000" width="100%" height="30"/>
         </mx:FormItem>
-        
         <mx:FormItem label="ราคาต่อหน่วย:" width="100%">
-            
-            <mx:NumericStepper id="pricePerUnitField"
-                value="{basket.price_per_unit}"
-                minimum="0.5" maximum="100000" stepSize="0.5"
-                width="100%" height="30"/>
+            <s:NumericStepper id="pricePerUnitField"
+                              value="{basket.price_per_unit}"
+                              minimum="0.5" maximum="100000" stepSize="0.5"
+                              width="100%" height="30"/>
         </mx:FormItem>
-        
         <mx:FormItem label="มีขาย:">
-            
-            <mx:CheckBox id="isSaleField"
-                selected="{Boolean(int(basket.is_sale))}"/>
+            <s:CheckBox id="isSaleField"
+                        selected="{Boolean(int(basket.is_sale))}"/>
         </mx:FormItem>
-        
         <mx:FormItem>
-            <mx:Button id="saveBtn"
-                label="บันทึก" click="saveProductListener(event)"/>
+            <s:Button id="saveBtn" label="บันทึก"
+                      click="saveProductListener(event)"/>
         </mx:FormItem>
     </mx:Form>
-</mx:TitleWindow>
+</s:TitleWindow>

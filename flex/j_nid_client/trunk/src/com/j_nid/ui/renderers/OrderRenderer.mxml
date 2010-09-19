@@ -1,14 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:Label xmlns:mx="http://www.adobe.com/2006/mxml">
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                xmlns:s="library://ns.adobe.com/flex/spark"
+                xmlns:mx="library://ns.adobe.com/flex/mx"
+                height="30">
 	
-	<mx:Script>
+    <fx:Script>
 		<![CDATA[
 			import com.j_nid.utils.Utils;
-			override public function set data(value:Object):void {
+			
+            override public function set data(value:Object):void {
 				super.data = value;
 				if (data) {
 					var created:Date = new Date(Date.parse(data.created));
-					text = data.person_name + " " + Utils.formatDate(created, "DD-MMM-YYYY JJ:NN");
+					lbl.text = data.person_name + " " + Utils.formatDate(created, "DD-MMM-YYYY JJ:NN");
 					if (Number(data.paid) >= Number(data.total))
 						setStyle("color", 0x0000FF);
 					else
@@ -16,5 +20,7 @@
 				}
 			}
 		]]>
-	</mx:Script>
-</mx:Label>
+	</fx:Script>
+    
+    <s:Label id="lbl" verticalCenter="0" paddingLeft="5"/>
+</s:ItemRenderer>

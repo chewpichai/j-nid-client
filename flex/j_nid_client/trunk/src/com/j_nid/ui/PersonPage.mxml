@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml"
-	creationComplete="creationCompleteHandler(event)"
-	width="100%" height="100%">
+<s:VGroup xmlns:fx="http://ns.adobe.com/mxml/2009"
+         xmlns:s="library://ns.adobe.com/flex/spark"
+         xmlns:mx="library://ns.adobe.com/flex/mx"
+         creationComplete="creationCompleteHandler(event)"
+         width="100%" height="100%">
 	
-	<mx:Script>
+	<fx:Script>
 		<![CDATA[
 			import com.j_nid.ui.popups.PersonForm;
 			import com.j_nid.utils.Responder;
@@ -57,78 +59,62 @@
 				loadPeople();
 			}
         ]]>
-    </mx:Script>
+    </fx:Script>
     
-    <mx:HBox verticalAlign="middle" width="100%">
-        
-        <mx:Label text="ค้นหา:"/>
-        
-        <mx:TextInput id="searchField"
-            change="searchFieldChangeListener(event)"
-            width="250"/>
-        
-        <mx:Button id="newBtn"
-            label="เพิ่ม" click="newClickListener(event)"/>
-    </mx:HBox>
+    <s:HGroup verticalAlign="middle" width="100%">
+        <s:Label text="ค้นหา:"/>
+        <s:TextInput id="searchField" change="searchFieldChangeListener(event)"
+                     width="250"/>
+        <s:Button id="newBtn" label="เพิ่ม" click="newClickListener(event)"/>
+    </s:HGroup>
     
-    <mx:TabNavigator creationPolicy="all" width="100%" height="100%">
-        
-        <mx:VBox label="บุคคล">
-            
-            <mx:DataGrid id="personPhoneNumberList"
-                doubleClickEnabled="true"
-                doubleClick="personListDoubleClick(event)"
-                headerStyleName="centerHeader"
-                width="100%" height="100%">
-                
+    <s:TabBar dataProvider="{viewStack}"/>
+    
+    <mx:ViewStack id="viewStack" creationPolicy="all"
+                  width="100%" height="100%">
+        <s:NavigatorContent label="บุคคล">
+            <mx:DataGrid id="personPhoneNumberList" doubleClickEnabled="true"
+                         doubleClick="personListDoubleClick(event)"
+                         headerStyleName="centerHeader"
+                         width="100%" height="100%">
                 <mx:columns>
                     <mx:DataGridColumn headerText="ชื่อ" dataField="name"/>
-                        
                     <mx:DataGridColumn headerText="เบอร์โทรศัพท์ 1" dataField="0"
-						itemRenderer="com.j_nid.ui.renderers.PersonPhoneNumberRenderer"
-						width="200"/>
-					
-					<mx:DataGridColumn headerText="เบอร์โทรศัพท์ 2" dataField="1"
-						itemRenderer="com.j_nid.ui.renderers.PersonPhoneNumberRenderer"
-						width="200"/>
-					
-					<mx:DataGridColumn headerText="เบอร์โทรศัพท์ 3" dataField="2"
-						itemRenderer="com.j_nid.ui.renderers.PersonPhoneNumberRenderer"
-						width="200"/>
-					
-					<mx:DataGridColumn headerText="เบอร์โทรศัพท์ 4" dataField="3"
-						itemRenderer="com.j_nid.ui.renderers.PersonPhoneNumberRenderer"
-						width="200"/>
+                                       itemRenderer="com.j_nid.ui.renderers.PersonPhoneNumberRenderer"
+                                       width="200"/>
+                    <mx:DataGridColumn headerText="เบอร์โทรศัพท์ 2" dataField="1"
+                                       itemRenderer="com.j_nid.ui.renderers.PersonPhoneNumberRenderer"
+                                       width="200"/>
+                    <mx:DataGridColumn headerText="เบอร์โทรศัพท์ 3" dataField="2"
+                                       itemRenderer="com.j_nid.ui.renderers.PersonPhoneNumberRenderer"
+                                       width="200"/>
+                    <mx:DataGridColumn headerText="เบอร์โทรศัพท์ 4" dataField="3"
+                                       itemRenderer="com.j_nid.ui.renderers.PersonPhoneNumberRenderer"
+                                       width="200"/>
                 </mx:columns>
             </mx:DataGrid>
-        </mx:VBox>
+        </s:NavigatorContent>
         
-        <mx:VBox label="ประเภทบุคคล">
-            
-            <mx:DataGrid id="personTypeList"
-                dataProvider="{personPhoneNumberList.dataProvider}"
-				doubleClickEnabled="true"
-                doubleClick="personListDoubleClick(event)"
-                headerStyleName="centerHeader"
-                width="100%" height="100%">
-                
+        <s:NavigatorContent label="ประเภทบุคคล">
+            <mx:DataGrid id="personTypeList" doubleClickEnabled="true"
+                         dataProvider="{personPhoneNumberList.dataProvider}"
+                         doubleClick="personListDoubleClick(event)"
+                         headerStyleName="centerHeader"
+                         width="100%" height="100%">
                 <mx:columns>
                     <mx:DataGridColumn headerText="ชื่อ" dataField="name"
-                        width="250"/>
-                        
+                                       width="250"/>
                     <mx:DataGridColumn headerText="ลูกค้า" textAlign="center"
-                        itemRenderer="com.j_nid.ui.renderers.PersonTypeRenderer"
-						dataField="is_customer" width="40"/>
-                    
+                                       itemRenderer="com.j_nid.ui.renderers.PersonTypeRenderer"
+                                       dataField="is_customer" width="40"/>
                     <mx:DataGridColumn headerText="ผู้ขาย" textAlign="center"
-						itemRenderer="com.j_nid.ui.renderers.PersonTypeRenderer"
-						dataField="is_supplier" width="40"/>
-					
+                                       itemRenderer="com.j_nid.ui.renderers.PersonTypeRenderer"
+                                       dataField="is_supplier" width="40"/>
                     <mx:DataGridColumn headerText="ทั่วไป" textAlign="center"
-						itemRenderer="com.j_nid.ui.renderers.PersonTypeRenderer"
-						dataField="is_general" width="40"/>
-				</mx:columns>
+                                       itemRenderer="com.j_nid.ui.renderers.PersonTypeRenderer"
+                                       dataField="is_general" width="40"/>
+                </mx:columns>
             </mx:DataGrid>
-        </mx:VBox>
-    </mx:TabNavigator>
-</mx:VBox>
+        </s:NavigatorContent>
+    </mx:ViewStack>
+</s:VGroup>

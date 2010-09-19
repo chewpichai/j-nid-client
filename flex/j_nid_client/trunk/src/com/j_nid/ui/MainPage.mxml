@@ -1,19 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml"
-    creationComplete="creationCompleteHandler(event)"
-    verticalGap="5" width="100%" height="100%">
+<s:VGroup xmlns:fx="http://ns.adobe.com/mxml/2009"
+          xmlns:s="library://ns.adobe.com/flex/spark"
+          xmlns:mx="library://ns.adobe.com/flex/mx"
+          creationComplete="creationCompleteHandler(event)"
+          width="100%" height="100%">
     
-    <mx:Script>
+    <fx:Script>
         <![CDATA[
-			import com.j_nid.ui.popups.ManageSaleProductForm;
-			import com.j_nid.ui.popups.ReturnBasketForm;
-        	import com.j_nid.utils.Responder;
-        	import com.j_nid.utils.ServiceUtils;
-        	import com.j_nid.utils.Utils;
-        	
-        	import mx.events.FlexEvent;
-        	import mx.events.ItemClickEvent;
-        	import mx.rpc.events.ResultEvent;
+            import com.j_nid.ui.popups.ManageSaleProductForm;
+            import com.j_nid.ui.popups.ReturnBasketForm;
+            import com.j_nid.utils.Responder;
+            import com.j_nid.utils.ServiceUtils;
+            import com.j_nid.utils.Utils;
+            
+            import mx.collections.XMLListCollection;
+            import mx.events.FlexEvent;
+            import mx.events.ItemClickEvent;
+            import mx.rpc.events.ResultEvent;
             
             [Bindable]
             public var subMenuList:Array = [
@@ -31,7 +34,8 @@
             
             private function resultHandler(data:Object):void {
             	var resultEvent:ResultEvent = ResultEvent(data);
-            	productList.dataProvider = resultEvent.result.children();
+            	productList.dataProvider =
+                    new XMLListCollection(resultEvent.result.children());
             }
             
             private function subMenuClickHandler(e:ItemClickEvent):void {
@@ -45,16 +49,20 @@
             	}
             }
         ]]>
-    </mx:Script>
+    </fx:Script>
     
-    <mx:TileList id="productList"
-        columnWidth="320" rowHeight="40"
-        selectable="false" direction="vertical"
-        itemRenderer="com.j_nid.ui.renderers.MainProductRenderer"
-        width="100%" height="100%"/>
-        
+    <s:Scroller width="100%" height="100%">
+        <s:DataGroup id="productList"
+                     itemRenderer="com.j_nid.ui.renderers.MainProductRenderer">
+            <s:layout>
+                <s:TileLayout orientation="columns" useVirtualLayout="true"
+                              rowHeight="25"/>
+            </s:layout>
+        </s:DataGroup>
+    </s:Scroller>
+    
     <mx:ButtonBar id="subMenu"
-    	dataProvider="{subMenuList}" horizontalAlign="center"
-    	itemClick="subMenuClickHandler(event)"
-    	buttonWidth="200" horizontalGap="10" width="100%"/>
-</mx:VBox>
+                  dataProvider="{subMenuList}" horizontalAlign="center"
+                  itemClick="subMenuClickHandler(event)"
+                  buttonWidth="200" horizontalGap="10" width="100%"/>
+</s:VGroup>

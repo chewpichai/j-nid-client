@@ -1,17 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml" 
-	xmlns:jn="com.j_nid.ui.*"
-	creationComplete="createtionCompleteHandler(event)"
-	width="100%" height="100%">
+<s:HGroup xmlns:fx="http://ns.adobe.com/mxml/2009"
+          xmlns:s="library://ns.adobe.com/flex/spark"
+          xmlns:mx="library://ns.adobe.com/flex/mx" 
+          xmlns:jn="com.j_nid.ui.*"
+          creationComplete="createtionCompleteHandler(event)"
+          width="100%" height="100%">
 	
-	 <mx:Script>
+	 <fx:Script>
 		<![CDATA[
-			import mx.rpc.events.ResultEvent;
-			import com.j_nid.utils.ServiceUtils;
-			import com.j_nid.utils.Utils;
-			import mx.events.ListEvent;
-			import mx.events.FlexEvent;
-			import com.j_nid.utils.Responder;
+            import com.j_nid.utils.Responder;
+            import com.j_nid.utils.ServiceUtils;
+            import com.j_nid.utils.Utils;
+            
+            import mx.collections.XMLListCollection;
+            import mx.events.FlexEvent;
+            import mx.events.ListEvent;
+            import mx.rpc.events.ResultEvent;
+            
+            import spark.events.IndexChangeEvent;
 						
 			private function createtionCompleteHandler(e:FlexEvent):void {
 			    loadProductTypes();
@@ -28,7 +34,8 @@
             
             private function productTypeResultHandler(data:Object):void {
                 var resultEvent:ResultEvent = ResultEvent(data);
-                productTypeList.dataProvider = resultEvent.result.children();
+                productTypeList.dataProvider =
+                    new XMLListCollection(resultEvent.result.children());
                 productTypeList.dataProvider.addItemAt(Utils.getBasketType(), 0);
                 productTypeList.dataProvider.addItemAt(Utils.getAllProductType(), 0);
                 productTypeList.selectedIndex = 0;
@@ -55,7 +62,7 @@
                 productList.dataProvider = resultEvent.result.children();
             }
 			
-			private function productTypeListChange(e:ListEvent):void {
+			private function productTypeListChange(e:IndexChangeEvent):void {
 				loadProducts(productTypeList.selectedItem.id);
 			}
 						
@@ -63,44 +70,37 @@
                 orderDetail.addOrderItem(XML(productList.selectedItem));
 			}
 		]]>
-	</mx:Script>
+	</fx:Script>
 	
-	<mx:HBox
-		height="100%">
-		
-		<mx:Panel title="ชนิดสินค้า" width="220" height="100%">
-			
-			<mx:List id="productTypeList"
-				change="productTypeListChange(event)"
-				labelField="name" borderStyle="none"
-				height="100%" width="100%"/>
-		</mx:Panel>
-		
-		<mx:Panel title="สินค้า" width="350" height="100%">
-			
-			<mx:DataGrid id="productList"
-				variableRowHeight="true" dragEnabled="true"
-				doubleClickEnabled="true" headerStyleName="centerHeader"
-				doubleClick="productDoubleClick(event)"
-				width="100%" height="100%">
-				
-				<mx:columns>
-					<mx:DataGridColumn headerText="ชื่อ" dataField="name"
-						wordWrap="true"/>
-					
-					<mx:DataGridColumn headerText="หน่วย" dataField="unit"
-                        labelFunction="Utils.unitLabelFunction"
-						textAlign="center" width="50"/>
-					
-					<mx:DataGridColumn headerText="ราคาต่อหน่วย"
-						dataField="price_per_unit" textAlign="right"
-						labelFunction="Utils.priceLabelFunction"
-						paddingRight="5" width="90"/>
-				</mx:columns>
-			</mx:DataGrid>
-		</mx:Panel>
-	</mx:HBox>
+    <s:HGroup height="100%">
+        <s:Panel title="ชนิดสินค้า" width="220" height="100%">
+            <s:List id="productTypeList" labelField="name"
+                    change="productTypeListChange(event)"
+                    borderVisible="false"
+                    width="100%" height="100%"/>
+        </s:Panel>
+        <s:Panel title="สินค้า" width="350" height="100%">
+            <mx:DataGrid id="productList"
+                         variableRowHeight="true" dragEnabled="true"
+                         doubleClickEnabled="true"
+                         doubleClick="productDoubleClick(event)"
+                         borderStyle="none" headerStyleName="centerHeader"
+                         width="100%" height="100%">
+                <mx:columns>
+                    <mx:DataGridColumn headerText="ชื่อ" dataField="name"
+                                       wordWrap="true"/>
+                    <mx:DataGridColumn headerText="หน่วย" dataField="unit"
+                                       labelFunction="Utils.unitLabelFunction"
+                                       textAlign="center" width="50"/>
+                    <mx:DataGridColumn headerText="ราคาต่อหน่วย"
+                                       dataField="price_per_unit"
+                                       labelFunction="Utils.priceLabelFunction"
+                                       textAlign="right"
+                                       paddingRight="5" width="90"/>
+                </mx:columns>
+            </mx:DataGrid>
+        </s:Panel>
+	</s:HGroup>
 	
-	<jn:OrderDetail id="orderDetail"
-		width="100%" height="100%"/>
-</mx:HBox>
+	<jn:OrderDetail id="orderDetail" width="100%" height="100%"/>
+</s:HGroup>

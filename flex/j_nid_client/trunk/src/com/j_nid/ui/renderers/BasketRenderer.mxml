@@ -1,18 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:Label xmlns:mx="http://www.adobe.com/2006/mxml">
-
-	<mx:Script>
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                xmlns:s="library://ns.adobe.com/flex/spark"
+                xmlns:mx="library://ns.adobe.com/flex/mx"
+                height="30">
+    
+	<fx:Script>
 		<![CDATA[
 			override public function set data(value:Object):void {
 				if (value) {
 					super.data = value;
-					text = value.name + " x " + value.quantity;
+                    lbl.text = value.name + " x " + value.quantity;
 					if (Boolean(int(data.is_deposit)))
-						setStyle("color", 0x0000ff);
+                        lbl.setStyle("color", 0x0000ff);
 					else
-						setStyle("color", 0xff0000);
+                        lbl.setStyle("color", 0xff0000);
 				}
 			}
 		]]>
-	</mx:Script>
-</mx:Label>
+	</fx:Script>
+    
+    <s:Label id="lbl" verticalCenter="0"/>
+</s:ItemRenderer>

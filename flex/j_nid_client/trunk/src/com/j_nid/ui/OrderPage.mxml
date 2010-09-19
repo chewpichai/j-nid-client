@@ -1,30 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml"
-    xmlns:jn="com.j_nid.components.*"
-    creationComplete="creationCompleteHandler(event)"
-    width="100%" height="100%">
+<s:VGroup xmlns:fx="http://ns.adobe.com/mxml/2009"
+          xmlns:s="library://ns.adobe.com/flex/spark"
+          xmlns:mx="library://ns.adobe.com/flex/mx"
+          xmlns:jn="com.j_nid.components.*"
+          creationComplete="creationCompleteHandler(event)"
+          width="100%" height="100%">
 
-    <mx:Script>
+    <fx:Script>
         <![CDATA[
-			import com.j_nid.ui.popups.ProductSelectForm;
-			import com.j_nid.utils.PrintUtils;
-			import com.j_nid.utils.ServiceUtils;
-			import com.j_nid.utils.Utils;
-			
-			import mx.binding.utils.ChangeWatcher;
-			import mx.collections.ArrayCollection;
-			import mx.collections.ListCollectionView;
-			import mx.collections.Sort;
-			import mx.collections.SortField;
-			import mx.collections.XMLListCollection;
-			import mx.controls.Alert;
-			import mx.events.CalendarLayoutChangeEvent;
-			import mx.events.CloseEvent;
-			import mx.events.CollectionEvent;
-			import mx.events.DataGridEvent;
-			import mx.events.FlexEvent;
-			import mx.events.ItemClickEvent;
-			import mx.events.ListEvent;
+            import com.j_nid.ui.popups.ProductSelectForm;
+            import com.j_nid.utils.PrintUtils;
+            import com.j_nid.utils.ServiceUtils;
+            import com.j_nid.utils.Utils;
+            
+            import mx.binding.utils.ChangeWatcher;
+            import mx.collections.ArrayCollection;
+            import mx.collections.ListCollectionView;
+            import mx.collections.Sort;
+            import mx.collections.SortField;
+            import mx.collections.XMLListCollection;
+            import mx.controls.Alert;
+            import mx.events.CalendarLayoutChangeEvent;
+            import mx.events.CloseEvent;
+            import mx.events.CollectionEvent;
+            import mx.events.DataGridEvent;
+            import mx.events.FlexEvent;
+            import mx.events.ItemClickEvent;
+            import mx.events.ListEvent;
+            
+            import spark.events.IndexChangeEvent;
 			
             private var _selectedOrder:XML;
 			[Bindable]
@@ -60,7 +64,8 @@
 			}
 			
 			private function customerResultHandler(data:Object):void {
-				customerField.dataProvider = data.result.children();
+				customerField.dataProvider =
+                    new XMLListCollection(data.result.children());
 			}
 			
 			private function loadOrders():void {
@@ -73,9 +78,10 @@
 				var filters:String = "filters=is_today=" + int(isToday);
 				if (!isToday) {
 					var startDate:Date = startDateField.selectedDate;
-					var endDate:Date = endDateField.selectedDate;
-					filters += ",date_range=" + Utils.formatDate(startDate, "YYYY-MM-DD") +
-						":" + Utils.formatDate(endDate, "YYYY-MM-DD");
+					var endDate:Date = new Date(endDateField.selectedDate.time);
+                    endDate.date += 1;
+					filters += ",date_range=" + Utils.formatDate(startDate, "YYYYMMDD") +
+						":" + Utils.formatDate(endDate, "YYYYMMDD");
 				}
                 if (orderTabBar.selectedIndex == 1 && customerField.selectedItem) {
                     filters += ",person_id=" + customerField.selectedItem.id;
@@ -306,8 +312,7 @@
 					notation += "  ";
 				notation += obj.name + " x 1";
 				notationField.text = notation;
-				notationField.verticalScrollPosition = 
-					notationField.maxVerticalScrollPosition;
+				notationField.scrollToRange(notation.length);
 			}
 			
 			private function addOrderItem(obj:XML):void {
@@ -385,7 +390,7 @@
 				loadOrders();
 			}
             
-            private function orderListChange(e:ListEvent):void {
+            private function orderListChange(e:IndexChangeEvent):void {
             	selectedOrder = XML(orderList.selectedItem);
 				loadOrderItems(selectedOrder.id);
             }
@@ -404,6 +409,7 @@
 			}
             
             private function set selectedOrder(order:XML):void {
+                trace(order);
                 _selectedOrder = order;
                 customerNameField.text = _selectedOrder.person_name;
                 createdField.text = getCreatedString(_selectedOrder.created);
@@ -416,158 +422,121 @@
                 return _selectedOrder;
             }
         ]]>
-    </mx:Script>
+    </fx:Script>
     
-    <mx:states>
-        <mx:State name="TodayOrder">
-            
-			<mx:RemoveChild target="{searchBox}"/>
-            
-			<mx:RemoveChild target="{customerField}"/>
-        </mx:State>
-    </mx:states>
+    <s:states>
+        <s:State name="base"/>
+        <s:State name="TodayOrder"/>
+    </s:states>
     
-    <mx:TabBar id="orderTabBar"
-        dataProvider="{menuList}" itemClick="tabBarClick(event)"/>
+    <mx:TabBar id="orderTabBar" dataProvider="{menuList}"
+               itemClick="tabBarClick(event)"/>
     
-    <mx:HBox width="100%" height="100%">
-        
-        <mx:Panel id="customerPnl"
-            title="ค้นหา" verticalGap="5" paddingTop="5" paddingBottom="5"
-            width="220" height="100%">
-            
-            <mx:HBox id="searchBox"
-                paddingLeft="5" paddingRight="5" verticalAlign="middle"
-				width="100%">
-                
-                <mx:Label text="ค้นหาชื่อลูกค้า:"/>
-            
-                <mx:TextInput id="personSearchField"
-                    change="searchChange(event)" width="100%"/>
-            </mx:HBox>
-            
-            <mx:List id="customerField"
-                labelField="name" borderThickness="0"
-                change="loadOrders()"
-				width="100%" height="100%"/>
-                
-            <mx:VBox id="dateRangeBox" horizontalAlign="left" width="100%">
-                
-                <mx:HBox horizontalAlign="right" width="190">
-                    
-                    <mx:Label text="เริ่มจากวันที่:"/>
-                    
+    <s:HGroup width="100%" height="100%">
+        <s:Panel id="customerPnl" title="ค้นหา" width="220" height="100%">
+            <s:layout>
+                <s:VerticalLayout gap="8" paddingTop="5" paddingBottom="5"/>
+            </s:layout>
+            <s:HGroup id="searchBox" paddingLeft="5" paddingRight="5"
+                      verticalAlign="middle" width="100%" includeIn="base">
+                <s:Label text="ค้นหาชื่อลูกค้า:"/>
+                <s:TextInput id="personSearchField" change="searchChange(event)"
+                             width="100%"/>
+            </s:HGroup>
+            <s:List id="customerField" labelField="name" change="loadOrders()"
+                    borderVisible="false" width="100%" height="100%"
+                    includeIn="base"/>
+            <s:VGroup id="dateRangeBox" horizontalAlign="left" width="100%">
+                <s:HGroup horizontalAlign="right" width="190">
+                    <s:Label text="เริ่มจากวันที่:"/>
                     <mx:DateField id="startDateField" change="loadOrders()"/>
-                </mx:HBox>
-                
-                <mx:HBox horizontalAlign="right" width="190">
-                    
-                    <mx:Label text="ถึงวันที่:"/>
-                    
+                </s:HGroup>
+                <s:HGroup horizontalAlign="right" width="190">
+                    <s:Label text="ถึงวันที่:"/>
                     <mx:DateField id="endDateField" change="loadOrders()"/>
-                </mx:HBox>
-            </mx:VBox>
-                
-            <mx:VBox paddingLeft="5" paddingBottom="5" paddingRight="5"
-				width="100%">
-                
-                <mx:CheckBox id="outstandingField" label="ค้างจ่าย"
-					change="loadOrders()"/>
-                
-                <mx:CheckBox id="paidField" label="จ่ายแล้ว"
-					change="loadOrders()"/>
-            </mx:VBox>
-        </mx:Panel>
+                </s:HGroup>
+            </s:VGroup>
+            <s:VGroup paddingLeft="5" paddingBottom="5" paddingRight="5"
+                      width="100%">
+                <s:CheckBox id="outstandingField" label="ค้างจ่าย"
+                            change="loadOrders()"/>
+                <s:CheckBox id="paidField" label="จ่ายแล้ว"
+                            change="loadOrders()"/>
+            </s:VGroup>
+        </s:Panel>
         
-        <mx:Panel title="รายการขาย" layout="absolute" width="250" height="100%">
-            
-            <mx:List id="orderList"
-                change="orderListChange(event)"
-				itemRenderer="com.j_nid.ui.renderers.OrderRenderer"
-                width="100%" height="100%"/>
-        </mx:Panel>
+        <s:Panel title="รายการขาย" width="250" height="100%">
+            <s:List id="orderList" change="orderListChange(event)"
+                    itemRenderer="com.j_nid.ui.renderers.OrderRenderer"
+                    borderVisible="false" width="100%" height="100%"/>
+        </s:Panel>
         
-        <mx:Panel title="รายละเอียด" layout="vertical"
-            paddingTop="5" paddingRight="5"
-            paddingBottom="5" paddingLeft="5"
-            width="100%" height="100%">
-            
-            <mx:HBox horizontalAlign="right"
-                paddingTop="5" paddingRight="5" 
-                width="100%" height="35">
-                
-                <mx:Label id="customerNameField"/>
-                
+        <s:Panel title="รายละเอียด" width="100%" height="100%">
+            <s:layout>
+                <s:VerticalLayout paddingTop="5" paddingRight="5"
+                                  paddingBottom="5" paddingLeft="5"/>
+            </s:layout>
+            <s:HGroup horizontalAlign="right" verticalAlign="middle"
+                      paddingTop="5" paddingRight="5"
+                      width="100%" height="35">
+                <s:Label id="customerNameField"/>
                 <jn:DateTimeInput id="createdField" width="130"/>
-            </mx:HBox>
-            
-            <mx:DataGrid id="orderItemList"
-				dataProvider="{orderItems}" keyDown="itemListKeyDown(event)"
-				headerStyleName="centerHeader" textAlign="center"
-                editable="true"
-                width="100%" height="100%">
-                
+            </s:HGroup>
+            <mx:DataGrid id="orderItemList" dataProvider="{orderItems}"
+                         keyDown="itemListKeyDown(event)"
+                         headerStyleName="centerHeader"
+                         textAlign="center" editable="true"
+                         rowHeight="30"
+                         width="100%" height="100%">
                 <mx:columns>
                     <mx:DataGridColumn headerText="จำนวน" dataField="quantity"
-                        itemRenderer="com.j_nid.ui.renderers.OrderItemRenderer"
-						itemEditor="com.j_nid.ui.renderers.OrderItemEditor"
-                        editorDataField="value" width="60"/>
-                    
+                                       itemRenderer="com.j_nid.ui.renderers.OrderItemRenderer"
+                                       itemEditor="com.j_nid.ui.renderers.OrderItemEditor"
+                                       editorDataField="value" width="60"/>
                     <mx:DataGridColumn headerText="ชื่อ" dataField="name"
-                        itemRenderer="com.j_nid.ui.renderers.OrderItemRenderer"
-                        editable="false"/>
-                    
+                                       itemRenderer="com.j_nid.ui.renderers.OrderItemRenderer"
+                                       editable="false"/>
                     <mx:DataGridColumn headerText="หน่วย" dataField="unit"
-                        textAlign="right" editorDataField="value"
-                        labelFunction="Utils.unitLabelFunction"
-                        itemRenderer="com.j_nid.ui.renderers.OrderItemRenderer"
-						itemEditor="com.j_nid.ui.renderers.OrderItemEditor"
-                        width="60"/>
-                    
+                                       textAlign="right" editorDataField="value"
+                                       labelFunction="Utils.unitLabelFunction"
+                                       itemRenderer="com.j_nid.ui.renderers.OrderItemRenderer"
+                                       itemEditor="com.j_nid.ui.renderers.OrderItemEditor"
+                                       width="60"/>
                     <mx:DataGridColumn headerText="ราคาต่อหน่วย"
-						dataField="price_per_unit" textAlign="right"
-                        labelFunction="Utils.priceLabelFunction"
-                        itemRenderer="com.j_nid.ui.renderers.OrderItemRenderer"
-						itemEditor="com.j_nid.ui.renderers.OrderItemEditor"
-						editorDataField="value" width="90"/>
-                    
+                                       dataField="price_per_unit" textAlign="right"
+                                       labelFunction="Utils.priceLabelFunction"
+                                       itemRenderer="com.j_nid.ui.renderers.OrderItemRenderer"
+                                       itemEditor="com.j_nid.ui.renderers.OrderItemEditor"
+                                       editorDataField="value" width="90"/>
                     <mx:DataGridColumn headerText="รวม" dataField="total"
-						labelFunction="Utils.priceLabelFunction"
-                        itemRenderer="com.j_nid.ui.renderers.OrderItemRenderer"
-						textAlign="right" editable="false" width="90"/>
+                                       labelFunction="Utils.priceLabelFunction"
+                                       itemRenderer="com.j_nid.ui.renderers.OrderItemRenderer"
+                                       textAlign="right" editable="false" width="90"/>
                 </mx:columns>
             </mx:DataGrid>
-            
-            <mx:HBox paddingRight="5" width="100%" height="110">
-                
-                <mx:Label text="หมายเหตุ:"/>
-                	
-                <mx:TextArea id="notationField"
-                    width="400" height="100%"/>
-                	
-                <mx:Spacer width="100%"/>
-                
-                <mx:VBox horizontalAlign="right" verticalGap="15">
-					
-					<mx:Button label="เพิ่ม" click="addOrderItemClick(event)"
-						enabled="{orderList.selectedItem != null}" width="75"/>
-					
-					<mx:Label id="summaryField"
-	                    text="รวมทั้งสิ้น {Utils.formatPrice(total)} (จ่ายแล้ว {Utils.formatPrice(paid)})"/>
-				</mx:VBox>
-            </mx:HBox>
-            
-            <mx:ControlBar horizontalAlign="right">
-				
-				<mx:Button id="saveBtn" label="บันทึก" click="saveBtnClick(event)"
-					enabled="{orderList.selectedItem != null}"/>
-            
-                <mx:Button label="ลบ" click="deleteOrderClick(event)"
-                    enabled="{orderList.selectedItem != null}"/>
-                
-                <mx:Button label="พิมพ์" click="printOrder(event)"
-                    enabled="{orderList.selectedItem != null}"/>
-            </mx:ControlBar>
-        </mx:Panel>
-    </mx:HBox>
-</mx:VBox>
+            <s:HGroup paddingRight="5" width="100%" height="110">
+                <s:Label text="หมายเหตุ:"/>
+                <s:TextArea id="notationField" width="400" height="100%"/>
+                <s:Rect width="100%"/>
+                <s:VGroup horizontalAlign="right" gap="15">
+                    <s:Button label="เพิ่ม" click="addOrderItemClick(event)"
+                              enabled="{orderList.selectedItem != null}"
+                              width="75"/>
+                    <s:Label id="summaryField" text="รวมทั้งสิ้น {Utils.formatPrice(total)} (จ่ายแล้ว {Utils.formatPrice(paid)})"/>
+                </s:VGroup>
+            </s:HGroup>
+            <s:controlBarLayout>
+                <s:HorizontalLayout horizontalAlign="right" paddingTop="5"
+                                    paddingBottom="5" paddingLeft="5"/>
+            </s:controlBarLayout>
+            <s:controlBarContent>
+                <s:Button id="saveBtn" label="บันทึก" click="saveBtnClick(event)"
+                          enabled="{orderList.selectedItem != null}"/>
+                <s:Button label="ลบ" click="deleteOrderClick(event)"
+                          enabled="{orderList.selectedItem != null}"/>
+                <s:Button label="พิมพ์" click="printOrder(event)"
+                          enabled="{orderList.selectedItem != null}"/>
+            </s:controlBarContent>
+        </s:Panel>
+    </s:HGroup>
+</s:VGroup>

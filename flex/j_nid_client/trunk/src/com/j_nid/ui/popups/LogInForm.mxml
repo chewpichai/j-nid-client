@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml"
-	title="เข้าสู่ระบบ" creationComplete="creationCompleteHandler(event)">
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+               xmlns:s="library://ns.adobe.com/flex/spark"
+               xmlns:mx="library://ns.adobe.com/flex/mx"
+               title="เข้าสู่ระบบ"
+               creationComplete="creationCompleteHandler(event)">
 	
-	<mx:Script>
+	<fx:Script>
 		<![CDATA[
 			import com.j_nid.utils.Responder;
 			import com.j_nid.utils.ServiceUtils;
@@ -50,33 +53,28 @@
 				}
 			}
 		]]>
-	</mx:Script>
+	</fx:Script>
     
     <mx:Form>
         <mx:FormItem label="ชื่อผู้ใช้:" width="100%">
-            
-            <mx:TextInput id="usernameField"
-                text="admin" width="100%"/>
+            <s:TextInput id="usernameField" text="admin" width="100%"/>
         </mx:FormItem>
-        
         <mx:FormItem label="รหัสผ่าน:" width="100%">
-            
-            <mx:TextInput id="passwordField"
-                text="123456" displayAsPassword="true" width="100%"/>
+            <s:TextInput id="passwordField" text="123456"
+                         displayAsPassword="true" width="100%"/>
         </mx:FormItem>
-        
         <mx:FormItem label="Server Address:" width="100%">
-            
-            <mx:TextInput id="serverField"
-                text="127.0.0.1:8000" width="100%"/>
+            <s:TextInput id="serverField" text="127.0.0.1:8000" width="100%"/>
         </mx:FormItem>
     </mx:Form>
     
-    <mx:ControlBar>
-        
-        <mx:Spacer width="100%"/>
-        
-        <mx:Button id="submitBtn"
-        	label="ตกลง"	click="submitBtnClickHandler(event)"/>
-    </mx:ControlBar>
-</mx:TitleWindow>
+    <s:controlBarLayout>
+        <s:HorizontalLayout horizontalAlign="right" paddingRight="10"
+                            paddingTop="5" paddingBottom="5"/>
+    </s:controlBarLayout>
+    
+    <s:controlBarContent>
+        <s:Button id="submitBtn"
+                  label="ตกลง" click="submitBtnClickHandler(event)"/>
+    </s:controlBarContent>
+</s:TitleWindow>

@@ -1,3 +1,6 @@
+@namespace mx "library://ns.adobe.com/flex/mx";
+@namespace s "library://ns.adobe.com/flex/spark";
+
 @font-face {
 	src: url("../assets/TAHOMA.TTF");
 	font-family: Tahoma;
@@ -9,7 +12,7 @@
 	font-weight: bold;
 }
 
-global {
+s|WindowedApplication {
 	font-family: Tahoma;
    	font-size: 14;
    	font-anti-alias-type: advanced;
@@ -17,7 +20,14 @@ global {
    	font-sharpness: -300;
 }
 
-Alert {
+s|WindowedApplication mx|ControlBar {
+    padding-bottom: 0;
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: 0;
+}
+
+mx|Alert {
     button-style-name: alertButton;
 }
 

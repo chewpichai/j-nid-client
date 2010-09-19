@@ -1,21 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:HBox xmlns:mx="http://www.adobe.com/2006/mxml"
-	doubleClick="doubleClickHandler(event)"
-	doubleClickEnabled="true" fontSize="15"
-	horizontalScrollPolicy="off" verticalScrollPolicy="off"
-	width="100%" height="100%">
+<s:DataRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                xmlns:s="library://ns.adobe.com/flex/spark"
+                xmlns:mx="library://ns.adobe.com/flex/mx"
+                doubleClick="doubleClickHandler(event)"
+                doubleClickEnabled="true" fontSize="15">
+    
+    <s:layout>
+        <s:HorizontalLayout/>
+    </s:layout>
 	
-	<mx:Script>
+	<fx:Script>
 		<![CDATA[
-			import mx.core.Application;
-			import com.j_nid.utils.Utils;
+            import com.j_nid.ui.popups.ProductPriceForm;
+            import com.j_nid.utils.Utils;
+            
+            import mx.core.FlexGlobals;
 		    
 		    private function doubleClickHandler(e:MouseEvent):void {
-		    	var productPriceEditor:ProductPriceEditor =
-                    ProductPriceEditor(Utils.showPopUp(ProductPriceEditor));
-                productPriceEditor.data = data;
+		    	var productPriceEditor:ProductPriceForm =
+                    ProductPriceForm(Utils.showPopUp(ProductPriceForm));
+                productPriceEditor.product = XML(data);
                 productPriceEditor.x = e.stageX;
-                var app:JNid = JNid(Application.application);
+                var app:JNid = JNid(FlexGlobals.topLevelApplication);
                 var height:Number = app.height;
                 var width:Number = app.width;
                 if (e.stageX + productPriceEditor.width > width) {
@@ -27,20 +33,20 @@
                 }
 		    }
         ]]>
-    </mx:Script>
+    </fx:Script>
     
-    <mx:Fade id="fadeIn" alphaFrom="0" alphaTo="0.8"/>
+    <fx:Declarations>
+        <mx:Fade id="fadeIn" alphaFrom="0" alphaTo="0.8"/>
+        <mx:Fade id="fadeOut" alphaFrom="0.8" alphaTo="0"/>
+    </fx:Declarations>
     
-    <mx:Fade id="fadeOut" alphaFrom="0.8" alphaTo="0"/>
+    <s:Label text="{data.name}" color="{data.color}" textAlign="left"
+             width="100%"/>
     
-    <mx:Label text="{data.name}"
-        color="{data.color}" textAlign="left"
-        width="100%"/>
-        
-    <mx:Label id="costLbl"
-        text="{data.cost_per_unit}" textAlign="right" alpha="0"
-        rollOverEffect="{fadeIn}" rollOutEffect="{fadeOut}"/>
+    <s:Label id="costLbl" text="{data.cost_per_unit}"
+             textAlign="right" alpha="0"
+             rollOverEffect="{fadeIn}" rollOutEffect="{fadeOut}"/>
     
-    <mx:Label id="priceLbl"
-        text="{data.price_per_unit}" textAlign="right" paddingRight="20"/>
-</mx:HBox>
+    <s:Label id="priceLbl" text="{data.price_per_unit}"
+             textAlign="right" paddingRight="20"/>
+</s:DataRenderer>

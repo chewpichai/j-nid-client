@@ -1,23 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml"
-    title="ข้อมูลสินค้า" creationComplete="creationCompleteHandler(event)"
-	showCloseButton="true" close="close()"
-    layout="absolute" width="400" height="400">
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+               xmlns:s="library://ns.adobe.com/flex/spark"
+               xmlns:mx="library://ns.adobe.com/flex/mx"
+               title="ข้อมูลสินค้า"
+               creationComplete="creationCompleteHandler(event)"
+               close="close()"
+               width="400" height="400">
     
-    <mx:Script>
+    <fx:Script>
         <![CDATA[
-			import com.j_nid.utils.Responder;
-			import com.j_nid.utils.ServiceUtils;
-			import com.j_nid.utils.Utils;
-			
-			import mx.events.FlexEvent;
-			import mx.rpc.events.ResultEvent;
-			import mx.utils.StringUtil;
+            import com.j_nid.utils.Responder;
+            import com.j_nid.utils.ServiceUtils;
+            import com.j_nid.utils.Utils;
+            
+            import mx.collections.XMLListCollection;
+            import mx.events.FlexEvent;
+            import mx.rpc.events.ResultEvent;
+            import mx.utils.StringUtil;
         	
             [Bindable]
             public var product:XML;
 			[Bindable]
-			private var productTypes:XMLList;
+			private var productTypes:XMLListCollection;
             private var errMsg:String;
             
             
@@ -33,7 +37,7 @@
 			
 			private function productTypeResultHandler(data:Object):void {
 				var resultEvent:ResultEvent = ResultEvent(data);
-				productTypes = resultEvent.result.children();
+				productTypes = new XMLListCollection(resultEvent.result.children());
 				typeField.selectedIndex = getTypeIndex(product.type);
 			}
             
@@ -80,64 +84,49 @@
             }
 			
 			private function getTypeIndex(type:String):int {
-				for (var i:int = 0; i < productTypes.length(); i++)
-					if (productTypes[i].name == type)
+				for (var i:int = 0; i < productTypes.length; i++)
+					if (productTypes.getItemAt(i).name == type)
 						return i;
 				return -1;
 			}
         ]]>
-    </mx:Script>
+    </fx:Script>
     
     <mx:Form width="100%" height="100%">
-        
         <mx:FormItem label="ชื่อ:" required="true" width="100%">
-            
-            <mx:TextInput id="nameField" text="{product.name}"
-                width="100%" height="30"/>
+            <s:TextInput id="nameField" text="{product.name}"
+                         width="100%" height="30"/>
         </mx:FormItem>
-        
         <mx:FormItem label="ชนิดสินค้า:" width="100%">
-            
-            <mx:ComboBox id="typeField"
-				dataProvider="{productTypes}"
-				labelField="name"
-                itemRenderer="com.j_nid.ui.renderers.ProductTypeComboRenderer"
-                width="100%" height="30"/>
+            <s:ComboBox id="typeField" dataProvider="{productTypes}"
+                        labelField="name"
+                        itemRenderer="com.j_nid.ui.renderers.ProductTypeComboRenderer"
+                        width="100%" height="30"/>
         </mx:FormItem>
-        
         <mx:FormItem label="หน่วย:" width="100%">
-            
-            <mx:NumericStepper id="unitField"
-                value="{product.unit}"
-                minimum="0.5" maximum="100000" stepSize="0.5"
-                width="100%" height="30"/>
+            <s:NumericStepper id="unitField" value="{product.unit}"
+                              minimum="0.5" maximum="100000" stepSize="0.5"
+                              width="100%" height="30"/>
         </mx:FormItem>
-		
 		<mx:FormItem label="ราคาทุนต่อหน่วย:" width="100%">
-			
-			<mx:NumericStepper id="costPerUnitField"
-				value="{product.cost_per_unit}"
-				minimum="0.5" maximum="100000" stepSize="0.5"
-				width="100%" height="30"/>
+            <s:NumericStepper id="costPerUnitField"
+                              value="{product.cost_per_unit}"
+                              minimum="0.5" maximum="100000" stepSize="0.5"
+                              width="100%" height="30"/>
 		</mx:FormItem>
-        
         <mx:FormItem label="ราคาต่อหน่วย:" width="100%">
-            
-            <mx:NumericStepper id="pricePerUnitField"
-                value="{product.price_per_unit}"
-                minimum="0.5" maximum="100000" stepSize="0.5"
-                width="100%" height="30"/>
+            <s:NumericStepper id="pricePerUnitField"
+                              value="{product.price_per_unit}"
+                              minimum="0.5" maximum="100000" stepSize="0.5"
+                              width="100%" height="30"/>
         </mx:FormItem>
-        
         <mx:FormItem label="มีขาย:">
-            
-            <mx:CheckBox id="isSaleField"
-				selected="{Boolean(int(product.is_sale))}"/>
+            <s:CheckBox id="isSaleField"
+                        selected="{Boolean(int(product.is_sale))}"/>
         </mx:FormItem>
-        
         <mx:FormItem>
-            <mx:Button id="saveBtn"
-                label="บันทึก" click="saveProductListener(event)"/>
+            <s:Button id="saveBtn" label="บันทึก"
+                      click="saveProductListener(event)"/>
         </mx:FormItem>
     </mx:Form>
-</mx:TitleWindow>
+</s:TitleWindow>

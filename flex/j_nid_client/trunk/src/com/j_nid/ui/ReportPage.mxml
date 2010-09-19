@@ -1,12 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:VBox xmlns:mx="http://www.adobe.com/2006/mxml"
-    width="100%" height="100%">
+<s:HGroup xmlns:fx="http://ns.adobe.com/mxml/2009"
+          xmlns:s="library://ns.adobe.com/flex/spark"
+          xmlns:mx="library://ns.adobe.com/flex/mx"
+          width="100%" height="100%">
     
-    <mx:Script>
+    <fx:Script>
         <![CDATA[
             import com.j_nid.ui.popups.OrderDetailForm;
+            import com.j_nid.ui.popups.PaymentDetailForm;
             import com.j_nid.utils.ServiceUtils;
             import com.j_nid.utils.Utils;
+            
+            import spark.events.IndexChangeEvent;
             
             private function formatDateForTransaction(item:Object,
                                     column:DataGridColumn):String {
@@ -19,7 +24,7 @@
             }
             
             private function priceLabelFunction(item:Object,
-                                    column:DataGridColumn):String {
+                                                column:DataGridColumn):String {
                 
                 if (Number(item[column.dataField]) != 0)
                     return Utils.formatPrice(item[column.dataField]);
@@ -38,6 +43,8 @@
             private function showTransactionDetail(transaction:XML):void {
                 if (transaction.type == "order")
                     showOrderDetailForm(transaction);
+                else
+                    showPaymentDetailForm(transaction);
             }
             
             private function showOrderDetailForm(transaction:XML):void {
@@ -54,6 +61,20 @@
                 form.order = data.result;
             }
             
+            private function showPaymentDetailForm(transaction:XML):void {
+                var responder:com.j_nid.utils.Responder =
+                    new com.j_nid.utils.Responder(paymentResultHandler);
+                var attrs:String = "attrs=id,amount,person_name,notation,created";
+                ServiceUtils.send("/payments/" + transaction.id + "/?" + attrs,
+                    "GET", responder);
+            }
+            
+            private function paymentResultHandler(data:Object):void {
+                var form:PaymentDetailForm =
+                    PaymentDetailForm(Utils.showPopUp(PaymentDetailForm));
+                form.payment = data.result;
+            }
+            
             private function submitBtnClick(e:MouseEvent):void {
                 loadTransactions();
             }
@@ -61,10 +82,23 @@
             private function loadTransactions():void {
                 var responder:com.j_nid.utils.Responder =
                     new com.j_nid.utils.Responder(transactionResultHandler);
-                var startDate:Date = startDateField.selectedDate;
-                var endDate:Date = endDateField.selectedDate;
-                var filters:String = "filters=date_range=" + Utils.formatDate(startDate, "YYYY-MM-DD") +
-                    ":" + Utils.formatDate(endDate, "YYYY-MM-DD");
+                var startDate:Date;
+                var endDate:Date;
+                var filters:String;
+                if (currentState == "dateReport") {
+                    startDate = startDateField.selectedDate;
+                    endDate = new Date(endDateField.selectedDate.time);
+                    endDate.date += 1;
+                    filters = "filters=datetime_range=" + Utils.formatDate(startDate, "YYYYMMDDJ") +
+                        ":" + Utils.formatDate(endDate, "YYYYMMDDJ");
+                } else if (currentState == "timeReport") {
+                    startDate = new Date(startDateField.selectedDate.time);
+                    startDate.hours = startHourField.selectedItem;
+                    endDate = new Date(startDateField.selectedDate.time);
+                    endDate.hours = endHourField.selectedItem + 1;
+                    filters = "filters=datetime_range=" + Utils.formatDate(startDate, "YYYYMMDDJ") +
+                        ":" + Utils.formatDate(endDate, "YYYYMMDDJ");
+                }
                 ServiceUtils.send("/transactions/?" + filters,
                     "GET", responder);
             }
@@ -72,43 +106,146 @@
             private function transactionResultHandler(data:Object):void {
                 transactionList.dataProvider = data.result.children();
             }
+
+            protected function menuChangeHandler(e:IndexChangeEvent):void {
+                switch (e.newIndex) {
+                    case 0: currentState = "dateReport";
+                            break;
+                    case 1: currentState = "timeReport";
+                            break
+                }
+            }
+
         ]]>
-    </mx:Script>
+    </fx:Script>
     
-    <mx:HBox width="100%">
-        
-        <mx:Label text="เริ่มจากวันที่"/>
-        
-        <mx:DateField id="startDateField"
-            selectedDate="{new Date()}" formatString="DD-MM-YYYY"/>
-        
-        <mx:Label text="ถึงวันที่"/>
-        
-        <mx:DateField id="endDateField"
-            selectedDate="{new Date()}" formatString="DD-MM-YYYY"/>
-        
-        <mx:Button label="ตกลง" click="submitBtnClick(event)"/>
-    </mx:HBox>
+    <s:states>
+        <s:State name="dateReport"/>
+        <s:State name="timeReport"/>
+    </s:states>
     
-    <mx:DataGrid id="transactionList"
-        keyDown="transactionListKeyDown(event)" variableRowHeight="true"
-        headerStyleName="centerHeader" doubleClickEnabled="true"
-        doubleClick="transactionListDoubleClick(event)"
-        rowHeight="30" width="100%" height="100%">
-        
-        <mx:columns>
-            <mx:DataGridColumn headerText="วันที่" dataField="created"
-                labelFunction="formatDateForTransaction" width="150"/>
-            
-            <mx:DataGridColumn headerText="รายการขาย" dataField="outstanding"
-                labelFunction="priceLabelFunction"
-                textAlign="right" paddingRight="5"/>
-            
-            <mx:DataGridColumn headerText="จ่ายเงิน" dataField="paid"
-                labelFunction="priceLabelFunction"
-                textAlign="right" paddingRight="5"/>
-            
-            <mx:DataGridColumn headerText="หมายเหตุ" dataField="note"/>
-        </mx:columns>
-    </mx:DataGrid>
-</mx:VBox>
+    <s:List change="menuChangeHandler(event)" selectedIndex="0"
+            borderVisible="false" width="300">
+        <s:layout>
+            <s:VerticalLayout/>
+        </s:layout>
+        <s:dataProvider>
+            <s:ArrayCollection>
+                <s:source>
+                    <fx:Array>
+                        <fx:String>รายงานการซื้อและจ่าย-รายวัน</fx:String>
+                        <fx:String>รายงานการซื้อและจ่าย-ช่วงเวลา</fx:String>
+                        <fx:String>รายงานยอดซื้อลูกค้า-รายวัน</fx:String>
+                        <fx:String>รายงานยอดซื้อขายลูกค้า-ช่วงเวลา</fx:String>
+                        <fx:String>รายงานจำนวนสินค้าที่ขาย-รายวัน</fx:String>
+                        <fx:String>รายงานจำนวนสินค้าที่ขาย-ช่วงเวลา</fx:String>
+                        <fx:String>รายงานยอดค้างและชำระของลูกค้า-รายวัน</fx:String>
+                        <fx:String>รายงานยอดค้างและชำระของลูกค้า-ช่วงเวลา</fx:String>
+                        <fx:String>รายงานราคาขายของสินค้าตามจำนวนขาย-รายวัน</fx:String>
+                        <fx:String>รายงานราคาขายของสินค้าตามจำนวนขาย-ช่วงเวลา</fx:String>
+                        <fx:String>สถิติยอดขายของสินค้า </fx:String>
+                    </fx:Array>
+                </s:source>
+            </s:ArrayCollection>
+        </s:dataProvider>
+    </s:List>
+    
+    <s:VGroup width="100%" height="100%">
+        <s:HGroup verticalAlign="middle" width="100%">
+            <s:Label text="เริ่มจากวันที่" text.timeReport="วันที่"/>
+            <mx:DateField id="startDateField"
+                          selectedDate="{new Date()}" formatString="DD-MM-YYYY"/>
+            <s:Label text="ถึงวันที่" text.timeReport="เวลา"/>
+            <mx:DateField id="endDateField"
+                          selectedDate="{new Date()}" formatString="DD-MM-YYYY"
+                          includeIn="dateReport"/>
+            <s:DropDownList id="startHourField" selectedIndex="0"
+                            includeIn="timeReport" width="45">
+                <s:dataProvider>
+                    <s:ArrayList>
+                        <s:source>
+                            <fx:int>0</fx:int>
+                            <fx:int>1</fx:int>
+                            <fx:int>2</fx:int>
+                            <fx:int>3</fx:int>
+                            <fx:int>4</fx:int>
+                            <fx:int>5</fx:int>
+                            <fx:int>6</fx:int>
+                            <fx:int>7</fx:int>
+                            <fx:int>8</fx:int>
+                            <fx:int>9</fx:int>
+                            <fx:int>10</fx:int>
+                            <fx:int>11</fx:int>
+                            <fx:int>12</fx:int>
+                            <fx:int>13</fx:int>
+                            <fx:int>14</fx:int>
+                            <fx:int>15</fx:int>
+                            <fx:int>16</fx:int>
+                            <fx:int>17</fx:int>
+                            <fx:int>18</fx:int>
+                            <fx:int>19</fx:int>
+                            <fx:int>20</fx:int>
+                            <fx:int>21</fx:int>
+                            <fx:int>22</fx:int>
+                        </s:source>
+                    </s:ArrayList>
+                </s:dataProvider>
+            </s:DropDownList>
+            <s:Label text="ถึง" includeIn="timeReport"/>
+            <s:DropDownList id="endHourField" selectedIndex="0"
+                            includeIn="timeReport" width="45">
+                <s:dataProvider>
+                    <s:ArrayList>
+                        <s:source>
+                            <fx:int>1</fx:int>
+                            <fx:int>2</fx:int>
+                            <fx:int>3</fx:int>
+                            <fx:int>4</fx:int>
+                            <fx:int>5</fx:int>
+                            <fx:int>6</fx:int>
+                            <fx:int>7</fx:int>
+                            <fx:int>8</fx:int>
+                            <fx:int>9</fx:int>
+                            <fx:int>10</fx:int>
+                            <fx:int>11</fx:int>
+                            <fx:int>12</fx:int>
+                            <fx:int>13</fx:int>
+                            <fx:int>14</fx:int>
+                            <fx:int>15</fx:int>
+                            <fx:int>16</fx:int>
+                            <fx:int>17</fx:int>
+                            <fx:int>18</fx:int>
+                            <fx:int>19</fx:int>
+                            <fx:int>20</fx:int>
+                            <fx:int>21</fx:int>
+                            <fx:int>22</fx:int>
+                            <fx:int>23</fx:int>
+                        </s:source>
+                    </s:ArrayList>
+                </s:dataProvider>
+            </s:DropDownList>
+            <s:Button label="ตกลง" click="submitBtnClick(event)"/>
+        </s:HGroup>
+        <mx:DataGrid id="transactionList"
+                     keyDown="transactionListKeyDown(event)"
+                     headerStyleName="centerHeader" doubleClickEnabled="true"
+                     doubleClick="transactionListDoubleClick(event)"
+                     variableRowHeight="true" wordWrap="true"
+                     rowHeight="30" width="100%" height="100%">
+            <mx:columns>
+                <mx:DataGridColumn headerText="วันที่" dataField="created"
+                                   labelFunction="formatDateForTransaction"
+                                   width="150"/>
+                <mx:DataGridColumn headerText="รายการขาย" dataField="outstanding"
+                                   labelFunction="priceLabelFunction"
+                                   textAlign="right" paddingRight="5"/>
+                <mx:DataGridColumn headerText="จ่ายเงิน" dataField="paid"
+                                   labelFunction="priceLabelFunction"
+                                   textAlign="right" paddingRight="5"/>
+                <mx:DataGridColumn headerText="ชื่อ" dataField="person_name"
+                                   textAlign="right" paddingRight="5"/>
+                <mx:DataGridColumn headerText="หมายเหตุ" dataField="note"/>
+            </mx:columns>
+        </mx:DataGrid>
+    </s:VGroup>
+</s:HGroup>

@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:WindowedApplication xmlns:mx="http://www.adobe.com/2006/mxml"
-	applicationComplete="applicationCompleteHanler(event)"
-	horizontalScrollPolicy="off" verticalScrollPolicy="off"
-	layout="absolute" backgroundColor="0xffffff" statusTextStyleName="copyright"
-	width="1280" height="800">
+<s:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009"
+                       xmlns:s="library://ns.adobe.com/flex/spark"
+                       xmlns:mx="library://ns.adobe.com/flex/mx"
+                       preinitialize="initScreenSize()"
+                       applicationComplete="applicationCompleteHanler(event)"
+                       width="1280" height="800">
 	
-	<mx:Script>
+	<fx:Script>
 		<![CDATA[
             import air.update.ApplicationUpdaterUI;
             import air.update.events.UpdateEvent;
@@ -19,15 +20,22 @@
             import mx.events.FlexEvent;
             import mx.events.ItemClickEvent;
             import mx.rpc.events.FaultEvent;
+            
+            import spark.events.IndexChangeEvent;
 			
 			public var productsToUpdate:XML = <products/>;
             private var appUpdater:ApplicationUpdaterUI;
-			
-            [Bindable]
-			public var mainMenuList:Array = [
-                "หน้าหลัก", "ทำรายการขาย", "ข้อมูลสินค้า",
-                "ข้อมูลบุคคล", "รายการขาย", "รายการบัญชี",
-                "รายงาน"];
+            
+            private function initScreenSize():void{
+                var thisScreen:Screen = Screen.mainScreen;
+                var newScaleX:Number = thisScreen.visibleBounds.width / 1019 * 0.98;
+                var newScaleY:Number = thisScreen.visibleBounds.height / 680 * 0.98;
+                var newScale:Number = Math.min(newScaleX, newScaleY, 1);
+                this.scaleX = newScale;
+                this.scaleY = newScale;
+                this.height = this.height * newScale;
+                this.width = this.width * newScale;
+            }
                 
             private function applicationCompleteHanler(e:FlexEvent):void {
                 var currentYear:int = new Date().fullYear;
@@ -69,8 +77,8 @@
 				mainMenu.selectedIndex = 0;
             }
             
-            private function menuClickHandler(e:ItemClickEvent):void {
-                switch (e.index) {
+            private function menuClickHandler(e:IndexChangeEvent):void {
+                switch (e.newIndex) {
                     case 0:
                         Utils.showMainPage();
                         break;
@@ -95,25 +103,35 @@
                 }
             }
 		]]>
-	</mx:Script>
+	</fx:Script>
 	
-	<mx:Style source="css/styles.css"/>
-	
-	<mx:ApplicationControlBar
-		paddingTop="0" paddingRight="0"	paddingBottom="0" paddingLeft="0"
-		dock="true"	height="40">
-		
-		<mx:ToggleButtonBar id="mainMenu"
-			dataProvider="{mainMenuList}" itemClick="menuClickHandler(event)"
-			height="100%"/>
-			
+	<fx:Style source="css/styles.css"/>
+    
+    <mx:ControlBar width="100%" height="40">
+        <s:ButtonBar id="mainMenu" change="menuClickHandler(event)"
+                     requireSelection="true" height="100%">
+            <s:dataProvider>
+                <s:ArrayCollection>
+                    <s:source>
+                        <fx:Array>
+                            <fx:String>หน้าหลัก</fx:String>
+                            <fx:String>ทำรายการขาย</fx:String>
+                            <fx:String>ข้อมูลสินค้า</fx:String>
+                            <fx:String>ข้อมูลบุคคล</fx:String>
+                            <fx:String>รายการขาย</fx:String>
+                            <fx:String>รายการบัญชี</fx:String>
+                            <fx:String>รายงาน</fx:String>
+                        </fx:Array>
+                    </s:source>
+                </s:ArrayCollection>
+            </s:dataProvider>
+        </s:ButtonBar>
         <mx:Spacer width="100%"/>
-        
-        <mx:LinkButton id="logOutBtn"
-            label="ออกจากระบบ" click="logOutBtnClickHandler(event)"/>
-	</mx:ApplicationControlBar>
-	
-	<mx:Box id="mainContainer"
-        paddingTop="10" paddingRight="10" paddingBottom="10" paddingLeft="10"
-		width="100%" height="100%"/>
-</mx:WindowedApplication>
+        <mx:LinkButton id="logOutBtn" label="ออกจากระบบ"
+                       click="logOutBtnClickHandler(event)"/>
+    </mx:ControlBar>
+	<s:VGroup id="mainContainer" top="40"
+            paddingTop="10" paddingRight="10"
+            paddingBottom="10" paddingLeft="10"
+            width="100%" height="100%"/>
+</s:WindowedApplication>
