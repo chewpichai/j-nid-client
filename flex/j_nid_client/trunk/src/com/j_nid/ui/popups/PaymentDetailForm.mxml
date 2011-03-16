@@ -96,6 +96,12 @@
             private function closeBtnDownHandler(e:FlexEvent):void {
                 close();
             }
+            
+            public static function totalLabelFunction(item:Object,
+                                                      column:DataGridColumn):String {
+                
+                return Utils.formatPrice(Number(item.quantity) * Number(item.price_per_unit));
+            }
         ]]>
     </fx:Script>
     
@@ -115,23 +121,16 @@
             <mx:DataGrid dataProvider="{depositedBaskets}" borderStyle="none"
                          width="100%" height="100%">
                 <mx:columns>
-                    <mx:DataGridColumn dataField="quantity" headerText="จำนวน" width="55"/>
+                    <mx:DataGridColumn dataField="quantity" headerText="จำนวน"
+                                       width="55"/>
                     <mx:DataGridColumn dataField="name" headerText="ชื่อ"/>
-                    <mx:DataGridColumn dataField="price_per_unit" headerText="ราคาต่อหน่วย" width="110"/>
-                    <mx:DataGridColumn headerText="รวม" width="110">
-                        <mx:itemRenderer>
-                            <fx:Component>
-                                <s:MXDataGridItemRenderer>
-                                    <fx:Script>
-                                        <![CDATA[
-                                            import com.j_nid.utils.Utils;
-                                        ]]>
-                                    </fx:Script>
-                                    <s:Label text="{Utils.formatPrice(Number(data.quantity)*Number(data.price_per_unit))}"/>
-                                </s:MXDataGridItemRenderer>
-                            </fx:Component>
-                        </mx:itemRenderer>
-                    </mx:DataGridColumn>
+                    <mx:DataGridColumn dataField="price_per_unit"
+                                       headerText="ราคาต่อหน่วย"
+                                       labelFunction="Utils.priceLabelFunction"
+                                       width="110"/>
+                    <mx:DataGridColumn headerText="รวม"
+                                       labelFunction="totalLabelFunction"
+                                       width="110"/>
                 </mx:columns>
             </mx:DataGrid>
         </s:VGroup>
@@ -141,23 +140,16 @@
             <mx:DataGrid dataProvider="{nonDepositBaskets}" borderStyle="none"
                          width="100%" height="100%">
                 <mx:columns>
-                    <mx:DataGridColumn dataField="quantity" headerText="จำนวน" width="55"/>
+                    <mx:DataGridColumn dataField="quantity" headerText="จำนวน"
+                                       width="55"/>
                     <mx:DataGridColumn dataField="name" headerText="ชื่อ"/>
-                    <mx:DataGridColumn dataField="price_per_unit" headerText="ราคาต่อหน่วย" width="110"/>
-                    <mx:DataGridColumn headerText="รวม" width="110">
-                        <mx:itemRenderer>
-                            <fx:Component>
-                                <s:MXDataGridItemRenderer>
-                                    <fx:Script>
-                                        <![CDATA[
-                                            import com.j_nid.utils.Utils;
-                                        ]]>
-                                    </fx:Script>
-                                    <s:Label text="{Utils.formatPrice(Number(data.quantity)*Number(data.price_per_unit))}"/>
-                                </s:MXDataGridItemRenderer>
-                            </fx:Component>
-                        </mx:itemRenderer>
-                    </mx:DataGridColumn>
+                    <mx:DataGridColumn dataField="price_per_unit"
+                                       headerText="ราคาต่อหน่วย"
+                                       labelFunction="Utils.priceLabelFunction"
+                                       width="110"/>
+                    <mx:DataGridColumn headerText="รวม"
+                                       labelFunction="totalLabelFunction"
+                                       width="110"/>
                 </mx:columns>
             </mx:DataGrid>
         </s:VGroup>

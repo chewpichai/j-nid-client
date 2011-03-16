@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+         xmlns:s="library://ns.adobe.com/flex/spark" 
+         xmlns:mx="library://ns.adobe.com/flex/mx"
+         initialize="initializeHandler(event)">
+    
+    <fx:Script>
+        <![CDATA[
+            import mx.collections.IList;
+            import mx.events.FlexEvent;
+            
+            import spark.core.NavigationUnit;
+            import spark.layouts.supportClasses.LayoutBase;
+            
+            [Bindable]
+            public var dataProvider:IList;
+            [Bindable]
+            public var itemRenderer:IFactory;
+            [Bindable]
+            public var dataLayout:LayoutBase;
+            
+            private var timer:Timer;
+            private var navigationUnit:uint;
+
+            private function initializeHandler(e:FlexEvent):void
+            {
+                timer = new Timer(85);
+                timer.addEventListener(TimerEvent.TIMER, onTimer);
+            }
+            
+            private function onTimer(e:TimerEvent):void
+            {
+                var delta:Number = dataGroup.getHorizontalScrollPositionDelta(navigationUnit);
+                dataGroup.horizontalScrollPosition += delta;
+            }
+            
+            private function rightEdge_mouseOverHandler(e:MouseEvent):void
+            {
+                navigationUnit = NavigationUnit.RIGHT;
+                timer.start();
+            }
+            
+            private function leftEdge_mouseOverHandler(e:MouseEvent):void
+            {
+                navigationUnit = NavigationUnit.LEFT;
+                timer.start();
+            }
+            
+            
+            private function onMouseOut(e:MouseEvent):void
+            {
+                timer.stop();
+            }
+        ]]>
+    </fx:Script>
+    
+    <s:Scroller id="scroller" verticalScrollPolicy="off"
+                horizontalScrollPolicy="off"
+                width="100%" height="100%">
+        <s:DataGroup id="dataGroup" dataProvider="{dataProvider}"
+                     itemRenderer="{itemRenderer}" layout="{dataLayout}"/>
+        
+    </s:Scroller>
+    
+    <s:Button id="rightEdge" mouseOver="rightEdge_mouseOverHandler(event)"
+              mouseOut="onMouseOut(event)"
+              alpha="0" right="0" width="60" height="100%"/>
+    <s:Button id="leftEdge" mouseOver="leftEdge_mouseOverHandler(event)"
+              mouseOut="onMouseOut(event)"
+              alpha="0" left="0" width="60" height="100%"/>
+</s:Group>

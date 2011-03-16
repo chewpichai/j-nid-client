@@ -2,6 +2,7 @@
 <s:VGroup xmlns:fx="http://ns.adobe.com/mxml/2009"
           xmlns:s="library://ns.adobe.com/flex/spark"
           xmlns:mx="library://ns.adobe.com/flex/mx"
+          xmlns:jn="com.j_nid.components.*"
           creationComplete="creationCompleteHandler(event)"
           width="100%" height="100%">
     
@@ -51,15 +52,24 @@
         ]]>
     </fx:Script>
     
-    <s:Scroller width="100%" height="100%">
+    <!--<s:Scroller width="100%" height="100%">
         <s:DataGroup id="productList"
                      itemRenderer="com.j_nid.ui.renderers.MainProductRenderer">
             <s:layout>
                 <s:TileLayout orientation="columns" useVirtualLayout="true"
-                              rowHeight="25"/>
+                              rowAlign="justifyUsingHeight" rowHeight="25"/>
             </s:layout>
         </s:DataGroup>
-    </s:Scroller>
+    </s:Scroller>-->
+    
+    <jn:AutoScrollDataGroup id="productList"
+                            itemRenderer="com.j_nid.ui.renderers.MainProductRenderer"
+                            width="100%" height="100%">
+        <jn:dataLayout>
+            <s:TileLayout orientation="columns" useVirtualLayout="true"
+                          rowAlign="justifyUsingHeight" rowHeight="25"/>
+        </jn:dataLayout>
+    </jn:AutoScrollDataGroup>
     
     <mx:ButtonBar id="subMenu"
                   dataProvider="{subMenuList}" horizontalAlign="center"

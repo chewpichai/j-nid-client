@@ -1,9 +1,12 @@
 package com.j_nid.utils {
     
     import com.j_nid.ui.AccountPage;
+    import com.j_nid.ui.CustomerReportPage;
     import com.j_nid.ui.MainPage;
     import com.j_nid.ui.MakeOrderPage;
+    import com.j_nid.ui.MonthlyReportPage;
     import com.j_nid.ui.OrderPage;
+    import com.j_nid.ui.PaymentPage;
     import com.j_nid.ui.PersonPage;
     import com.j_nid.ui.ProductPage;
     import com.j_nid.ui.ReportPage;
@@ -35,24 +38,24 @@ package com.j_nid.utils {
         
         // defalut format YYYY-MM-DD JJ:NN:SS for use with Django.
         public static function formatDate(date:Date, 
-                                          formatString:String="YYYY-MM-DD JJ:NN:SS"):String {
-            
-            if (dateFormatter == null) {
+                                          formatString:String="YYYY-MM-DD JJ:NN:SS"):String
+        {   
+            if (dateFormatter == null)
                 dateFormatter = new DateFormatter();
-            }
             dateFormatter.formatString = formatString;
             return dateFormatter.format(date);
         }
         
         // Use to move date by num days.
-        public static function moveDateByDay(date:Date, day:int):Date {
+        public static function moveDateByDay(date:Date, day:int):Date
+        {
             date = new Date(date.time);
             return new Date(date.setDate(date.date + day));
         }
         
         public static function priceLabelFunction(item:Object,
-                                                  column:DataGridColumn):String {
-            
+                                                  column:DataGridColumn):String
+        {   
             return Utils.formatPrice(item[column.dataField]);
         }
         
@@ -81,12 +84,19 @@ package com.j_nid.utils {
             return numberFormatter.format(num);
         }
         
-        public static function sum(obj:Object, field:String):Number {
+        public static function sum(obj:Object, field:String):Number
+        {
             var sum:Number = 0;
-            for each (var item:* in obj) {
+            for each (var item:* in obj)
+            {
                 sum += Number(item[field]);
             }
             return sum;
+        }
+        
+        public static function avrg(obj:Object, field:String):Number {
+            var sum:Number = sum(obj, field);
+            return sum / obj.length;
         }
         
         public static function convertFirstChar(str:String,
@@ -156,12 +166,24 @@ package com.j_nid.utils {
             addToMainContainer(new OrderPage());
         }
         
+        public static function showPaymentPage():void {
+            addToMainContainer(new PaymentPage());
+        }
+        
         public static function showAccountPage():void {
             addToMainContainer(new AccountPage());
         }
         
         public static function showReportPage():void {
             addToMainContainer(new ReportPage());
+        }
+        
+        public static function showCustomerReportPage():void {
+            addToMainContainer(new CustomerReportPage());
+        }
+        
+        public static function showMonthlyReportPage():void {
+            addToMainContainer(new MonthlyReportPage());
         }
         
         public static function addToMainContainer(ui:UIComponent):void {

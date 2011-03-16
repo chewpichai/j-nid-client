@@ -4,6 +4,7 @@
                        xmlns:mx="library://ns.adobe.com/flex/mx"
                        preinitialize="initScreenSize()"
                        applicationComplete="applicationCompleteHanler(event)"
+                       close="closeAllWindows(event)"
                        width="1280" height="800">
 	
 	<fx:Script>
@@ -26,7 +27,8 @@
 			public var productsToUpdate:XML = <products/>;
             private var appUpdater:ApplicationUpdaterUI;
             
-            private function initScreenSize():void{
+            private function initScreenSize():void
+            {
                 var thisScreen:Screen = Screen.mainScreen;
                 var newScaleX:Number = thisScreen.visibleBounds.width / 1019 * 0.98;
                 var newScaleY:Number = thisScreen.visibleBounds.height / 680 * 0.98;
@@ -77,8 +79,10 @@
 				mainMenu.selectedIndex = 0;
             }
             
-            private function menuClickHandler(e:IndexChangeEvent):void {
-                switch (e.newIndex) {
+            private function menuClickHandler(e:IndexChangeEvent):void
+            {
+                switch (e.newIndex)
+                {
                     case 0:
                         Utils.showMainPage();
                         break;
@@ -94,12 +98,32 @@
 					case 4:
 						Utils.showOrderPage();
 						break;
-					case 5:
+                    case 5:
+                        Utils.showPaymentPage();
+                        break;
+					case 6:
 						Utils.showAccountPage();
 						break;
-                    case 6:
+                    case 7:
                         Utils.showReportPage();
                         break;
+                    case 8:
+                        Utils.showCustomerReportPage();
+                        break;
+                    case 9:
+                        Utils.showMonthlyReportPage();
+                        break;
+                }
+            }
+            
+            private function closeAllWindows(e:Event):void
+            {
+                e.preventDefault();
+                // loop through all windows and close them.
+                for(var i:int = NativeApplication.nativeApplication.openedWindows.length - 1; i >= 0; --i)
+                {
+                    var closeWin:NativeWindow = NativeApplication.nativeApplication.openedWindows[i] as NativeWindow;
+                    closeWin.close();
                 }
             }
 		]]>
@@ -119,8 +143,11 @@
                             <fx:String>ข้อมูลสินค้า</fx:String>
                             <fx:String>ข้อมูลบุคคล</fx:String>
                             <fx:String>รายการขาย</fx:String>
+                            <fx:String>รายการจ่ายเงิน</fx:String>
                             <fx:String>รายการบัญชี</fx:String>
-                            <fx:String>รายงาน</fx:String>
+                            <fx:String>รายงานรายวัน</fx:String>
+                            <fx:String>รายงานสรุปลูกค้า</fx:String>
+                            <fx:String>รายงานรายเดือน</fx:String>
                         </fx:Array>
                     </s:source>
                 </s:ArrayCollection>
@@ -130,8 +157,7 @@
         <mx:LinkButton id="logOutBtn" label="ออกจากระบบ"
                        click="logOutBtnClickHandler(event)"/>
     </mx:ControlBar>
-	<s:VGroup id="mainContainer" top="40"
-            paddingTop="10" paddingRight="10"
-            paddingBottom="10" paddingLeft="10"
-            width="100%" height="100%"/>
+	
+    <s:Group id="mainContainer" top="50" right="10" bottom="10" left="10"
+             width="100%" height="100%"/>
 </s:WindowedApplication>

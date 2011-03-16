@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:VGroup xmlns:fx="http://ns.adobe.com/mxml/2009" 
+          xmlns:s="library://ns.adobe.com/flex/spark" 
+          xmlns:mx="library://ns.adobe.com/flex/mx"
+          horizontalAlign="center"
+          creationComplete="init(event)"
+          width="100%" height="100%">
+    
+    <fx:Script>
+        <![CDATA[
+            import com.j_nid.utils.PrintUtils;
+            import com.j_nid.utils.Responder;
+            import com.j_nid.utils.ServiceUtils;
+            import com.j_nid.utils.Utils;
+            
+            import mx.collections.ArrayList;
+            import mx.collections.XMLListCollection;
+            import mx.events.FlexEvent;
+            
+
+            private function init(e:FlexEvent):void
+            {
+                getYearList();
+            }
+            
+            private function getYearList():void
+            {
+                var responder:com.j_nid.utils.Responder =
+                    new com.j_nid.utils.Responder(yearListResultHandler);
+                ServiceUtils.send("/reports/", "GET", responder);
+            }
+            
+            private function getMonthList(year:int):void
+            {
+                var responder:com.j_nid.utils.Responder =
+                    new com.j_nid.utils.Responder(monthListResultHandler);
+                ServiceUtils.send("/reports/" + year + "/", "GET", responder);
+            }
+            
+            private function yearListResultHandler(data:Object):void
+            {
+                yearField.dataProvider = new XMLListCollection(data.result.children());
+                yearField.selectedIndex = 0;
+                getMonthList(yearField.selectedItem.@data);
+            }
+            
+            private function monthListResultHandler(data:Object):void
+            {
+                monthField.dataProvider = new XMLListCollection(data.result.children());
+                monthField.validateNow();
+                monthField.selectedIndex = 0;
+                getReport();
+            }
+            
+            private function getReport():void
+            {
+                var year:int = yearField.selectedItem.@data;
+                var month:int = monthField.selectedItem.@data;
+                var responder:com.j_nid.utils.Responder =
+                    new com.j_nid.utils.Responder(resultHandler);
+                ServiceUtils.send("/reports/" + year + "/" + month + "/",
+                    "GET", responder);
+            }
+            
+            private function resultHandler(data:Object):void
+            {
+                reportList.dataProvider = data.result.children();
+                quantitySum.text = Utils.formatPrice(Utils.sum(reportList.dataProvider, "quantity"));
+                orderSum.text = Utils.formatPrice(Utils.sum(reportList.dataProvider, "ordered_total"));
+                paymentSum.text = Utils.formatPrice(Utils.sum(reportList.dataProvider, "paid_total"));
+                var sum:Number = Utils.sum(reportList.dataProvider, "outstanding_total");
+                if (sum < 0)
+                    outstandingSum.setStyle("color", "0xFF0000");
+                else
+                    outstandingSum.setStyle("color", "0x0000FF");
+                outstandingSum.text = Utils.formatPrice(Math.abs(sum));
+            }
+            
+            private function formatDate(item:Object,
+                                        column:DataGridColumn):String
+            {   
+                var created:Date = new Date(Date.parse(item[column.dataField]));
+                return Utils.formatDate(created, "DD MMM YYYY");
+            }
+
+            private function printBtnClickHandler(e:MouseEvent):void
+            {
+                var transactions:Array = [];
+                for each (var trans:* in reportList.dataProvider)
+                    transactions.push(trans);
+                
+                PrintUtils.printMonthlyReport(transactions,
+                    yearField.selectedItem.@data,
+                    monthField.selectedItem.@data);
+            }
+
+        ]]>
+    </fx:Script>
+    
+    <s:HGroup verticalAlign="middle">
+        <s:Label text="ปี:"/>
+        <s:DropDownList id="yearField" labelField="@data"
+                        change="{getMonthList(yearField.selectedItem.@data)}"/>
+        <s:Label text="เดือน:"/>
+        <s:DropDownList id="monthField" labelField="@data" change="getReport()"/>
+    </s:HGroup>
+    
+    <mx:DataGrid id="reportList" height="100%">
+        <mx:columns>
+            <mx:DataGridColumn headerText="วันที่" dataField="created"
+                               headerStyleName="centerHeader"
+                               labelFunction="formatDate"
+                               textAlign="center" width="150"/>
+            <mx:DataGridColumn headerText="จำนวนสินค้า" dataField="quantity"
+                               headerStyleName="centerHeader"
+                               textAlign="center" width="150"/>
+            <mx:DataGridColumn headerText="ยอดขาย" dataField="ordered_total"
+                               headerStyleName="centerHeader"
+                               labelFunction="Utils.priceLabelFunction"
+                               textAlign="right" color="0xFF0000"
+                               paddingRight="5" width="180"/>
+            <mx:DataGridColumn headerText="ยอดจ่าย" dataField="paid_total"
+                               headerStyleName="centerHeader"
+                               labelFunction="Utils.priceLabelFunction"
+                               textAlign="right" color="0x0000FF"
+                               paddingRight="5" width="180"/>
+            <mx:DataGridColumn headerText="ยอดค้าง" dataField="outstanding_total"
+                               headerStyleName="centerHeader"
+                               itemRenderer="com.j_nid.ui.renderers.OutstandingRenderer"
+                               textAlign="right" paddingRight="5"
+                               width="180"/>
+        </mx:columns>
+    </mx:DataGrid>
+    
+    <s:HGroup verticalAlign="middle" horizontalAlign="right">
+        <s:Label text="จำนวนสินค้ารวม:"/>
+        <s:Label id="quantitySum" color="#00ff00"/>
+        <s:Label text="ชิ้น"/>
+        <s:Rect width="20"/>
+        <s:Label text="ยอดขายรวม:"/>
+        <s:Label id="orderSum" color="#ff0000"/>
+        <s:Label text="บาท"/>
+        <s:Rect width="20"/>
+        <s:Label text="ยอดจ่ายรวม:"/>
+        <s:Label id="paymentSum" color="#0000ff"/>
+        <s:Label text="บาท"/>
+        <s:Rect width="20"/>
+        <s:Label text="ยอดค้างรวม:"/>
+        <s:Label id="outstandingSum"/>
+        <s:Label text="บาท"/>
+        <s:Rect width="40"/>
+        <s:Button label="พิมพ์" click="printBtnClickHandler(event)"/>
+    </s:HGroup>
+</s:VGroup>

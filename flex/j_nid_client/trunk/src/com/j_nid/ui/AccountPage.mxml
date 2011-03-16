@@ -236,7 +236,8 @@
 		<s:TextInput id="searchField" change="loadCustomers()"
                      width="250"/>
 	</mx:FormItem>
-	<s:HGroup id="searchCustomer" width="100%" height="100%" includeIn="base">
+	
+    <s:HGroup id="searchCustomer" width="100%" height="100%" includeIn="base">
         <mx:DataGrid id="customerList" headerStyleName="centerHeader"
                      doubleClickEnabled="true" rowHeight="30"
                      doubleClick="customerListDoubleClick(event)"
@@ -246,7 +247,8 @@
                                    dataField="name"/>
                 <mx:DataGridColumn headerText="ยอดค้างทั้งหมด"
                                    dataField="outstanding_total"
-                                   itemRenderer="com.j_nid.ui.renderers.OutstandingRenderer"/>
+                                   itemRenderer="com.j_nid.ui.renderers.OutstandingRenderer"
+                                   paddingLeft="5"/>
                 <mx:DataGridColumn headerText="จำนวนบิลค้างจ่าย"
                                    dataField="num_outstanding_orders"/>
                 <mx:DataGridColumn headerText="บิลล่าสุดที่ทำรายการ"
@@ -262,7 +264,6 @@
                         change="loadCustomers()"/>
 		</s:VGroup>
 	</s:HGroup>
-        
 		
 	<s:HGroup horizontalAlign="left" verticalAlign="middle" width="100%" includeIn="personDetail">
 	    <s:Button label="ย้อนกลับ" click="backBtnClickHandler(event)"/>
@@ -273,6 +274,7 @@
 	    <s:Label text="{customer.phone_number}" width="200"/>
 	    <s:Button label="ชำระเงิน" click="payBtnClickListener(event)"/>
 	</s:HGroup>
+    
     <mx:DataGrid id="transactionList"
                  keyDown="transactionListKeyDown(event)"
                  variableRowHeight="true" rowHeight="30"
@@ -291,10 +293,11 @@
                                textAlign="right" paddingRight="5"/>
             <mx:DataGridColumn headerText="คงเหลือ" dataField="balance"
                                itemRenderer="com.j_nid.ui.renderers.OutstandingRenderer"
-                               textAlign="right" paddingRight="5"/>
+                               paddingLeft="5"/>
             <mx:DataGridColumn headerText="หมายเหตุ" dataField="note"/>
         </mx:columns>
 	</mx:DataGrid>
+    
     <s:HGroup verticalAlign="middle" bottom="0" width="100%" height="30" includeIn="personDetail">
         <s:Rect width="100%"/>
         <s:Label text="เริ่มจากวันที่"/>

@@ -3,23 +3,23 @@
          xmlns:s="library://ns.adobe.com/flex/spark"
          xmlns:mx="library://ns.adobe.com/flex/mx"
          fontSize="12">
-	
-	<fx:Script>
-		<![CDATA[
-			import com.j_nid.utils.Utils;
-			
-			[Bindable]
-			public var order:XML;
-			[Bindable]
+    
+    <fx:Script>
+        <![CDATA[
+            import com.j_nid.utils.Utils;
+            
+            [Bindable]
+            public var order:XML;
+            [Bindable]
             public var orderItems:Array;
             [Bindable]
             public var numPages:int;
             [Bindable]
             public var pageNum:int;
-		]]>
-	</fx:Script>
-	
-	<s:states>
+        ]]>
+    </fx:Script>
+    
+    <s:states>
         <s:State name="base"/>
         <s:State name="middle"/>
     </s:states>
@@ -36,12 +36,13 @@
                       styleName="printDataGrid">
         <mx:columns>
             <mx:DataGridColumn headerText="จำนวน" dataField="quantity"
-                               width="12"/>
-            <mx:DataGridColumn headerText="รายการ" dataField="name"
-                               width="67"/>
-            <mx:DataGridColumn headerText="หน่วย" dataField="unit"
                                labelFunction="Utils.unitLabelFunction"
                                width="12"/>
+            <mx:DataGridColumn headerText="รายการ" dataField="name"
+                               width="66"/>
+            <mx:DataGridColumn headerText="หน่วย" dataField="unit"
+                               labelFunction="Utils.unitLabelFunction"
+                               width="13"/>
             <mx:DataGridColumn headerText="ราคา" dataField="price_per_unit"
                                labelFunction="Utils.priceLabelFunction"
                                width="12"/>

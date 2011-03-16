@@ -33,6 +33,8 @@
             private var _selectedOrder:XML;
 			[Bindable]
 			private var orderItems:XMLListCollection;
+            [Bindable]
+            private var unsaveOrderItems:XMLListCollection;
 			private var depositedBaskets:XMLListCollection;
 			private var nonDepositBaskets:XMLListCollection;
 			[Bindable]
@@ -43,7 +45,6 @@
 			private var menuList:Array = [
 				"รายการขายของวันนี้", "ค้นหารายการของลูกค้า",
 				"ค้นหารายการขายย้อนหลัง"];
-			private var selectedOrderIndex:int = -1;
             
             private function creationCompleteHandler(e:FlexEvent):void {
 				total = 0;
@@ -101,12 +102,6 @@
 					orders.addItem(order);
 				}
 				orderList.dataProvider = orders;
-				if (selectedOrderIndex != -1) {
-                    selectedOrder = XML(orders.getItemAt(selectedOrderIndex));
-					orderList.selectedItem = selectedOrder;
-					loadOrderItems(selectedOrder.id);
-                    selectedOrderIndex = -1;
-				}
 			}
 			
 			private function loadOrderItems(orderID:int):void {
@@ -120,10 +115,11 @@
 			
 			private function orderItemResultHandler(data:Object):void {
 				orderItems = new XMLListCollection();
-				orderItems.addEventListener(CollectionEvent.COLLECTION_CHANGE,
+                orderItems.addEventListener(CollectionEvent.COLLECTION_CHANGE,
 					orderItemsChange);
-				for each (var item:XML in data.result.children())
+				for each (var item:XML in data.result.children()) {
 					orderItems.addItem(item);
+                }
 				loadBasketsOrders(selectedOrder.id);
 			}
 			
@@ -156,6 +152,7 @@
 							nonDepositBaskets.addItem(item);
 					}
 				}
+                unsaveOrderItems = new XMLListCollection(orderItems.copy());
 			}
 			
 			private function getNonDepositBasket(item:XML):XML {
@@ -203,7 +200,7 @@
             private function printOrder(e:MouseEvent):void {
 				var order:XML = XML(orderList.selectedItem).copy();
 				order.order_items = <order_items/>;
-				order.order_items.appendChild(orderItems.source);
+				order.order_items.appendChild(unsaveOrderItems.source);
                 order.created = Utils.formatDate(new Date(Date.parse(order.created)), 'DD/MM/YY JJ:NN');
 				PrintUtils.printOrder(order);
             }
@@ -386,7 +383,12 @@
             }
 			
 			private function putOrderResultHandler(data:Object):void {
-				selectedOrderIndex = orderList.selectedIndex;
+                orderItems = null;
+                unsaveOrderItems = null;
+                total = paid = 0;
+                notationField.text = "";
+                customerNameField.text = "";
+                createdField.text = "";
 				loadOrders();
 			}
             
@@ -409,7 +411,6 @@
 			}
             
             private function set selectedOrder(order:XML):void {
-                trace(order);
                 _selectedOrder = order;
                 customerNameField.text = _selectedOrder.person_name;
                 createdField.text = getCreatedString(_selectedOrder.created);

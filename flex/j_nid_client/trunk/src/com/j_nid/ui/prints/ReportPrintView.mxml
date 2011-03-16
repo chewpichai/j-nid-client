@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:VGroup xmlns:fx="http://ns.adobe.com/mxml/2009" 
+          xmlns:s="library://ns.adobe.com/flex/spark" 
+          xmlns:mx="library://ns.adobe.com/flex/mx"
+          paddingTop="20" paddingBottom="20"
+          paddingLeft="20" paddingRight="20"
+          horizontalAlign="center" gap="10" fontSize="10">
+    
+    <fx:Script>
+        <![CDATA[
+            import com.j_nid.utils.Utils;
+            
+            import mx.collections.ArrayList;
+            
+            [Bindable]
+            public var transactions:ArrayList;
+            [Bindable]
+            public var customerName:String;
+            [Bindable]
+            public var startDate:Date;
+            [Bindable]
+            public var endDate:Date;
+            [Bindable]
+            public var quantitySum:String;
+            [Bindable]
+            public var orderSum:String;
+            [Bindable]
+            public var paymentSum:String;
+            
+            public function startJob():void
+            {
+                header.visible = true;
+                header.includeInLayout = true;
+                footer.visible = true;
+                footer.includeInLayout = true;
+                validateNow();
+                if (printGrid.validNextPage)
+                {
+                    footer.visible = false;
+                    footer.includeInLayout = false;
+                    printGrid.height += footer.height;
+                    validateNow();
+                }
+            }
+            
+            public function nextPage():Boolean
+            {
+                header.visible = false;
+                header.includeInLayout = false;
+                printGrid.nextPage();
+                footer.visible = !printGrid.validNextPage;
+                footer.includeInLayout = !printGrid.validNextPage;
+                validateNow();
+                return printGrid.validNextPage;
+            }
+            
+            private function priceLabelFunction(item:Object,
+                                                column:DataGridColumn):String
+            {   
+                if (Number(item[column.dataField]) != 0)
+                    return Utils.formatPrice(item[column.dataField]);
+                return "";
+            }
+            
+            private function formatDateForTransaction(item:Object,
+                                                      column:DataGridColumn):String
+            {   
+                if (String(item[column.dataField]).length > 0) {
+                    var created:Date = new Date(Date.parse(item[column.dataField]));
+                    return Utils.formatDate(created, "DD MMM YYYY JJ:NN");
+                }
+                return "";
+            }
+        ]]>
+    </fx:Script>
+    
+    <s:HGroup id="header" verticalAlign="middle" width="100%">
+        <s:Label text="ชื่อลูกค้า:" visible="{customerName.length > 0}"/>
+        <s:Label text="{customerName}"/>
+        <s:Label text="เริ่มจากวันที่:"/>
+        <s:Label text="{Utils.formatDate(startDate, 'DD MMM YYYY')}"/>
+        <s:Label text="ถึงวันที่:"/>
+        <s:Label text="{Utils.formatDate(endDate, 'DD MMM YYYY')}"/>
+    </s:HGroup>
+    
+    <mx:PrintDataGrid id="printGrid" dataProvider="{transactions}"
+                      variableRowHeight="true" styleName="reportDataGrid"
+                      width="100%" height="100%">
+        <mx:columns>
+            <mx:DataGridColumn headerText="วันที่" dataField="created"
+                               labelFunction="formatDateForTransaction"
+                               width="100"/>
+            <mx:DataGridColumn headerText="ชื่อ" dataField="person_name"
+                               textAlign="right" paddingRight="5"
+                               width="100"/>
+            <mx:DataGridColumn headerText="จำนวน" dataField="quantity"
+                               textAlign="center" paddingRight="5"
+                               width="40"/>
+            <mx:DataGridColumn headerText="รายการขาย" dataField="outstanding"
+                               labelFunction="priceLabelFunction"
+                               textAlign="right" paddingRight="5"
+                               width="65"/>
+            <mx:DataGridColumn headerText="จ่ายเงิน" dataField="paid"
+                               labelFunction="priceLabelFunction"
+                               textAlign="right" paddingRight="5"
+                               width="65"/>
+            <mx:DataGridColumn headerText="หมายเหตุ" dataField="note">
+                <mx:itemRenderer>
+                    <fx:Component>
+                        <mx:Text text="{data.note}" width="100%"/>
+                    </fx:Component>
+                </mx:itemRenderer>
+            </mx:DataGridColumn>
+        </mx:columns>
+    </mx:PrintDataGrid>
+    
+    <s:HGroup id="footer" verticalAlign="middle" horizontalAlign="right"
+              width="100%">
+        <s:Label text="จำนวนสินค้ารวม:"/>
+        <s:Label text="{quantitySum}" color="#00ff00"/>
+        <s:Label text="ชิ้น"/>
+        <s:Rect width="5"/>
+        <s:Label text="ยอดรายการขายรวม:"/>
+        <s:Label text="{orderSum}" color="#ff0000"/>
+        <s:Label text="บาท"/>
+        <s:Rect width="5"/>
+        <s:Label text="ยอดจ่ายเงินรวม:"/>
+        <s:Label text="{paymentSum}" color="#0000ff"/>
+        <s:Label text="บาท"/>
+    </s:HGroup>
+</s:VGroup>

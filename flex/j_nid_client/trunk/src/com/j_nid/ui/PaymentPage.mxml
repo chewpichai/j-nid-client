@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:VGroup xmlns:fx="http://ns.adobe.com/mxml/2009" 
+          xmlns:s="library://ns.adobe.com/flex/spark" 
+          xmlns:mx="library://ns.adobe.com/flex/mx"
+          creationComplete="creationCompleteHandler(event)"
+          horizontalAlign="center" width="100%" height="100%">
+    
+    <fx:Script>
+        <![CDATA[
+            import com.j_nid.ui.popups.PersonSelectForm;
+            import com.j_nid.utils.Responder;
+            import com.j_nid.utils.ServiceUtils;
+            import com.j_nid.utils.Utils;
+            
+            import mx.collections.XMLListCollection;
+            import mx.controls.Alert;
+            import mx.events.CloseEvent;
+            import mx.events.FlexEvent;
+            
+            import spark.events.IndexChangeEvent;
+            
+            private function creationCompleteHandler(e:FlexEvent):void {
+                loadCustomers();
+            }
+            
+            private function loadCustomers():void {
+                var responder:com.j_nid.utils.Responder =
+                    new com.j_nid.utils.Responder(customerResultHandler);
+                var attrs:String = "attrs=id,name,outstanding_total";
+                var filters:String = "filters=is_customer=1";
+                ServiceUtils.send("/people/?" + attrs + "&" + filters,
+                    "GET", responder);
+            }
+            
+            private function customerResultHandler(data:Object):void {
+                customerField.dataProvider =
+                    new XMLListCollection(data.result.children());
+                customerField.selectedIndex = -1;
+            }
+            
+            private function selectCustomerBtnDown(e:FlexEvent):void {
+                var form:PersonSelectForm =
+                    PersonSelectForm(Utils.showPopUp(PersonSelectForm));
+                form.people = new XMLListCollection(XMLList(customerField.dataProvider));
+                form.addEventListener(Event.REMOVED_FROM_STAGE,
+                    personSelectFormCloseHandler);
+            }
+            
+            private function personSelectFormCloseHandler(e:Event):void {
+                var form:PersonSelectForm = PersonSelectForm(e.currentTarget);
+                form.removeEventListener(Event.REMOVED_FROM_STAGE,
+                    personSelectFormCloseHandler);
+                if (form.selectedPerson) {
+                    customerField.selectedItem = form.selectedPerson;
+                    loadPayments(customerField.selectedItem);
+                }
+            }
+            
+            private function loadPayments(customer:XML):void {
+                var responder:com.j_nid.utils.Responder =
+                    new com.j_nid.utils.Responder(paymetsResultHandler);
+                ServiceUtils.send("/people/" + customer.id + "/payments/", "GET", responder);
+            }
+            
+            private function paymetsResultHandler(data:Object):void {
+                paymentList.dataProvider =
+                    new XMLListCollection(data.result.children());
+            }
+            
+            private function cratedLabelFunction(item:Object,
+                                                 column:DataGridColumn):String {
+                var created:Date = new Date(Date.parse(item[column.dataField]));
+                return Utils.formatDate(created, "DD MMM YYYY JJ:NN");
+            }
+            
+            private function paymentListKeyDown(e:KeyboardEvent):void {
+                if (e.keyCode == Keyboard.DELETE &&
+                    paymentList.selectedItem != null) {
+                    
+                    Utils.showConfirm("ต้องการลบข้อมูลหรือไม่",
+                        "ยืนยันการลบ", closeHandler);
+                }
+            }
+            
+            private function closeHandler(e:CloseEvent):void {
+                var id:int = paymentList.selectedItem.id;
+                var responder:com.j_nid.utils.Responder =
+                    new com.j_nid.utils.Responder(deleteResultHandler);
+                if (e.detail == Alert.OK) {
+                    ServiceUtils.send("/payments/" + id + "/",
+                        "DELETE", responder);
+                }
+            }
+            
+            private function deleteResultHandler(data:Object):void {
+                loadPayments(customerField.selectedItem);
+            }
+
+            protected function customerFieldChangeHandler(e:IndexChangeEvent):void {
+                if (customerField.selectedItem is XML)
+                    loadPayments(customerField.selectedItem);
+            }
+
+        ]]>
+    </fx:Script>
+    
+    <fx:Declarations>
+        <!-- Place non-visual elements (e.g., services, value objects) here -->
+    </fx:Declarations>
+    
+    <s:HGroup id="customerGroup" horizontalAlign="center" verticalAlign="middle"
+              width="100%">
+        <s:Label text="ชื่อลูกค้า:"/>
+        <s:ComboBox id="customerField" labelField="name"
+                    change="customerFieldChangeHandler(event)"
+                    width="250"/>
+        <s:Button label="เลือก" buttonDown="selectCustomerBtnDown(event)"/>
+    </s:HGroup>
+    
+    <mx:DataGrid id="paymentList" headerStyleName="centerHeader"
+                 wordWrap="true" variableRowHeight="true"
+                 keyDown="paymentListKeyDown(event)"
+                 width="60%" height="100%">
+        <mx:columns>
+            <mx:DataGridColumn headerText="วันที่" dataField="created"
+                               labelFunction="cratedLabelFunction"
+                               width="150"/>
+            <mx:DataGridColumn headerText="จำนวน" dataField="amount"
+                               labelFunction="Utils.priceLabelFunction"
+                               textAlign="center" width="100"/>
+            <mx:DataGridColumn headerText="หมายเหตุ" dataField="notation"/>
+        </mx:columns>
+    </mx:DataGrid>
+</s:VGroup>

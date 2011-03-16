@@ -12,7 +12,7 @@
 	font-weight: bold;
 }
 
-s|WindowedApplication {
+s|WindowedApplication, s|Window {
 	font-family: Tahoma;
    	font-size: 14;
    	font-anti-alias-type: advanced;
@@ -53,6 +53,18 @@ mx|Alert {
 	text-align: center;
 	vertical-grid-lines: false;
 	horizontal-grid-lines: false;
+}
+
+.reportDataGrid {
+    header-background-skin: Embed(source="../assets/blackDot.jpg");
+    header-separator-skin: Embed(source="../assets/printHeaderSkin.png");
+    header-horizontal-separator-skin: Embed(source="../assets/printHeaderSkin.png");
+    header-style-name: reportPrintDataGridHeader;
+}
+
+.reportPrintDataGridHeader {
+    text-align: center;
+    color: #ffffff;
 }
 
 .cartItemList {
