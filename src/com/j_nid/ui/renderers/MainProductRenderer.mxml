@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:DataRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                xmlns:s="library://ns.adobe.com/flex/spark"
+                xmlns:mx="library://ns.adobe.com/flex/mx"
+                doubleClick="doubleClickHandler(event)"
+                doubleClickEnabled="true" fontSize="15">
+    
+    <s:layout>
+        <s:HorizontalLayout/>
+    </s:layout>
+	
+	<fx:Script>
+		<![CDATA[
+            import com.j_nid.ui.popups.ProductPriceForm;
+            import com.j_nid.utils.Utils;
+            
+            import mx.core.FlexGlobals;
+		    
+		    private function doubleClickHandler(e:MouseEvent):void {
+		    	var productPriceEditor:ProductPriceForm =
+                    ProductPriceForm(Utils.showPopUp(ProductPriceForm));
+                productPriceEditor.product = XML(data);
+                productPriceEditor.x = e.stageX;
+                var app:JNid = JNid(FlexGlobals.topLevelApplication);
+                var height:Number = app.height;
+                var width:Number = app.width;
+                if (e.stageX + productPriceEditor.width > width) {
+                    productPriceEditor.x = width - (productPriceEditor.width + 10);
+                }
+                productPriceEditor.y = e.stageY;
+                if (e.stageY + productPriceEditor.height > height) {
+                    productPriceEditor.y = height - (productPriceEditor.height + 10);
+                }
+		    }
+        ]]>
+    </fx:Script>
+    
+    <fx:Declarations>
+        <mx:Fade id="fadeIn" alphaFrom="0" alphaTo="0.8"/>
+        <mx:Fade id="fadeOut" alphaFrom="0.8" alphaTo="0"/>
+    </fx:Declarations>
+    
+    <s:Label text="{data.name}" color="{data.color}" textAlign="left"
+             width="100%"/>
+    
+    <s:Label id="costLbl" text="{data.cost_per_unit}"
+             textAlign="right" alpha="0"
+             rollOverEffect="{fadeIn}" rollOutEffect="{fadeOut}"/>
+    
+    <s:Label id="priceLbl" text="{data.price_per_unit}"
+             textAlign="right" paddingRight="20"/>
+</s:DataRenderer>

@@ -1,0 +1,543 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:VGroup xmlns:fx="http://ns.adobe.com/mxml/2009"
+          xmlns:s="library://ns.adobe.com/flex/spark"
+          xmlns:mx="library://ns.adobe.com/flex/mx"
+          xmlns:jn="com.j_nid.components.*"
+          creationComplete="creationCompleteHandler(event)"
+          width="100%" height="100%">
+
+    <fx:Script>
+        <![CDATA[
+            import com.j_nid.ui.popups.ProductSelectForm;
+            import com.j_nid.utils.PrintUtils;
+            import com.j_nid.utils.ServiceUtils;
+            import com.j_nid.utils.Utils;
+            
+            import mx.binding.utils.ChangeWatcher;
+            import mx.collections.ArrayCollection;
+            import mx.collections.ListCollectionView;
+            import mx.collections.Sort;
+            import mx.collections.SortField;
+            import mx.collections.XMLListCollection;
+            import mx.controls.Alert;
+            import mx.events.CalendarLayoutChangeEvent;
+            import mx.events.CloseEvent;
+            import mx.events.CollectionEvent;
+            import mx.events.DataGridEvent;
+            import mx.events.FlexEvent;
+            import mx.events.ItemClickEvent;
+            import mx.events.ListEvent;
+            
+            import spark.events.IndexChangeEvent;
+			
+            private var _selectedOrder:XML;
+			[Bindable]
+			private var orderItems:XMLListCollection;
+            [Bindable]
+            private var unsaveOrderItems:XMLListCollection;
+			private var depositedBaskets:XMLListCollection;
+			private var nonDepositBaskets:XMLListCollection;
+			[Bindable]
+            private var total:Number;
+            [Bindable]
+            private var paid:Number;
+			[Bindable]
+			private var menuList:Array = [
+				"รายการขายของวันนี้", "ค้นหารายการของลูกค้า",
+				"ค้นหารายการขายย้อนหลัง"];
+            
+            private function creationCompleteHandler(e:FlexEvent):void {
+				total = 0;
+				paid = 0;
+				currentState = "TodayOrder";
+				initTodayOrder();
+            }
+			
+			private function loadCustomers(name:String=""):void {
+				var responder:com.j_nid.utils.Responder =
+					new com.j_nid.utils.Responder(customerResultHandler);
+				var attrs:String = "attrs=id,name,outstanding_total";
+				var filters:String = "filters=is_customer=1";
+				if (name.length > 0)
+					filters += ",name=" + name;
+				ServiceUtils.send("/people/?" + attrs + "&" + filters,
+					"GET", responder);
+			}
+			
+			private function customerResultHandler(data:Object):void {
+				customerField.dataProvider =
+                    new XMLListCollection(data.result.children());
+			}
+			
+			private function loadOrders():void {
+				depositedBaskets = new XMLListCollection();
+				nonDepositBaskets = new XMLListCollection();
+				var isToday:Boolean = orderTabBar.selectedIndex == 0;
+				var responder:com.j_nid.utils.Responder =
+					new com.j_nid.utils.Responder(orderResultHandler);
+				var attrs:String = "attrs=id,created,person_name,total,notation,paid";
+				var filters:String = "filters=is_today=" + int(isToday);
+				if (!isToday) {
+					var startDate:Date = startDateField.selectedDate;
+					var endDate:Date = new Date(endDateField.selectedDate.time);
+                    endDate.date += 1;
+					filters += ",date_range=" + Utils.formatDate(startDate, "YYYYMMDD") +
+						":" + Utils.formatDate(endDate, "YYYYMMDD");
+				}
+                if (orderTabBar.selectedIndex == 1 && customerField.selectedItem) {
+                    filters += ",person_id=" + customerField.selectedItem.id;
+                }
+				ServiceUtils.send("/orders/?" + attrs + "&" + filters, "GET", responder);
+			}
+			
+			private function orderResultHandler(data:Object):void {
+				var orders:XMLListCollection = new XMLListCollection();
+				for each (var order:XML in data.result.children()) {
+					var isOutstanding:Boolean = Number(order.total) > Number(order.paid);
+					var isPaid:Boolean = !isOutstanding;
+					if (!paidField.selected && isPaid)
+						continue;
+					if (!outstandingField.selected && isOutstanding)
+						continue;
+					orders.addItem(order);
+				}
+				orderList.dataProvider = orders;
+			}
+			
+			private function loadOrderItems(orderID:int):void {
+				var responder:com.j_nid.utils.Responder =
+					new com.j_nid.utils.Responder(orderItemResultHandler);
+				var attrs:String = "attrs=id,quantity,name,unit,price_per_unit,total,is_deleted,unit_per_quantity,product_id";
+				var filters:String = "filters=order_id=" + orderID;
+				ServiceUtils.send("/orderitems/?" + attrs + "&" + filters,
+					"GET", responder);
+			}
+			
+			private function orderItemResultHandler(data:Object):void {
+				orderItems = new XMLListCollection();
+                orderItems.addEventListener(CollectionEvent.COLLECTION_CHANGE,
+					orderItemsChange);
+				for each (var item:XML in data.result.children()) {
+					orderItems.addItem(item);
+                }
+				loadBasketsOrders(selectedOrder.id);
+			}
+			
+			private function loadBasketsOrders(orderID:int):void {
+				var responder:com.j_nid.utils.Responder =
+					new com.j_nid.utils.Responder(basketOrderResultHandler);
+				var attrs:String = "attrs=id,name,quantity,price_per_unit,is_deposit,basket_id";
+				ServiceUtils.send("/orders/" + orderID + "/baskets/?" + attrs,
+					"GET", responder);
+			}
+			
+			private function basketOrderResultHandler(data:Object):void {
+				for each (var item:XML in data.result.children()) {
+					item.setName("basket");
+					item.id = int(item.basket_id);
+					delete item.basket_id;
+					if (Boolean(int(item.is_deposit))) {
+						var addedBasket:XML = getAddedBasket(item);
+						if (addedBasket) {
+							addedBasket.unit = int(addedBasket.unit) + 1;
+							addedBasket.total = Number(addedBasket.price_per_unit) * int(addedBasket.unit);
+						} else {
+							item.unit = 1;
+							item.total = Number(item.price_per_unit);
+							orderItems.addItem(item);
+						}
+						depositedBaskets.addItem(item);
+					} else {
+						if (!getNonDepositBasket(item))
+							nonDepositBaskets.addItem(item);
+					}
+				}
+                unsaveOrderItems = new XMLListCollection(orderItems.copy());
+			}
+			
+			private function getNonDepositBasket(item:XML):XML {
+				for each (var basket:XML in nonDepositBaskets)
+					if (int(basket.id) == int(item.id))
+						return basket;
+				return null;
+			}
+			
+			private function getAddedBasket(basket:XML):XML {
+				for each (var item:XML in orderItems)
+					if (item.name() == "basket" && int(item.id) == int(basket.id))
+						return item;
+				return null;
+			}
+            
+            private function orderDeleteResultHandler(data:Object):void {
+                loadOrders();
+            }
+            
+            private function initOrderByDate():void {
+                outstandingField.selected = true;
+                var now:Date = new Date();
+                var rangeEnd:Date = new Date(now.fullYear, now.month, now.date);
+                var rangeStart:Date = Utils.moveDateByDay(rangeEnd, -7);
+                startDateField.selectedDate = rangeStart;
+                endDateField.selectedDate = rangeEnd;
+                startDateField.enabled = true;
+                endDateField.enabled = true;
+				loadOrders();
+            }
+            
+            private function initTodayOrder():void {
+                var now:Date = new Date();
+                var today:Date = new Date(now.fullYear, now.month, now.date);
+                startDateField.selectedDate = today;
+                endDateField.selectedDate = today;
+                startDateField.enabled = false;
+                endDateField.enabled = false;
+                outstandingField.selected = true;
+                paidField.selected = true;
+				loadOrders();
+            }
+            
+            private function printOrder(e:MouseEvent):void {
+				var order:XML = XML(orderList.selectedItem).copy();
+				order.order_items = <order_items/>;
+				order.order_items.appendChild(unsaveOrderItems.source);
+                order.created = Utils.formatDate(new Date(Date.parse(order.created)), 'DD/MM/YY JJ:NN');
+				PrintUtils.printOrder(order);
+            }
+            
+            private function deleteOrderClick(e:MouseEvent):void {
+                Utils.showConfirm("ต้องการลบข้อมูลหรือไม่", "ยืนยันการลบ",
+                    deleteOrderConfirmCloseHandler);
+            }
+			
+			private function deleteOrderConfirmCloseHandler(e:CloseEvent):void {
+				if (e.detail == Alert.OK) {
+					var order:XML = XML(orderList.selectedItem);
+					var responder:com.j_nid.utils.Responder =
+						new com.j_nid.utils.Responder(orderDeleteResultHandler);
+					ServiceUtils.send("/orders/" + order.id + "/",
+						"DELETE", responder);
+				}
+			}
+            
+            private function searchChange(e:Event):void {
+				loadCustomers(personSearchField.text);
+            }
+            
+            private function itemListKeyDown(e:KeyboardEvent):void {
+                if (e.keyCode == Keyboard.DELETE) {
+                    Utils.showConfirm("ต้องการลบข้อมูลหรือไม่", "ยืนยันการลบ",
+						deleteOrderItemConfirmCloseHandler);
+                }
+            }
+			
+			private function deleteOrderItemConfirmCloseHandler(e:CloseEvent):void {
+				var item:XML = XML(orderItemList.selectedItem);
+				if (e.detail == Alert.OK) {
+					if (item.name() == "order_item" && item.hasOwnProperty("is_deleted")) {
+						item.is_deleted = 1;
+					} else {
+						orderItems.removeItemAt(orderItems.getItemIndex(item));
+						if (item.name() == "basket")
+							removeDepositedBasket(item);
+					}
+				}
+                callLater(orderItemList.invalidateList);
+			}
+			
+			private function removeDepositedBasket(basket:XML):void {
+				for each (var b:XML in depositedBaskets)
+					if (int(b.id) == int(basket.id))
+						depositedBaskets.removeItemAt(depositedBaskets.getItemIndex(b));
+			}
+            
+            private function tabBarClick(e:ItemClickEvent):void {
+            	if (orderTabBar.selectedIndex == 0) {
+                    currentState = "TodayOrder";
+                    initTodayOrder();
+                } else if (orderTabBar.selectedIndex == 1) {
+                    currentState = "";
+					loadCustomers();
+                    initOrderByDate();
+                } else if (orderTabBar.selectedIndex == 2) {
+                    currentState = "TodayOrder";
+                    initOrderByDate();
+                }
+            }
+            
+            private function addOrderItemClick(e:MouseEvent):void {
+                var form:ProductSelectForm =
+                        ProductSelectForm(Utils.showPopUp(ProductSelectForm));
+                form.addEventListener(Event.REMOVED_FROM_STAGE,
+					productSelectFormRemove);
+            }
+            
+            private function productSelectFormRemove(e:Event):void {
+				var form:ProductSelectForm = ProductSelectForm(e.currentTarget);
+				var product:XML = form.selectedProduct;
+				if (product) {
+					if (product.name() == "basket") {
+						Alert.show("เพิ่มในลังมัดจำใช่หรือไม่", "เพิ่มลัง",
+							(Alert.YES|Alert.NO), null,
+							function(e:CloseEvent):void {
+								if (e.detail == Alert.YES) {
+									addOrderItem(product);
+								} else if (e.detail == Alert.NO) {
+									addNonDepositBasket(product);
+								}
+							});
+					} else {
+						addOrderItem(product);
+					}
+				}
+            }
+			
+			private function addNonDepositBasket(obj:XML):void {
+				var notation:String = notationField.text;
+				var pattern:RegExp = new RegExp("(" +
+						Utils.escapeRegexChars(obj.name) +
+						"\\s+x\\s+)(\\d+)");
+				var result:Object = pattern.exec(notation);
+				if (result) {
+					var unit:int = int(result[2]) + 1;
+					var replace:String = "$1" +  unit;
+					notationField.text = notation.replace(pattern, replace);
+					return;
+				}
+				nonDepositBaskets.addItem(obj);
+				if (notation.length > 0)
+					notation += "  ";
+				notation += obj.name + " x 1";
+				notationField.text = notation;
+				notationField.scrollToRange(notation.length);
+			}
+			
+			private function addOrderItem(obj:XML):void {
+				var orderItem:XML = <order_item/>;
+				orderItem.type = obj.name();
+				orderItem.name = obj.name;
+				orderItem.unit_per_quantity = Number(obj.unit);
+				orderItem.unit = obj.unit;
+				orderItem.price_per_unit = obj.price_per_unit;
+				orderItem.cost_per_unit = obj.cost_per_unit;
+				if (orderItem.type == "basket") {
+					orderItem.setName("basket");
+					orderItem.id = int(obj.id);
+					orderItem.quantity = 0;
+				} else {
+					orderItem.product_id = int(obj.id);
+					orderItem.quantity = 1;
+				}
+				orderItem.total = Number(orderItem.price_per_unit) * Number(orderItem.unit);
+				for each (var item:XML in orderItems) {
+					if ((orderItem.type == "basket" && int(orderItem.id) == int(item.id)) ||
+						(orderItem.type == "product" && orderItem.product_id == item.product_id)) {
+						
+						item.unit = Number(item.unit) + Number(orderItem.unit);
+						if (item.type == "basket")
+							item.quantity = 0;
+						else
+							item.quantity = int(item.quantity) + 1;
+						item.total = Number(item.price_per_unit) * Number(item.unit);
+						return;
+					}
+				}
+				orderItems.addItem(orderItem);
+				orderItemList.verticalScrollPosition = 
+					orderItemList.maxVerticalScrollPosition;
+			}
+            
+            private function saveBtnClick(e:MouseEvent):void {
+				var order:XML = selectedOrder.copy();
+            	order.notation = notationField.text;
+				order.created = createdField.dateString;
+				delete order.paid;
+				delete order.total;
+				delete order.person_name;
+				var orderItems:XML = <order_items/>;
+				var depositedBaskets:XML = <deposited_baskets/>;
+				var nonDepositBaskets:XML = <non_deposit_baskets/>;
+				for each (var item:XML in this.orderItems) {
+					if (item.name() == "basket")
+                        depositedBaskets.appendChild(item);
+					else
+						orderItems.appendChild(item);
+				}
+				order.deposited_baskets = depositedBaskets;
+				order.order_items = orderItems;
+				for each (var basket:XML in this.nonDepositBaskets) {
+					var pattern:RegExp = new RegExp(
+						Utils.escapeRegexChars(basket.name) +
+						"\\s+x\\s+(\\d+)", "g");
+					var result:Object = pattern.exec(order.notation);
+					if (result) {
+						basket.unit = result[1];
+						nonDepositBaskets.appendChild(basket);
+					}	
+				}
+				order.non_deposit_baskets = nonDepositBaskets;
+				var responder:com.j_nid.utils.Responder =
+					new com.j_nid.utils.Responder(putOrderResultHandler);
+				ServiceUtils.send("/orders/" + order.id + "/",
+					"PUT", responder, order);
+            }
+			
+			private function putOrderResultHandler(data:Object):void {
+                orderItems = null;
+                unsaveOrderItems = null;
+                total = paid = 0;
+                notationField.text = "";
+                customerNameField.text = "";
+                createdField.text = "";
+				loadOrders();
+			}
+            
+            private function orderListChange(e:IndexChangeEvent):void {
+            	selectedOrder = XML(orderList.selectedItem);
+				loadOrderItems(selectedOrder.id);
+            }
+            
+            private function orderItemsChange(e:CollectionEvent):void {
+				var items:Array = [];
+				for each (var item:XML in orderItems)
+					if (!Boolean(int(item.is_deleted)))
+						items.push(item);
+				total = Utils.sum(items, "total");
+            }
+			
+			private function getCreatedString(value:String):String {
+				var created:Date = new Date(Date.parse(value));
+				return Utils.formatDate(created, "DD-MM-YYYY JJ:NN");
+			}
+            
+            private function set selectedOrder(order:XML):void {
+                _selectedOrder = order;
+                customerNameField.text = _selectedOrder.person_name;
+                createdField.text = getCreatedString(_selectedOrder.created);
+                notationField.text = _selectedOrder.notation;
+                total = _selectedOrder.total;
+                paid = _selectedOrder.paid;
+            }
+            
+            private function get selectedOrder():XML {
+                return _selectedOrder;
+            }
+        ]]>
+    </fx:Script>
+    
+    <s:states>
+        <s:State name="base"/>
+        <s:State name="TodayOrder"/>
+    </s:states>
+    
+    <mx:TabBar id="orderTabBar" dataProvider="{menuList}"
+               itemClick="tabBarClick(event)"/>
+    
+    <s:HGroup width="100%" height="100%">
+        <s:Panel id="customerPnl" title="ค้นหา" width="220" height="100%">
+            <s:layout>
+                <s:VerticalLayout gap="8" paddingTop="5" paddingBottom="5"/>
+            </s:layout>
+            <s:HGroup id="searchBox" paddingLeft="5" paddingRight="5"
+                      verticalAlign="middle" width="100%" includeIn="base">
+                <s:Label text="ค้นหาชื่อลูกค้า:"/>
+                <s:TextInput id="personSearchField" change="searchChange(event)"
+                             width="100%"/>
+            </s:HGroup>
+            <s:List id="customerField" labelField="name" change="loadOrders()"
+                    borderVisible="false" width="100%" height="100%"
+                    includeIn="base"/>
+            <s:VGroup id="dateRangeBox" horizontalAlign="left" width="100%">
+                <s:HGroup horizontalAlign="right" width="190">
+                    <s:Label text="เริ่มจากวันที่:"/>
+                    <mx:DateField id="startDateField" change="loadOrders()"/>
+                </s:HGroup>
+                <s:HGroup horizontalAlign="right" width="190">
+                    <s:Label text="ถึงวันที่:"/>
+                    <mx:DateField id="endDateField" change="loadOrders()"/>
+                </s:HGroup>
+            </s:VGroup>
+            <s:VGroup paddingLeft="5" paddingBottom="5" paddingRight="5"
+                      width="100%">
+                <s:CheckBox id="outstandingField" label="ค้างจ่าย"
+                            change="loadOrders()"/>
+                <s:CheckBox id="paidField" label="จ่ายแล้ว"
+                            change="loadOrders()"/>
+            </s:VGroup>
+        </s:Panel>
+        
+        <s:Panel title="รายการขาย" width="250" height="100%">
+            <s:List id="orderList" change="orderListChange(event)"
+                    itemRenderer="com.j_nid.ui.renderers.OrderRenderer"
+                    borderVisible="false" width="100%" height="100%"/>
+        </s:Panel>
+        
+        <s:Panel title="รายละเอียด" width="100%" height="100%">
+            <s:layout>
+                <s:VerticalLayout paddingTop="5" paddingRight="5"
+                                  paddingBottom="5" paddingLeft="5"/>
+            </s:layout>
+            <s:HGroup horizontalAlign="right" verticalAlign="middle"
+                      paddingTop="5" paddingRight="5"
+                      width="100%" height="35">
+                <s:Label id="customerNameField"/>
+                <jn:DateTimeInput id="createdField" width="130"/>
+            </s:HGroup>
+            <mx:DataGrid id="orderItemList" dataProvider="{orderItems}"
+                         keyDown="itemListKeyDown(event)"
+                         headerStyleName="centerHeader"
+                         textAlign="center" editable="true"
+                         rowHeight="30"
+                         width="100%" height="100%">
+                <mx:columns>
+                    <mx:DataGridColumn headerText="จำนวน" dataField="quantity"
+                                       itemRenderer="com.j_nid.ui.renderers.OrderItemRenderer"
+                                       itemEditor="com.j_nid.ui.renderers.OrderItemEditor"
+                                       editorDataField="value" width="60"/>
+                    <mx:DataGridColumn headerText="ชื่อ" dataField="name"
+                                       itemRenderer="com.j_nid.ui.renderers.OrderItemRenderer"
+                                       editable="false"/>
+                    <mx:DataGridColumn headerText="หน่วย" dataField="unit"
+                                       textAlign="right" editorDataField="value"
+                                       labelFunction="Utils.unitLabelFunction"
+                                       itemRenderer="com.j_nid.ui.renderers.OrderItemRenderer"
+                                       itemEditor="com.j_nid.ui.renderers.OrderItemEditor"
+                                       width="60"/>
+                    <mx:DataGridColumn headerText="ราคาต่อหน่วย"
+                                       dataField="price_per_unit" textAlign="right"
+                                       labelFunction="Utils.priceLabelFunction"
+                                       itemRenderer="com.j_nid.ui.renderers.OrderItemRenderer"
+                                       itemEditor="com.j_nid.ui.renderers.OrderItemEditor"
+                                       editorDataField="value" width="90"/>
+                    <mx:DataGridColumn headerText="รวม" dataField="total"
+                                       labelFunction="Utils.priceLabelFunction"
+                                       itemRenderer="com.j_nid.ui.renderers.OrderItemRenderer"
+                                       textAlign="right" editable="false" width="90"/>
+                </mx:columns>
+            </mx:DataGrid>
+            <s:HGroup paddingRight="5" width="100%" height="110">
+                <s:Label text="หมายเหตุ:"/>
+                <s:TextArea id="notationField" width="400" height="100%"/>
+                <s:Rect width="100%"/>
+                <s:VGroup horizontalAlign="right" gap="15">
+                    <s:Button label="เพิ่ม" click="addOrderItemClick(event)"
+                              enabled="{orderList.selectedItem != null}"
+                              width="75"/>
+                    <s:Label id="summaryField" text="รวมทั้งสิ้น {Utils.formatPrice(total)} (จ่ายแล้ว {Utils.formatPrice(paid)})"/>
+                </s:VGroup>
+            </s:HGroup>
+            <s:controlBarLayout>
+                <s:HorizontalLayout horizontalAlign="right" paddingTop="5"
+                                    paddingBottom="5" paddingLeft="5"/>
+            </s:controlBarLayout>
+            <s:controlBarContent>
+                <s:Button id="saveBtn" label="บันทึก" click="saveBtnClick(event)"
+                          enabled="{orderList.selectedItem != null}"/>
+                <s:Button label="ลบ" click="deleteOrderClick(event)"
+                          enabled="{orderList.selectedItem != null}"/>
+                <s:Button label="พิมพ์" click="printOrder(event)"
+                          enabled="{orderList.selectedItem != null}"/>
+            </s:controlBarContent>
+        </s:Panel>
+    </s:HGroup>
+</s:VGroup>

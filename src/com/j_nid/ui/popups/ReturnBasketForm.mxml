@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+               xmlns:s="library://ns.adobe.com/flex/spark"
+               xmlns:mx="library://ns.adobe.com/flex/mx"
+               xmlns:jn="com.j_nid.components.*"
+               title="รายการคืนลัง"
+               creationComplete="creationCompleteHandler(event)"
+               close="close()"
+               width="800" height="600">
+    
+    <s:layout>
+        <s:VerticalLayout paddingTop="10" paddingLeft="10" paddingRight="10"
+                          paddingBottom="10"/>
+    </s:layout>
+    
+    <fx:Script>
+        <![CDATA[
+            import com.j_nid.events.DiffEvent;
+            import com.j_nid.utils.Responder;
+            import com.j_nid.utils.ServiceUtils;
+            import com.j_nid.utils.Utils;
+            
+            import mx.collections.Sort;
+            import mx.collections.SortField;
+            import mx.collections.XMLListCollection;
+            import mx.events.DragEvent;
+            import mx.events.FlexEvent;
+            import mx.events.ListEvent;
+            import mx.events.ValidationResultEvent;
+            import mx.validators.ValidationResult;
+            
+            [Bindable]
+            private var depositedBaskets:XMLListCollection;
+            [Bindable]
+            private var nonDepositBaskets:XMLListCollection;
+            [Bindable]
+            private var returnBaskets:XMLListCollection;
+            private var sort:Sort;
+            private var baskets:XMLList;
+            private var _customer:XML;
+            private var errMsg:String;
+            
+            [Bindable]
+            public function get customer():XML {
+                return _customer;
+            }
+            
+            public function set customer(val:XML):void {
+                _customer = val;
+                loadBaskets();
+            }
+            
+            private function creationCompleteHandler(e:FlexEvent):void {
+                sort = new Sort();
+                sort.fields = [new SortField("name")];
+                addEventListener(DiffEvent.NUMBER_CHANGE, quantityChangeHandler);
+                loadCustomers();
+            }
+            
+            private function loadCustomers():void {
+                var responder:com.j_nid.utils.Responder =
+                    new com.j_nid.utils.Responder(customerResultHandler);
+                var attrs:String = "attrs=id,name,outstanding_total";
+                var filters:String = "filters=is_customer=1";
+                ServiceUtils.send("/people/?" + attrs + "&" + filters,
+                    "GET", responder);
+            }
+            
+            private function customerResultHandler(data:Object):void {
+                customerField.dataProvider =
+                    new XMLListCollection(data.result.children());
+                customerField.selectedIndex = -1;
+            }
+            
+            private function loadBaskets():void {
+                depositedBaskets = new XMLListCollection();
+                depositedBaskets.sort = sort;
+                nonDepositBaskets = new XMLListCollection();
+                nonDepositBaskets.sort = sort;
+                returnBaskets = new XMLListCollection();
+                var responder:com.j_nid.utils.Responder =
+                    new com.j_nid.utils.Responder(basketResultHandler);
+                var attrs:String = "attrs=id,name,is_deposit,price_per_unit";
+                var filters:String = "filters=is_return=0";
+                if (customer.hasOwnProperty("id"))
+                    ServiceUtils.send("/people/" + customer.id + "/baskets/?" + attrs + "&" + filters,
+                        "GET", responder);
+            }
+            
+            private function basketResultHandler(data:Object):void {
+                baskets = data.result.children();
+                for each (var basket:XML in baskets) {
+                    if (Boolean(int(basket.is_deposit))) {
+                        var depositedBasket:XML = getDepositedBasket(basket);
+                        if (depositedBasket) {
+                            depositedBasket.quantity = int(depositedBasket.quantity) + 1;
+                        } else {
+                            depositedBasket = basket.copy();
+                            depositedBasket.quantity = 1;
+                            depositedBaskets.addItem(depositedBasket);
+                        }
+                    } else {
+                        var nonDepositBasket:XML = getNonDepositBasket(basket);
+                        if (nonDepositBasket) {
+                            nonDepositBasket.quantity = int(nonDepositBasket.quantity) + 1;
+                        } else {
+                            nonDepositBasket = basket.copy();
+                            nonDepositBasket.quantity = 1;
+                            nonDepositBaskets.addItem(nonDepositBasket);
+                        }
+                    }
+                }
+                depositedBaskets.refresh();
+                nonDepositBaskets.refresh();
+            }
+            
+            private function getDepositedBasket(basket:XML):XML {
+                for each (var pb:XML in depositedBaskets)
+                if (pb.name == basket.name)
+                    return pb;
+                return null;
+            }
+            
+            private function getNonDepositBasket(basket:XML):XML {
+                for each (var npb:XML in nonDepositBaskets)
+                if (npb.name == basket.name)
+                    return npb;
+                return null;
+            }
+            
+            private function close():void {
+                Utils.hidePopUp(this);
+            }
+            
+            private function selectCustomerBtnDown(e:FlexEvent):void {
+                var form:PersonSelectForm =
+                    PersonSelectForm(Utils.showPopUp(PersonSelectForm));
+                form.people = new XMLListCollection(XMLList(customerField.dataProvider));
+                form.addEventListener(Event.REMOVED_FROM_STAGE,
+                    personSelectFormCloseHandler);
+            }
+            
+            private function personSelectFormCloseHandler(e:Event):void {
+                var form:PersonSelectForm = PersonSelectForm(e.currentTarget);
+                form.removeEventListener(Event.REMOVED_FROM_STAGE,
+                    personSelectFormCloseHandler);
+                if (form.selectedPerson) {
+                    customerField.selectedItem = form.selectedPerson;
+                    customer = XML(customerField.selectedItem);
+                }
+            }
+            
+            private function dragDropHandler(e:DragEvent):void {
+                returnList.layout.hideDropIndicator();
+                var basket:XML = e.dragSource.dataForFormat("itemsByIndex")[0];
+                if (Boolean(int(basket.is_deposit))) {
+                    paymentField.value += Number(basket.price_per_unit);
+                }
+                var returnBasket:XML = getReturnBasket(basket);
+                if (returnBasket) {
+                    returnBasket.quantity = int(returnBasket.quantity) + 1;
+                } else {
+                    returnBasket = basket.copy();
+                    returnBasket.quantity = 1;
+                    returnBasket.maximum = int(basket.quantity);
+                    returnBaskets.addItem(returnBasket);
+                }
+                e.preventDefault();
+            }
+            
+            private function getReturnBasket(basket:XML):XML {
+                for each (var rb:XML in returnBaskets)
+                if (rb.name == basket.name && rb.is_deposit == basket.is_deposit)
+                    return rb;
+                return null;
+            }
+            
+            private function deleteBtnDownHandler(e:FlexEvent):void {
+                var basket:XML = XML(returnList.selectedItem);
+                paymentField.value -= Number(basket.price_per_unit) * int(basket.quantity);
+                returnBaskets.removeItemAt(returnBaskets.getItemIndex(basket));
+            }
+            
+            private function clearBtnDownHandler(e:FlexEvent):void {
+                for each (var basket:XML in returnBaskets)
+                paymentField.value -= Number(basket.price_per_unit) * int(basket.quantity);
+                returnBaskets.removeAll();
+            }
+            
+            private function saveBtnDown(e:FlexEvent):void {
+                if (isValid()) {
+                    var basketOrders:XML = <basket_orders/>;
+                    for each (var basket:XML in returnBaskets)
+                    basketOrders.appendChild(getReturnBaskets(basket));
+                    var responder:com.j_nid.utils.Responder =
+                        new com.j_nid.utils.Responder(resultHandler);
+                    if (paymentField.value > 0) {
+                        var payment:XML = <payment/>;
+                        payment.amount = paymentField.value;
+                        payment.notation = notationField.text;
+                        payment.created = createdField.dateString;
+                        payment.person_id = int(customer.id);
+                        payment.basket_orders = basketOrders;
+                        ServiceUtils.send("/payments/",	"POST", responder, payment);
+                    } else {
+                        ServiceUtils.send("/basketorders/",	"PUT", responder, basketOrders);
+                    }
+                } else {
+                    Utils.showMessage(errMsg, "พบข้อผิดพลาด");
+                }
+            }
+            
+            private function isValid():Boolean {
+                errMsg = "";
+                if (paymentField.value == 0 && (!returnBaskets || returnBaskets.length < 0))
+                    errMsg += "กรุณาตรวจสอบข้อมูลตะกร้าหรือจำนวนเงิน\n";
+                if (createdField.dateString.length == 0)
+                    errMsg += "กรุณาตรวจสอบวันที่ให้ถูกต้อง\n";
+                return errMsg.length == 0;
+            }
+            
+            private function getReturnBaskets(basket:XML):XMLList {
+                var returnBaskets:XML = <baskets/>;
+                for each (var b:XML in baskets) {
+                    var length:int = returnBaskets.children().length();
+                    if (b.name == basket.name &&
+                        basket.is_deposit == b.is_deposit &&
+                        length < int(basket.quantity)) {
+                        
+                        b.is_return = 1;
+                        returnBaskets.appendChild(b);
+                    }
+                }
+                return returnBaskets.children();
+            }
+            
+            private function resultHandler(data:Object):void {
+                close();
+            }
+            
+            private function getColor(outstandingTotal:Number):int {
+                if (outstandingTotal < 0)
+                    return 0xff0000;
+                return 0x0000ff;
+            }
+            
+            private function quantityChangeHandler(e:DiffEvent):void {
+                paymentField.value += e.diff;
+            }
+        ]]>
+    </fx:Script>
+    
+    <s:states>
+        <s:State name="base"/>
+        <s:State name="payment"/>
+    </s:states>
+    
+    <s:HGroup id="customerGroup" horizontalAlign="center" verticalAlign="middle"
+              width="100%" includeIn="base">
+        <s:Label text="ชื่อลูกค้า:"/>
+        <s:ComboBox id="customerField" labelField="name"
+                    change="customer=XML(customerField.selectedItem)"
+                    width="250"/>
+        <s:Button label="เลือก" buttonDown="selectCustomerBtnDown(event)"/>
+    </s:HGroup>
+    
+    <mx:Form width="100%">
+        <mx:FormItem label="ยอดค้างชำระ">
+            <s:Label text="{Utils.formatPrice(Math.abs(Number(customer.outstanding_total)))}"
+                     color="{getColor(customer.outstanding_total)}"/>
+        </mx:FormItem>
+        <mx:FormItem label="วันที่">
+            <jn:DateTimeInput id="createdField"
+                              text="{Utils.formatDate(new Date(), 'DD-MM-YYYY JJ:NN')}"
+                              textAlign="left" width="150"/>
+        </mx:FormItem>
+        <mx:FormItem label="จำนวนเงินที่ชำระ">
+            <s:NumericStepper id="paymentField" maximum="1000000"
+                              stepSize="0.5" width="150"/>
+        </mx:FormItem>
+    </mx:Form>
+    
+    <s:HGroup width="100%" height="100%">
+        <s:VGroup width="50%" height="100%">
+            <s:VGroup width="100%" height="50%">
+                <s:Label text="ลังมัดจำ"/>
+                <s:List id="depositedList" labelField="name"
+                        dataProvider="{depositedBaskets}" dragEnabled="true"
+                        itemRenderer="com.j_nid.ui.renderers.BasketRenderer"
+                        width="100%" height="100%"/>
+            </s:VGroup>
+            <s:VGroup width="100%" height="50%">
+                <s:Label text="ลังไม่มัดจำ"/>
+                <s:List id="nonDepositList" labelField="name"
+                        dataProvider="{nonDepositBaskets}" dragEnabled="true"
+                        itemRenderer="com.j_nid.ui.renderers.BasketRenderer"
+                        width="100%" height="100%"/>
+            </s:VGroup>
+        </s:VGroup>
+        <s:VGroup width="50%" height="100%">
+            <s:Label text="คืนลัง"/>
+            <s:List id="returnList" labelField="name"
+                    dataProvider="{returnBaskets}" dropEnabled="true"
+                    dragDrop="dragDropHandler(event)"
+                    itemRenderer="com.j_nid.ui.renderers.ReturnBasketRenderer"
+                    width="100%" height="100%"/>
+            <s:HGroup horizontalAlign="center" width="100%">
+                <s:Button label="ล้าง" buttonDown="clearBtnDownHandler(event)"/>
+                <s:Button label="ลบ" enabled="{returnList.selectedItem}"
+                          buttonDown="deleteBtnDownHandler(event)"/>
+            </s:HGroup>
+        </s:VGroup>
+    </s:HGroup>
+    
+    <s:VGroup width="100%">
+        <s:Label text="หมายเหตุ"/>
+        <s:TextArea id="notationField" width="100%" height="50"/>
+    </s:VGroup>
+    
+    <s:controlBarLayout>
+        <s:HorizontalLayout horizontalAlign="right" paddingRight="10"
+                            paddingTop="5" paddingBottom="5"/>
+    </s:controlBarLayout>
+    
+    <s:controlBarContent>
+        <s:Button id="saveBtn" label="บันทึก" buttonDown="saveBtnDown(event)"/>
+        <s:Button label="ยกเลิก" buttonDown="close()"/>
+    </s:controlBarContent>
+</s:TitleWindow>

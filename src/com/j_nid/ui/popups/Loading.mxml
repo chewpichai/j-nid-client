@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+         xmlns:s="library://ns.adobe.com/flex/spark"
+         xmlns:mx="library://ns.adobe.com/flex/mx"
+         creationComplete="creationCompleteHandler(event)"
+         width="150" height="50">
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			
+			private var timer:Timer;
+			private var count:uint;
+			
+			private function creationCompleteHandler(e:FlexEvent):void {
+				loadingLabl.text = "กรุณารอสักครู่...";
+				timer = new Timer(500);
+				timer.addEventListener(TimerEvent.TIMER, timerHandler);
+				timer.start();
+			}
+			
+			private function timerHandler(e:TimerEvent):void {
+				count++;
+				if (count == 3) {
+				    loadingLabl.text = "กรุณารอสักครู่...";
+				    count = 0;
+				} else if (count == 2)
+				    loadingLabl.text = "กรุณารอสักครู่..";
+				else
+				    loadingLabl.text = "กรุณารอสักครู่.";
+			}
+		]]>
+	</fx:Script>
+	
+    <s:Label id="loadingLabl" verticalAlign="middle" horizontalCenter="0"
+             paddingLeft="5" paddingRight="5" backgroundColor="0xffffff"
+             width="110" height="100%"/>
+</s:Group>

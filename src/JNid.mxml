@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009"
+                       xmlns:s="library://ns.adobe.com/flex/spark"
+                       xmlns:mx="library://ns.adobe.com/flex/mx"
+                       preinitialize="initScreenSize()"
+                       applicationComplete="applicationCompleteHanler(event)"
+                       close="closeAllWindows(event)"
+                       width="1280" height="800">
+	
+	<fx:Script>
+		<![CDATA[
+            import air.update.ApplicationUpdaterUI;
+            import air.update.events.UpdateEvent;
+            
+            import com.j_nid.ui.popups.LogInForm;
+            import com.j_nid.utils.Responder;
+            import com.j_nid.utils.ServiceUtils;
+            import com.j_nid.utils.Utils;
+            
+            import mx.controls.Alert;
+            import mx.events.FlexEvent;
+            import mx.events.ItemClickEvent;
+            import mx.rpc.events.FaultEvent;
+            
+            import spark.events.IndexChangeEvent;
+			
+			public var productsToUpdate:XML = <products/>;
+            private var appUpdater:ApplicationUpdaterUI;
+            
+            private function initScreenSize():void
+            {
+                var thisScreen:Screen = Screen.mainScreen;
+                var newScaleX:Number = thisScreen.visibleBounds.width / 1019 * 0.98;
+                var newScaleY:Number = thisScreen.visibleBounds.height / 680 * 0.98;
+                var newScale:Number = Math.min(newScaleX, newScaleY, 1);
+                this.scaleX = newScale;
+                this.scaleY = newScale;
+                this.height = this.height * newScale;
+                this.width = this.width * newScale;
+            }
+                
+            private function applicationCompleteHanler(e:FlexEvent):void {
+                var currentYear:int = new Date().fullYear;
+            	status = "Copyright (c) 2008-" + currentYear + " ChewLab. All rights reserved.";
+                checkForUpdate();
+            }
+            
+            private function checkForUpdate():void {
+                appUpdater = new ApplicationUpdaterUI();
+                appUpdater.updateURL = "http://www.chewlab.com/apps/j-nid/update.xml";
+                appUpdater.isCheckForUpdateVisible = false;
+                appUpdater.addEventListener(UpdateEvent.INITIALIZED, onUpdate);
+                appUpdater.addEventListener(ErrorEvent.ERROR, onError);
+                appUpdater.initialize();
+            }
+            
+            private function onUpdate(e:UpdateEvent):void {
+                appUpdater.checkNow();
+                startApp();
+            }
+            
+            private function onError(e:ErrorEvent):void {
+                startApp();
+            }
+            
+            private function startApp():void {
+                Utils.showPopUp(LogInForm);
+            }
+            
+            private function logOutBtnClickHandler(e:MouseEvent):void {
+            	var responder:com.j_nid.utils.Responder =
+                    new com.j_nid.utils.Responder(resultHandler);
+                ServiceUtils.send("/sessions/", "DELETE", responder);
+            }
+            
+            private function resultHandler(data:Object):void {
+            	Utils.clearMainContainer();
+                Utils.showPopUp(LogInForm);
+				mainMenu.selectedIndex = 0;
+            }
+            
+            private function menuClickHandler(e:IndexChangeEvent):void
+            {
+                switch (e.newIndex)
+                {
+                    case 0:
+                        Utils.showMainPage();
+                        break;
+                    case 1:
+                        Utils.showMakeOrderPage();
+                        break;
+					case 2:
+						Utils.showProductPage();
+						break;
+					case 3:
+						Utils.showPersonPage();
+						break;
+					case 4:
+						Utils.showOrderPage();
+						break;
+                    case 5:
+                        Utils.showPaymentPage();
+                        break;
+					case 6:
+						Utils.showAccountPage();
+						break;
+                    case 7:
+                        Utils.showReportPage();
+                        break;
+                    case 8:
+                        Utils.showCustomerReportPage();
+                        break;
+                    case 9:
+                        Utils.showMonthlyReportPage();
+                        break;
+                }
+            }
+            
+            private function closeAllWindows(e:Event):void
+            {
+                e.preventDefault();
+                // loop through all windows and close them.
+                for(var i:int = NativeApplication.nativeApplication.openedWindows.length - 1; i >= 0; --i)
+                {
+                    var closeWin:NativeWindow = NativeApplication.nativeApplication.openedWindows[i] as NativeWindow;
+                    closeWin.close();
+                }
+            }
+		]]>
+	</fx:Script>
+	
+	<fx:Style source="css/styles.css"/>
+    
+    <mx:ControlBar width="100%" height="40">
+        <s:ButtonBar id="mainMenu" change="menuClickHandler(event)"
+                     requireSelection="true" height="100%">
+            <s:dataProvider>
+                <s:ArrayCollection>
+                    <s:source>
+                        <fx:Array>
+                            <fx:String>หน้าหลัก</fx:String>
+                            <fx:String>ทำรายการขาย</fx:String>
+                            <fx:String>ข้อมูลสินค้า</fx:String>
+                            <fx:String>ข้อมูลบุคคล</fx:String>
+                            <fx:String>รายการขาย</fx:String>
+                            <fx:String>รายการจ่ายเงิน</fx:String>
+                            <fx:String>รายการบัญชี</fx:String>
+                            <fx:String>รายงานรายวัน</fx:String>
+                            <fx:String>รายงานสรุปลูกค้า</fx:String>
+                            <fx:String>รายงานรายเดือน</fx:String>
+                        </fx:Array>
+                    </s:source>
+                </s:ArrayCollection>
+            </s:dataProvider>
+        </s:ButtonBar>
+        <mx:Spacer width="100%"/>
+        <mx:LinkButton id="logOutBtn" label="ออกจากระบบ"
+                       click="logOutBtnClickHandler(event)"/>
+    </mx:ControlBar>
+	
+    <s:Group id="mainContainer" top="50" right="10" bottom="10" left="10"
+             width="100%" height="100%"/>
+</s:WindowedApplication>

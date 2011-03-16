@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:MXDataGridItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                          xmlns:s="library://ns.adobe.com/flex/spark"
+                          xmlns:mx="library://ns.adobe.com/flex/mx"
+                          creationComplete="creationCompleteHandler(event)"
+                          width="100%">
+    
+    <fx:Script>
+        <![CDATA[
+            import mx.binding.utils.ChangeWatcher;
+            import mx.collections.XMLListCollection;
+            import mx.controls.DataGrid;
+            import mx.controls.dataGridClasses.DataGridColumn;
+            import mx.controls.dataGridClasses.DataGridListData;
+            import mx.events.FlexEvent;
+            import mx.events.NumericStepperEvent;
+            
+            private var dataField:String;
+            private var timer:Timer;
+            
+            private function creationCompleteHandler(e:FlexEvent):void
+            {
+                showHandler(e);
+            }
+            
+            private function showHandler(e:FlexEvent):void
+            {
+                stepper.enabled = true;
+                dataField = DataGridListData(listData).dataField;
+                if (dataField == "price_per_unit" || dataField == "unit")
+                    stepper.stepSize = 0.5;
+                if (dataField != "quantity")
+                    stepper.minimum = 1;
+                if (dataField == "quantity" && data.type == "basket")
+                {
+                    stepper.enabled = false;
+                }
+                else
+                {
+                    timer = new Timer(100);
+                    timer.addEventListener(TimerEvent.TIMER, timerHandler);
+                    timer.start();
+                }
+            }
+            
+            private function hideHandler(e:FlexEvent):void
+            {
+                if (timer)
+                {
+                    timer.stop();
+                    timer.removeEventListener(TimerEvent.TIMER, timerHandler);
+                }
+            }
+            
+            private function timerHandler(e:TimerEvent):void
+            {
+                stepper.value = data[dataField];
+            }
+            
+            private function changeHandler(e:Event):void
+            {
+                var diff:Number = stepper.value - Number(data[dataField]);
+                data[dataField] = stepper.value;
+                if (dataField == "quantity")
+                    data["unit"] = Math.max(0, Number(data["unit"]) + diff * Number(data["unit_per_quantity"]));
+                else if (dataField == "unit" && (data.type != "basket" && data.name() != "basket_order"))
+                    data["quantity"] = Math.ceil(Number(data["unit"]) / Number(data["unit_per_quantity"]));
+                data["total"] = Number(data["unit"]) * Number(data["price_per_unit"]);
+            }
+            
+            public function set value(val:Number):void
+            {
+                stepper.value = val;
+            }
+            
+            public function get value():Number
+            {
+                return stepper.value;
+            }
+        ]]>
+    </fx:Script>
+    
+    <s:NumericStepper id="stepper" show="showHandler(event)"
+                      change="changeHandler(event)"
+                      hide="hideHandler(event)" maximum="{Number.MAX_VALUE}"
+                      width="100%"/>
+</s:MXDataGridItemRenderer>

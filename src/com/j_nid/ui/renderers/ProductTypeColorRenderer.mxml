@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:MXDataGridItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                          xmlns:s="library://ns.adobe.com/flex/spark"
+                          xmlns:mx="library://ns.adobe.com/flex/mx">
+    <s:layout>
+        <s:HorizontalLayout paddingLeft="10"/>
+    </s:layout>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.j_nid.utils.Responder;
+			import com.j_nid.utils.ServiceUtils;
+			
+			import mx.events.ColorPickerEvent;
+			
+			private function changeHandler(e:ColorPickerEvent):void {
+				data.color = e.color;
+				var responder:com.j_nid.utils.Responder =
+					new com.j_nid.utils.Responder(resultHandler);
+				ServiceUtils.send("/producttypes/" + data.id + "/",
+					"PUT", responder, XML(data));
+			}
+			
+			private function resultHandler(data:Object):void {
+				
+			}
+		]]>
+	</fx:Script>
+	
+	<mx:ColorPicker selectedColor="{data.color}" change="changeHandler(event)"/>
+</s:MXDataGridItemRenderer>

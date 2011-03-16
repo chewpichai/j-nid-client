@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:DataRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                xmlns:s="library://ns.adobe.com/flex/spark"
+                xmlns:mx="library://ns.adobe.com/flex/mx">
+    
+    <s:layout>
+        <s:HorizontalLayout paddingLeft="10"/>
+    </s:layout>
+
+	<fx:Script>
+		<![CDATA[
+            import mx.core.FlexGlobals;
+			
+			private function changeHandler(e:Event):void {
+				var products:XML = JNid(FlexGlobals.topLevelApplication).productsToUpdate;
+				var product:XML = getProduct();
+				if (product) {
+					product.is_sale = int(checkBox.selected);
+				} else {
+					data.is_sale = int(checkBox.selected);
+					products.appendChild(data);
+				}
+			}
+			
+			private function getProduct():XML {
+				var products:XML = JNid(FlexGlobals.topLevelApplication).productsToUpdate;
+                for each (var product:XML in products.children()) {
+                    if (product.id == data.id)
+                       return product;
+                }
+                return null;
+			}
+		]]>
+	</fx:Script>
+	
+    <s:CheckBox id="checkBox" selected="{Boolean(int(data.is_sale))}"
+                change="changeHandler(event)"/>
+    <s:Label text="{data.name}" color="{data.color}" textAlign="left"
+             width="100%"/>
+</s:DataRenderer>

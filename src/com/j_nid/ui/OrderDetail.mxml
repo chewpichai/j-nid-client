@@ -1,0 +1,320 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Panel xmlns:fx="http://ns.adobe.com/mxml/2009"
+         xmlns:s="library://ns.adobe.com/flex/spark"
+         xmlns:mx="library://ns.adobe.com/flex/mx"
+         title="รายการขาย"
+         creationComplete="creationCompleteHandler(event)">
+    
+    <s:layout>
+        <s:VerticalLayout paddingLeft="5" paddingRight="5" paddingTop="5"/>
+    </s:layout>
+    
+    <fx:Script>
+        <![CDATA[
+            import com.j_nid.ui.popups.OrderProcessForm;
+            import com.j_nid.ui.popups.PersonForm;
+            import com.j_nid.ui.popups.PersonSelectForm;
+            import com.j_nid.utils.ServiceUtils;
+            import com.j_nid.utils.Utils;
+            
+            import mx.collections.ArrayCollection;
+            import mx.collections.XMLListCollection;
+            import mx.core.UIComponent;
+            import mx.events.CollectionEvent;
+            import mx.events.DragEvent;
+            import mx.events.FlexEvent;
+            import mx.managers.DragManager;
+            import mx.rpc.events.ResultEvent;
+            
+            [Bindable]
+            private var orderItems:XMLListCollection;
+            private var nonDepositBaskets:XMLListCollection;
+            private var errMsg:String;
+            private var order:XML;
+            
+            private function creationCompleteHandler(e:FlexEvent):void
+            {
+                orderItems = new XMLListCollection();
+                orderItems.addEventListener(CollectionEvent.COLLECTION_CHANGE,
+                    orderItemsChange);
+                nonDepositBaskets = new XMLListCollection();
+                loadCustomers(customerResultHandler);
+            }
+            
+            private function loadCustomers(resultHandler:Function):void
+            {
+                var responder:com.j_nid.utils.Responder =
+                    new com.j_nid.utils.Responder(resultHandler);
+                var attrs:String = "attrs=id,name,outstanding_total";
+                var filters:String = "filters=is_customer=1";
+                ServiceUtils.send("/people/?" + attrs + "&" + filters,
+                    "GET", responder);
+            }
+            
+            private function customerResultHandler(data:Object):void
+            {
+                var resultEvent:ResultEvent = ResultEvent(data);
+                customerField.dataProvider = 
+                    new XMLListCollection(resultEvent.result.children());
+                customerField.selectedIndex = new Date().hours;
+            }
+            
+            private function orderItemsChange(e:CollectionEvent):void
+            {
+                totalQunatityLbl.text = "รวม " + 
+                    Utils.sum(e.currentTarget, "quantity") + " ชิ้น";
+                totalLbl.text = "รวมทั้งสิ้น " + 
+                    Utils.formatPrice(Utils.sum(e.currentTarget, "total"));
+            }
+            
+            private function dragEnterListener(e:DragEvent):void
+            {
+                var uiComponent:UIComponent = UIComponent(e.currentTarget);
+                var obj:XML = e.dragSource.dataForFormat("items")[0];
+                if (uiComponent == notationField && obj.name() != "basket")
+                    return;
+                DragManager.acceptDragDrop(uiComponent);
+            }
+            
+            private function dragDropListener(e:DragEvent):void
+            {
+                var obj:XML = e.dragSource.dataForFormat("items")[0];
+                addOrderItem(obj);
+            }
+            
+            public function addOrderItem(obj:XML):void
+            {
+                var orderItem:XML = <order_item/>;
+                orderItem.type = obj.name();
+                orderItem.name = obj.name;
+                orderItem.unit_per_quantity = Number(obj.unit);
+                orderItem.unit = obj.unit;
+                orderItem.price_per_unit = obj.price_per_unit;
+                orderItem.cost_per_unit = obj.cost_per_unit;
+                if (orderItem.type == "basket") {
+                    orderItem.id = int(obj.id);
+                    orderItem.quantity = 0;
+                } else {
+                    orderItem.product_id = int(obj.id);
+                    orderItem.quantity = 1;
+                }
+                orderItem.total = Number(orderItem.price_per_unit) * Number(orderItem.unit);
+                for each (var item:XML in orderItems) {
+                    if ((orderItem.type == "basket" && orderItem.id == item.id) ||
+                        (orderItem.type == "product" && orderItem.product_id == item.product_id)) {
+                        
+                        item.unit = Number(item.unit) + Number(orderItem.unit);
+                        if (item.type == "basket")
+                            item.quantity = 0;
+                        else
+                            item.quantity = int(item.quantity) + 1;
+                        item.total = Number(item.price_per_unit) * Number(item.unit);
+                        return;
+                    }
+                }
+                orderItems.addItem(orderItem);
+                orderItemList.verticalScrollPosition = 
+                    orderItemList.maxVerticalScrollPosition;
+            }
+            
+            private function clearHandler(e:FlexEvent):void
+            {
+                orderItems.removeAll();
+            }
+            
+            private function removeHandler(e:FlexEvent):void
+            {
+                var item:XML = XML(orderItemList.selectedItem);
+                if (item) {
+                    var i:int = orderItems.getItemIndex(item);
+                    orderItems.removeItemAt(i);
+                }
+            }
+            
+            private function processHandler(e:FlexEvent):void
+            {
+                if (isValid())
+                {
+                    order = <order/>;
+                    order.person_id = int(customerField.selectedItem.id);
+                    order.person_name = String(customerField.selectedItem.name);
+                    order.person_outstanding = Number(customerField.selectedItem.outstanding_total);
+                    order.notation = notationField.text;
+                    order.order_items = <order_items/>;
+                    order.order_items.appendChild(orderItems.source);
+                    order.non_deposit_baskets = <non_deposit_baskets/>;
+                    order.non_deposit_baskets.appendChild(nonDepositBaskets.source);
+                    var form:OrderProcessForm =
+                        OrderProcessForm(Utils.showPopUp(OrderProcessForm));
+                    if (int(order.person_id) <= 24) {
+                        form.paidField.value = Utils.sum(orderItems, "total");
+                        form.paidField.enabled = false;
+                    }
+                    form.order = order.copy();
+                }
+                else
+                {
+                    Utils.showMessage(errMsg, "พบข้อผิดพลาด");
+                }
+            }
+            
+            private function isValid():Boolean
+            {
+                errMsg = "";
+                if (orderItemList.dataProvider.length == 0)
+                    errMsg += "กรุณาใส่สินค้าอย่างน้อย 1 ชิ้น\n";
+                return errMsg.length == 0;
+            }
+            
+            private function customerFieldDoubleClick(e:MouseEvent):void
+            {
+                var form:PersonSelectForm =
+                    PersonSelectForm(Utils.showPopUp(PersonSelectForm));
+                form.people = XMLListCollection(customerField.dataProvider);
+                form.addEventListener(Event.REMOVED_FROM_STAGE,
+                    personSelectFormCloseHandler);
+            }
+            
+            private function personSelectFormCloseHandler(e:Event):void
+            {
+                var form:PersonSelectForm = PersonSelectForm(e.currentTarget);
+                form.removeEventListener(Event.REMOVED_FROM_STAGE,
+                    personSelectFormCloseHandler);
+                if (form.selectedPerson)
+                    customerField.selectedItem = form.selectedPerson;
+            }
+            
+            private function addCustomerHandler(e:FlexEvent):void
+            {
+                var form:PersonForm = PersonForm(Utils.showPopUp(PersonForm));
+                form.person = <person/>;
+                form.person.is_customer = 1;
+                form.addEventListener(Event.REMOVED_FROM_STAGE,
+                    personAddFormCloseHandler);
+            }
+            
+            private function personAddFormCloseHandler(e:Event):void
+            {
+                var form:PersonForm = PersonForm(e.currentTarget);
+                form.removeEventListener(Event.REMOVED_FROM_STAGE,
+                    personAddFormCloseHandler);
+                loadCustomers(function(data:Object):void {
+                    var resultEvent:ResultEvent = ResultEvent(data);
+                    customerField.dataProvider = 
+                    new XMLListCollection(resultEvent.result.children());
+                    var customer:XML = getCustomer(form.person);
+                    if (customer)
+                        customerField.selectedItem = customer;
+                    else
+                        customerField.selectedIndex = new Date().hours;
+                });
+            }
+            
+            private function getCustomer(person:XML):XML
+            {
+                for each (var customer:XML in customerField.dataProvider)
+                if (int(person.id) == int(customer.id))
+                    return customer;
+                return null;
+            }
+            
+            private function getOutstanding(person:XML):String
+            {
+                var outstanding:Number = Number(person.outstanding_total);
+                if (outstanding < 0)
+                    outstandingLbl.setStyle("color", 0xff0000);
+                else
+                    outstandingLbl.setStyle("color", 0x0000ff);
+                return "ยอดค้าง: " + Utils.formatPrice(Math.abs(outstanding));
+            }
+            
+            private function notationDragDropHandler(e:DragEvent):void
+            {
+                var obj:XML = e.dragSource.dataForFormat("items")[0].copy();
+                obj.unit = 1;
+                var notation:String = notationField.text;
+                for each (var basket:XML in nonDepositBaskets) {
+                    if (basket.id == obj.id) {
+                        basket.unit = int(basket.unit) + int(obj.unit);
+                        var pattern:RegExp = new RegExp("(" +
+                            Utils.escapeRegexChars(obj.name) +
+                            "\\s+x\\s+)\\d+");
+                        var replace:String = "$1" + basket.unit;
+                        notationField.text = notation.replace(pattern, replace);
+                        return;
+                    }
+                }
+                nonDepositBaskets.addItem(obj);
+                if (notation.length > 0)
+                    notation += "  ";
+                notation += obj.name + " x 1";
+                notationField.text = notation;
+                notationField.scrollToRange(notation.length);
+            }
+        ]]>
+    </fx:Script>
+    
+    <s:HGroup verticalAlign="middle" width="100%">
+        <s:Label text="ชื่อลูกค้า:"/>
+        <s:ComboBox id="customerField" labelField="name"
+                    doubleClickEnabled="true"
+                    doubleClick="customerFieldDoubleClick(event)"
+                    width="250"/>
+        <s:Button id="listCustomerBtn" label="เลือก"
+                  click="customerFieldDoubleClick(event)"/>
+        <s:Button id="addCustomerBtn" label="+"
+                  buttonDown="addCustomerHandler(event)"/>
+        <s:Rect width="100%"/>
+        <s:Label id="outstandingLbl"
+                 text="{getOutstanding(XML(customerField.selectedItem))}"/>
+    </s:HGroup>
+    
+    <mx:DataGrid id="orderItemList"
+                 dataProvider="{orderItems}" dragDrop="dragDropListener(event)"
+                 dragEnter="dragEnterListener(event)" wordWrap="true"
+                 itemEditEnd="event.preventDefault()" variableRowHeight="true"
+                 styleName="cartItemList" headerStyleName="centerHeader"
+                 width="100%" height="100%">
+        <mx:columns>
+            <mx:DataGridColumn headerText="จำนวน" dataField="quantity"
+                               itemRenderer="com.j_nid.ui.renderers.OrderItemEditor"
+                               width="70"/>
+            <mx:DataGridColumn headerText="ชื่อ" dataField="name"
+                               itemRenderer="com.j_nid.ui.renderers.ShowCostRederer"
+                               editable="false" width="150"/>
+            <mx:DataGridColumn headerText="หน่วย" dataField="unit"
+                               itemRenderer="com.j_nid.ui.renderers.OrderItemEditor"
+                               width="70"/>
+            <mx:DataGridColumn headerText="ราคาต่อหน่วย" dataField="price_per_unit" 
+                               itemRenderer="com.j_nid.ui.renderers.OrderItemEditor"
+                               width="85"/>
+            <mx:DataGridColumn headerText="รวม" dataField="total"
+                               labelFunction="Utils.priceLabelFunction"
+                               textAlign="right" editable="false" width="85"/>
+        </mx:columns>
+    </mx:DataGrid>
+    
+    <s:HGroup width="100%">
+        <s:Label id="totalQunatityLbl" text="รวม 0 ชิ้น"
+                 width="100%" height="30"/>
+        <s:Label id="totalLbl" text="รวมทั้งสิ้น 0.00" textAlign="right"
+                 paddingRight="10"
+                 width="100%" height="30"/>
+    </s:HGroup>
+    
+    <s:controlBarLayout>
+        <s:HorizontalLayout verticalAlign="middle" paddingBottom="5"
+                            paddingTop="5" paddingLeft="5" paddingRight="5"/>
+    </s:controlBarLayout>
+    
+    <s:controlBarContent>
+        <s:TextArea id="notationField"
+                    dragDrop="notationDragDropHandler(event)"
+                    dragEnter="dragEnterListener(event)"
+                    width="100%" height="100"/>
+        <s:Button label="ล้างข้อมูล" buttonDown="clearHandler(event)"/>
+        <s:Button label="เอาออก" buttonDown="removeHandler(event)"
+                  enabled="{orderItemList.selectedItem != null}"/>
+        <s:Button label="ดำเนินการ" buttonDown="processHandler(event)"/>
+    </s:controlBarContent>
+</s:Panel>

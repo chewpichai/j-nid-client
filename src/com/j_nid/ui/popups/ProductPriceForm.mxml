@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:TitleWindow	xmlns:fx="http://ns.adobe.com/mxml/2009"
+                xmlns:s="library://ns.adobe.com/flex/spark"
+                xmlns:mx="library://ns.adobe.com/flex/mx"
+                title="{product.name}" borderColor="{product.color}"
+                alpha="0.75" close="close()">
+    <s:layout>
+        <s:VerticalLayout paddingTop="5" paddingRight="5"
+                          paddingBottom="5" paddingLeft="5"/>
+    </s:layout>
+    
+    <fx:Script>
+        <![CDATA[
+            import com.j_nid.utils.ServiceUtils;
+            import com.j_nid.utils.Responder;
+            import mx.rpc.events.FaultEvent;
+            import com.j_nid.utils.Utils;
+            
+            [Bindable]
+            public var product:XML;
+            
+            private function saveBtnClickHandler(e:MouseEvent):void {
+                var responder:com.j_nid.utils.Responder =
+                    new com.j_nid.utils.Responder(resultHandler);
+                var xml:XML = <product/>;
+                xml.cost_per_unit = costField.value;
+                xml.price_per_unit = priceField.value;
+                ServiceUtils.send("/products/" + product.id + "/", "PUT",
+                    responder, xml);
+            }
+            
+            private function cancelBtnClickHandler(e:MouseEvent):void {
+                close();
+            }
+            
+            private function resultHandler(data:Object):void {
+                Utils.hidePopUp(this);
+                Utils.showMainPage();
+            }
+            
+            private function close():void {
+                Utils.hidePopUp(this);
+            }
+        ]]>
+    </fx:Script>
+    
+    <mx:Form width="100%">
+        <mx:FormItem label="ราคาทุนต่อหน่วย:"	width="100%">
+            <s:NumericStepper id="costField" value="{product.cost_per_unit}" 
+                              textAlign="right" stepSize="0.5" maximum="10000"/>
+        </mx:FormItem>
+        <mx:FormItem label="ราคาต่อหน่วย:" width="100%">
+            <s:NumericStepper id="priceField" value="{product.price_per_unit}" 
+                              textAlign="right" stepSize="0.5" maximum="10000"/>
+        </mx:FormItem>
+    </mx:Form>
+    
+    <s:controlBarLayout>
+        <s:HorizontalLayout horizontalAlign="center" paddingTop="5"
+                            paddingBottom="5"/>
+    </s:controlBarLayout>
+    
+    <s:controlBarContent>
+        <s:Button label="บันทึก" click="saveBtnClickHandler(event)"/>
+        <s:Button label="ยกเลิก" click="cancelBtnClickHandler(event)"/>
+    </s:controlBarContent>
+</s:TitleWindow>

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                xmlns:s="library://ns.adobe.com/flex/spark"
+                xmlns:mx="library://ns.adobe.com/flex/mx"
+                height="30">
+    <s:layout>
+        <s:HorizontalLayout verticalAlign="middle"
+                            paddingLeft="5" paddingRight="5"/>
+    </s:layout>
+    
+    <fx:Script>
+        <![CDATA[
+            import com.j_nid.events.DiffEvent;
+            
+            override public function set data(value:Object):void {
+                if (value) {
+                    super.data = value;
+                    if (quantityField) {
+                        quantityField.value = value.quantity;
+                        quantityField.maximum = value.maximum;
+                    }
+                    if (nameLbl) {
+                        nameLbl.text = value.name;
+                        if (Boolean(int(data.is_deposit)))
+                            nameLbl.setStyle("color", 0x0000ff);
+                        else
+                            nameLbl.setStyle("color", 0xff0000);
+                    }
+                }
+            }
+            
+            protected function changeHandler(e:Event):void {
+                var diff:int = int(quantityField.value) - int(data.quantity);
+                diff *= data.price_per_unit;
+                data.quantity = quantityField.value;
+                if (Boolean(int(data.is_deposit))) {
+                    var diffEvent:DiffEvent = new DiffEvent(diff);
+                    dispatchEvent(diffEvent);
+                }
+            }
+            
+        ]]>
+    </fx:Script>
+    
+    <s:Label id="nameLbl" width="100%"/>
+    
+    <s:NumericStepper id="quantityField" stepSize="1" minimum="1"
+                      change="changeHandler(event)" width="60"/>
+</s:ItemRenderer>

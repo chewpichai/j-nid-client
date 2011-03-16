@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:MXDataGridItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                          xmlns:s="library://ns.adobe.com/flex/spark"
+                          xmlns:mx="library://ns.adobe.com/flex/mx">
+    <s:layout>
+        <s:HorizontalLayout paddingLeft="10"/>
+    </s:layout>
+    
+    <fx:Script>
+        <![CDATA[
+            import com.j_nid.utils.ServiceUtils;
+            
+            private function changeListener(e:Event):void {
+                data.is_sale = int(checkBox.selected);
+                var responder:com.j_nid.utils.Responder =
+                    new com.j_nid.utils.Responder(resultHandler);
+                ServiceUtils.send("/products/" + data.id + "/",
+                    "PUT", responder, XML(data));
+            }
+            
+            private function resultHandler(data:Object):void {
+                
+            }
+        ]]>
+    </fx:Script>
+    
+    <s:CheckBox id="checkBox" selected="{Boolean(int(data.is_sale))}"
+                change="changeListener(event)"/>
+</s:MXDataGridItemRenderer>

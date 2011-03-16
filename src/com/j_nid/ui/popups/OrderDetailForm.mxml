@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+               xmlns:s="library://ns.adobe.com/flex/spark"
+               xmlns:mx="library://ns.adobe.com/flex/mx"
+               title="รายละเอียด" borderAlpha="0.8"
+               close="close()"
+               width="800" height="600">
+    <s:layout>
+        <s:VerticalLayout paddingBottom="10" paddingTop="10"/>
+    </s:layout>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.j_nid.utils.PrintUtils;
+			import com.j_nid.utils.Responder;
+			import com.j_nid.utils.ServiceUtils;
+			import com.j_nid.utils.Utils;
+			
+			import mx.collections.XMLListCollection;
+			import mx.events.FlexEvent;
+			
+			private var _order:XML;
+			
+			[Bindable]
+			public function set order(obj:XML):void {
+				_order = obj;
+				loadOrderItems();
+			}
+			
+			public function get order():XML {
+				return _order;
+			}
+			
+			private function loadOrderItems():void {
+				var responder:com.j_nid.utils.Responder =
+					new com.j_nid.utils.Responder(orderItemResultHandler);
+				var attrs:String = "attrs=id,quantity,name,unit,price_per_unit,total,is_deleted,unit_per_quantity";
+				var filters:String = "filters=order_id=" + order.id;
+				ServiceUtils.send("/orderitems/?" + attrs + "&" + filters,
+					"GET", responder);
+			}
+			
+			private function orderItemResultHandler(data:Object):void {
+				order.order_items = <order_items/>;
+				for each (var item:XML in data.result.children())
+					order.order_items.appendChild(item);
+				loadBasketsOrders();
+			}
+			
+			private function loadBasketsOrders():void {
+				var responder:com.j_nid.utils.Responder =
+					new com.j_nid.utils.Responder(basketOrderResultHandler);
+				var attrs:String = "attrs=id,name,quantity,price_per_unit,is_deposit";
+				ServiceUtils.send("/orders/" + order.id + "/baskets/?" + attrs,
+					"GET", responder);
+			}
+			
+			private function basketOrderResultHandler(data:Object):void {
+				for each (var basket:XML in data.result.children()) {
+    				if (Boolean(int(basket.is_deposit))) {
+    					var addedBasket:XML = getAddedBasket(basket);
+    					if (addedBasket) {
+    						addedBasket.unit = int(addedBasket.unit) + 1;
+    						addedBasket.total = Number(addedBasket.price_per_unit) * int(addedBasket.unit);
+    					} else {
+    						basket.unit = 1;
+    						basket.total = Number(basket.price_per_unit);
+    						order.order_items.appendChild(basket);
+    					}
+    				}
+                }
+			}
+			
+			private function getAddedBasket(basket:XML):XML {
+				for each (var item:XML in order.order_items.children())
+					if (item.name == basket.name)
+						return item;
+				return null;
+			}
+			
+			private function formatDate(val:String):String {
+				var date:Date = new Date(Date.parse(val));
+				return Utils.formatDate(date, "DD-MM-YYYY JJ:NN");
+			}
+			
+			private function close():void {
+				Utils.hidePopUp(this);
+			}
+			
+			private function closeBtnDownHandler(e:FlexEvent):void {
+				close();
+			}
+			
+			private function printBtnDownHandler(e:FlexEvent):void {
+				PrintUtils.printOrder(order);
+			}
+		]]>
+	</fx:Script>
+		
+	<s:HGroup verticalAlign="middle" paddingRight="5" width="100%">
+		<mx:FormItem label="ชื่อลูกค้า:">
+			<s:Label text="{order.person_name}"/>
+		</mx:FormItem>
+		<s:Rect width="100%"/>
+		<mx:FormItem label="วันที่:">
+			<s:Label text="{formatDate(order.created)}"/>
+		</mx:FormItem>
+	</s:HGroup>
+	
+    <mx:DataGrid id="orderItemList" wordWrap="true"
+                 dataProvider="{new XMLListCollection(order.order_items.children())}"
+                 variableRowHeight="true" headerStyleName="centerHeader"
+                 borderStyle="none" width="100%" height="100%">
+        <mx:columns>
+            <mx:DataGridColumn headerText="จำนวน" dataField="quantity"
+                               labelFunction="Utils.unitLabelFunction"
+                               width="70"/>
+            <mx:DataGridColumn headerText="ชื่อ" dataField="name"/>
+            <mx:DataGridColumn headerText="หน่วย"	dataField="unit"
+                               labelFunction="Utils.unitLabelFunction"
+                               width="70"/>
+            <mx:DataGridColumn headerText="ราคาต่อหน่วย"
+                               dataField="price_per_unit"
+                               labelFunction="Utils.priceLabelFunction"
+                               width="90"/>
+            <mx:DataGridColumn headerText="รวม" dataField="total"
+                               labelFunction="Utils.priceLabelFunction"
+                               width="90"/>
+        </mx:columns>
+	</mx:DataGrid>
+	
+	<mx:FormItem label="หมายเหตุ:" width="100%">
+		<s:Label text="{order.notation}" width="100%"/>
+	</mx:FormItem>
+	
+    <s:HGroup verticalAlign="middle" horizontalAlign="right" paddingRight="5"
+              width="100%">
+        <s:Label text="จำนวนรวม {Utils.sum(order.order_items.children(), 'quantity')} รวมทั้งสิ้น {Utils.formatPrice(Utils.sum(order.order_items.children(), 'total'))} บาท"
+                 textAlign="right"/>
+    </s:HGroup>
+	
+    <s:controlBarLayout>
+        <s:HorizontalLayout horizontalAlign="right" paddingRight="5"
+                            paddingBottom="5" paddingTop="5"/>
+    </s:controlBarLayout>
+    
+	<s:controlBarContent>
+		<s:Button label="พิมพ์" buttonDown="printBtnDownHandler(event)"/>
+		<s:Button label="ปิด" buttonDown="closeBtnDownHandler(event)"/>
+	</s:controlBarContent>
+</s:TitleWindow>

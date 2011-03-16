@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:VGroup xmlns:fx="http://ns.adobe.com/mxml/2009"
+          xmlns:s="library://ns.adobe.com/flex/spark"
+          xmlns:mx="library://ns.adobe.com/flex/mx"
+          xmlns:jn="com.j_nid.components.*"
+          width="100%" height="100%">
+    
+    <fx:Script>
+        <![CDATA[
+            import com.j_nid.ui.popups.OrderDetailForm;
+            import com.j_nid.ui.popups.PaymentDetailForm;
+            import com.j_nid.ui.windows.ProductStats;
+            import com.j_nid.utils.PrintUtils;
+            import com.j_nid.utils.ServiceUtils;
+            import com.j_nid.utils.Utils;
+            
+            import mx.collections.ArrayCollection;
+            import mx.collections.ListCollectionView;
+            import mx.collections.XMLListCollection;
+            import mx.utils.URLUtil;
+            
+            import spark.events.IndexChangeEvent;
+            
+            private function formatDateForTransaction(item:Object,
+                                                      column:DataGridColumn):String
+            {
+                
+                if (String(item[column.dataField]).length > 0)
+                {
+                    var created:Date = new Date(Date.parse(item[column.dataField]));
+                    return Utils.formatDate(created, "DD MMM YYYY JJ:NN");
+                }
+                return "";
+            }
+            
+            private function priceLabelFunction(item:Object,
+                                                column:DataGridColumn):String
+            {
+                
+                if (Number(item[column.dataField]) != 0)
+                    return Utils.formatPrice(item[column.dataField]);
+                return "";
+            }
+            
+            private function transactionListDoubleClick(e:MouseEvent):void
+            {
+                var dg:DataGrid = DataGrid(e.currentTarget);
+                showTransactionDetail(XML(dg.selectedItem));
+            }
+            
+            private function showTransactionDetail(transaction:XML):void
+            {
+                if (transaction.type == "order")
+                    showOrderDetailForm(transaction);
+                else
+                    showPaymentDetailForm(transaction);
+            }
+            
+            private function showOrderDetailForm(transaction:XML):void {
+                var responder:com.j_nid.utils.Responder =
+                    new com.j_nid.utils.Responder(orderResultHandler);
+                var attrs:String = "attrs=id,person_name,notation,created";
+                ServiceUtils.send("/orders/" + transaction.id + "/?" + attrs,
+                    "GET", responder);
+            }
+            
+            private function orderResultHandler(data:Object):void {
+                var form:OrderDetailForm =
+                    OrderDetailForm(Utils.showPopUp(OrderDetailForm));
+                form.order = data.result;
+            }
+            
+            private function showPaymentDetailForm(transaction:XML):void {
+                var responder:com.j_nid.utils.Responder =
+                    new com.j_nid.utils.Responder(paymentResultHandler);
+                var attrs:String = "attrs=id,amount,person_name,notation,created";
+                ServiceUtils.send("/payments/" + transaction.id + "/?" + attrs,
+                    "GET", responder);
+            }
+            
+            private function paymentResultHandler(data:Object):void {
+                var form:PaymentDetailForm =
+                    PaymentDetailForm(Utils.showPopUp(PaymentDetailForm));
+                form.payment = data.result;
+            }
+            
+            private function submitBtnClick(e:MouseEvent):void {
+                loadTransactions();
+            }
+            
+            private function loadTransactions():void
+            {
+                var responder:com.j_nid.utils.Responder =
+                    new com.j_nid.utils.Responder(transactionResultHandler);
+                var statResponder:com.j_nid.utils.Responder =
+                    new com.j_nid.utils.Responder(statResultHandler);
+                var customerID:int;
+                var startDate:Date;
+                var endDate:Date;
+                var filters:String;
+                startDate = startDateField.selectedDate;
+                endDate = new Date(endDateField.selectedDate.time);
+                endDate.date += 1;
+                filters = "filters=date_range=" + Utils.formatDate(startDate, "YYYYMMDD") +
+                    ":" + Utils.formatDate(endDate, "YYYYMMDD");
+                if (customerField.selectedItem)
+                    customerID = customerField.selectedItem.id;
+                if (customerID > 0)
+                    filters += ",person_id=" + customerID;
+                ServiceUtils.send("/transactions/?" + filters,
+                    "GET", responder);
+                ServiceUtils.send("/products/stats/?" + filters,
+                    "GET", statResponder);
+            }
+            
+            private function transactionResultHandler(data:Object):void
+            {
+                transactionList.dataProvider = data.result.children();
+                quantitySum.text = Utils.formatPrice(Utils.sum(transactionList.dataProvider, "quantity"));
+                orderSum.text = Utils.formatPrice(Utils.sum(transactionList.dataProvider, "outstanding"));
+                paymentSum.text = Utils.formatPrice(Utils.sum(transactionList.dataProvider, "paid"));
+            }
+            
+            private function statResultHandler(data:Object):void
+            {
+                productStatList.dataProvider = data.result.children();
+            }
+            
+            private function onPrintBtnClick(e:MouseEvent):void
+            {
+                var transactions:Array = [];
+                for each (var transaction:* in transactionList.dataProvider)
+                    transactions.push(transaction);
+                var customerName:String = customerField.selectedItem ? customerField.selectedItem.name : "";
+                PrintUtils.printReport(transactions,
+                    customerName, startDateField.selectedDate,
+                    endDateField.selectedDate, quantitySum.text,
+                    orderSum.text, paymentSum.text);
+            }
+
+            private function productStatListDoubleClickHandler(e:MouseEvent):void
+            {
+                var id:int = productStatList.selectedItem.id;
+                var responder:com.j_nid.utils.Responder =
+                    new com.j_nid.utils.Responder(productStatResultHandler);
+                var startDate:Date = startDateField.selectedDate;
+                var endDate:Date = new Date(endDateField.selectedDate.time);
+                endDate.date += 1;
+                var dateRange:String = Utils.formatDate(startDate, "YYYYMMDD") +
+                        ":" + Utils.formatDate(endDate, "YYYYMMDD");
+                var data:Object = {date_range: dateRange};
+                if (customerField.selectedItem)
+                    data['person_id'] = int(customerField.selectedItem.id);
+                ServiceUtils.send("/products/" + id + "/stats/?" + URLUtil.objectToString(data),
+                    "GET", responder);
+            }
+            
+            private function productStatResultHandler(data:Object):void
+            {
+                var window:ProductStats = new ProductStats();
+                var startDate:Date = startDateField.selectedDate;
+                var endDate:Date = endDateField.selectedDate;
+                window.title = data.result.@name + "  " + 
+                    Utils.formatDate(startDate, "DD MMM YYYY") + " ถึง " + 
+                    Utils.formatDate(endDate, "DD MMM YYYY");
+                window.stats = new XMLListCollection(data.result.children());
+                window.open();
+            }
+        ]]>
+    </fx:Script>
+    
+    <s:VGroup width="100%" height="100%">
+        <s:HGroup verticalAlign="middle" width="100%">
+            <s:Label text="ชื่อลูกค้า:"/>
+            <jn:CustomerComboBox id="customerField"/>
+            <s:Label text="เริ่มจากวันที่:"/>
+            <mx:DateField id="startDateField"
+                          selectedDate="{new Date()}" formatString="DD-MM-YYYY"/>
+            <s:Label text="ถึงวันที่:"/>
+            <mx:DateField id="endDateField"
+                          selectedDate="{new Date()}" formatString="DD-MM-YYYY"/>
+            <s:Button label="ตกลง" click="submitBtnClick(event)"/>
+        </s:HGroup>
+        <s:HGroup width="100%" height="100%">
+            <s:Panel title="จำนวนสินค้าที่ขาย" width="300" height="100%">
+                <mx:DataGrid id="productStatList" borderStyle="none"
+                             wordWrap="true" variableRowHeight="true"
+                             doubleClickEnabled="true" doubleClick="productStatListDoubleClickHandler(event)"
+                             width="100%" height="100%">
+                    <mx:columns>
+                        <mx:DataGridColumn headerText="ชื่อ" dataField="name"/>
+                        <mx:DataGridColumn headerText="หน่วย" dataField="unit"
+                                           labelFunction="priceLabelFunction"
+                                           width="60"/>
+                        <mx:DataGridColumn headerText="จำนวน" dataField="quantity"
+                                           labelFunction="priceLabelFunction"
+                                           width="60"/>
+                    </mx:columns>
+                </mx:DataGrid>
+            </s:Panel>
+            <mx:DataGrid id="transactionList" headerStyleName="centerHeader"
+                         doubleClickEnabled="true"
+                         doubleClick="transactionListDoubleClick(event)"
+                         variableRowHeight="true" wordWrap="true"
+                         rowHeight="30" width="100%" height="100%">
+                <mx:columns>
+                    <mx:DataGridColumn headerText="วันที่" dataField="created"
+                                       labelFunction="formatDateForTransaction"
+                                       width="150"/>
+                    <mx:DataGridColumn headerText="ชื่อ" dataField="person_name"
+                                       textAlign="right" paddingRight="5"/>
+                    <mx:DataGridColumn headerText="จำนวน" dataField="quantity"
+                                       textAlign="center" paddingRight="5"
+                                       width="70"/>
+                    <mx:DataGridColumn headerText="รายการขาย" dataField="outstanding"
+                                       labelFunction="priceLabelFunction"
+                                       textAlign="right" paddingRight="5"
+                                       width="90"/>
+                    <mx:DataGridColumn headerText="จ่ายเงิน" dataField="paid"
+                                       labelFunction="priceLabelFunction"
+                                       textAlign="right" paddingRight="5"
+                                       width="90"/>
+                    <mx:DataGridColumn headerText="หมายเหตุ" dataField="note"/>
+                </mx:columns>
+            </mx:DataGrid>
+        </s:HGroup>
+    </s:VGroup>
+    
+    <s:HGroup verticalAlign="middle" horizontalAlign="right" width="100%">
+        <s:Label text="จำนวนสินค้ารวม:"/>
+        <s:Label id="quantitySum" color="#00ff00"/>
+        <s:Label text="ชิ้น"/>
+        <s:Rect width="20"/>
+        <s:Label text="ยอดรายการขายรวม:"/>
+        <s:Label id="orderSum" color="#ff0000"/>
+        <s:Label text="บาท"/>
+        <s:Rect width="20"/>
+        <s:Label text="ยอดจ่ายเงินรวม:"/>
+        <s:Label id="paymentSum" color="#0000ff"/>
+        <s:Label text="บาท"/>
+        <s:Rect width="40"/>
+        <s:Button label="พิมพ์" click="onPrintBtnClick(event)"
+                  enabled="{transactionList.dataProvider}"/>
+    </s:HGroup>
+</s:VGroup>

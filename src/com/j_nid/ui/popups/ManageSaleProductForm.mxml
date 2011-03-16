@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+               xmlns:s="library://ns.adobe.com/flex/spark"
+               xmlns:mx="library://ns.adobe.com/flex/mx"
+               title="กำหนดรายการสินค้าที่มีขาย"
+               creationComplete="creationCompleteHandler(event)"
+               close="close()"
+               width="800" height="600">
+    
+    <s:layout>
+        <s:VerticalLayout horizontalAlign="center" gap="10"
+                          paddingBottom="5" paddingTop="5"/>
+    </s:layout>
+    
+    <fx:Script>
+        <![CDATA[
+            import com.j_nid.utils.Responder;
+            import com.j_nid.utils.ServiceUtils;
+            import com.j_nid.utils.Utils;
+            
+            import mx.collections.XMLListCollection;
+            import mx.controls.Alert;
+            import mx.core.Application;
+            import mx.core.FlexGlobals;
+            import mx.events.CloseEvent;
+            import mx.events.FlexEvent;
+            import mx.events.ListEvent;
+            import mx.rpc.events.ResultEvent;
+            
+            import spark.events.IndexChangeEvent;
+            
+            private function creationCompleteHandler(e:FlexEvent):void {
+                loadProductTypes();
+                loadProducts();
+            }
+            
+            private function loadProductTypes():void {
+                var responder:com.j_nid.utils.Responder =
+                    new com.j_nid.utils.Responder(productTypeResultHandler);
+                ServiceUtils.send("/producttypes/", "GET", responder);
+            }
+            
+            private function productTypeResultHandler(data:Object):void {
+                var resultEvent:ResultEvent = ResultEvent(data);
+                productTypeList.dataProvider =
+                    new XMLListCollection(resultEvent.result.children());
+                productTypeList.dataProvider.addItemAt(Utils.getAllProductType(), 0);
+                productTypeList.selectedIndex = 0;
+            }
+            
+            private function loadProducts(typeID:int=0):void {
+                var responder:com.j_nid.utils.Responder =
+                    new com.j_nid.utils.Responder(productResultHandler);
+                var attrs:String = "attrs=id,name,color,is_sale";
+                if (typeID == 0) {
+                    ServiceUtils.send("/products/?" + attrs, "GET", responder);
+                } else {
+                    var filters:String = "filters=type_id=" + typeID;
+                    ServiceUtils.send("/products/?" + attrs + "&" + filters,
+                        "GET", responder);
+                }
+            }
+            
+            private function productResultHandler(data:Object):void {
+                var resultEvent:ResultEvent = ResultEvent(data);
+                productList.dataProvider =
+                    new XMLListCollection(resultEvent.result.children());
+            }
+            
+            private function changeHandler(e:IndexChangeEvent):void {
+                loadProducts(int(productTypeList.selectedItem.id));
+            }
+            
+            private function cancelBtnClickHandler(e:MouseEvent):void {
+                close();
+            }
+            
+            private function close():void {
+                var productsToUpdate:XML = 
+                    JNid(FlexGlobals.topLevelApplication).productsToUpdate;
+                if (productsToUpdate.children().length() > 0) {
+                    Utils.showConfirm("พบการแก้ไขข้อมูลต่องการยกเลิกใช่หรือไม่",
+                        "ยืนยันการยกเลิกการแก้ไขข้อมูล", closeHandler);
+                } else {
+                    closeHandler(null);
+                }
+            }
+            
+            private function closeHandler(e:CloseEvent):void {
+                if (e && !(e.detail == Alert.OK))
+                    return;
+                var productsToUpdate:XML = 
+                    JNid(FlexGlobals.topLevelApplication).productsToUpdate;
+                productsToUpdate = <products/>;
+                Utils.hidePopUp(this);
+                Utils.showMainPage();
+            }
+            
+            private function saveBtnClickHandler(e:MouseEvent):void {
+                var responder:com.j_nid.utils.Responder =
+                    new com.j_nid.utils.Responder(saveProductsResultHandler);
+                var productsToUpdate:XML = 
+                    JNid(FlexGlobals.topLevelApplication).productsToUpdate;
+                ServiceUtils.send("/products/", "PUT", responder, productsToUpdate);
+            }
+            
+            private function saveProductsResultHandler(data:Object):void {
+                closeHandler(null);
+            }
+        ]]>
+    </fx:Script>
+    
+    <s:DropDownList id="productTypeList" labelField="name"
+                    change="changeHandler(event)">
+        <s:itemRenderer>
+            <fx:Component>
+                <s:ItemRenderer height="25">
+                    <s:Label text="{data.name}" color="{data.color}"
+                             verticalCenter="0"/>
+                </s:ItemRenderer>
+            </fx:Component>
+        </s:itemRenderer>
+    </s:DropDownList>
+    
+    <s:Scroller width="100%" height="100%">
+        <s:DataGroup id="productList"
+                     itemRenderer="com.j_nid.ui.renderers.SetSaleProductRenderer">
+            <s:layout>
+                <s:TileLayout useVirtualLayout="true"/>
+            </s:layout>
+        </s:DataGroup>
+    </s:Scroller>
+    
+    <s:HGroup horizontalAlign="center" gap="15" width="100%">
+        <s:Button label="บันทึก" click="saveBtnClickHandler(event)"
+                  width="100"/>
+        <s:Button label="ไม่บันทึก" click="cancelBtnClickHandler(event)"
+                  width="100"/>
+    </s:HGroup>
+</s:TitleWindow>

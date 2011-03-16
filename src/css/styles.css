@@ -1,0 +1,90 @@
+@namespace mx "library://ns.adobe.com/flex/mx";
+@namespace s "library://ns.adobe.com/flex/spark";
+
+@font-face {
+	src: url("../assets/TAHOMA.TTF");
+	font-family: Tahoma;
+}
+
+@font-face {
+	src: url("../assets/tahomabd.TTF");
+	font-family: Tahoma;
+	font-weight: bold;
+}
+
+s|WindowedApplication, s|Window {
+	font-family: Tahoma;
+   	font-size: 14;
+   	font-anti-alias-type: advanced;
+   	font-grid-fit-type: none;
+   	font-sharpness: -300;
+}
+
+s|WindowedApplication mx|ControlBar {
+    padding-bottom: 0;
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: 0;
+}
+
+mx|Alert {
+    button-style-name: alertButton;
+}
+
+.alertButton {
+    font-size: 12;
+}
+
+.centerHeader {
+	text-align: center;
+}
+
+.printDataGrid {
+	header-background-skin: Embed(source="../assets/printHeaderSkin.png");
+	header-separator-skin: Embed(source="../assets/printHeaderSkin.png");
+	header-style-name: printDataGridHeader;
+	border-style: none;
+	vertical-grid-lines: false;
+	horizontal-grid-lines: false;
+	font-size: 12;
+}
+
+.printDataGridHeader {
+	text-align: center;
+	vertical-grid-lines: false;
+	horizontal-grid-lines: false;
+}
+
+.reportDataGrid {
+    header-background-skin: Embed(source="../assets/blackDot.jpg");
+    header-separator-skin: Embed(source="../assets/printHeaderSkin.png");
+    header-horizontal-separator-skin: Embed(source="../assets/printHeaderSkin.png");
+    header-style-name: reportPrintDataGridHeader;
+}
+
+.reportPrintDataGridHeader {
+    text-align: center;
+    color: #ffffff;
+}
+
+.cartItemList {
+   	alternating-item-colors: #ffffff, #ffff99;
+}
+
+.copyright {
+	font-weight: normal;
+	font-size: 11;
+	text-align: center;
+}
+
+.squareBtn {
+	corner-radius: 0;
+}
+
+.formLabel {
+    text-align: right;
+}
+
+.personFormHeader {
+	font-size: 13;
+}

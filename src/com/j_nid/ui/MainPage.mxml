@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:VGroup xmlns:fx="http://ns.adobe.com/mxml/2009"
+          xmlns:s="library://ns.adobe.com/flex/spark"
+          xmlns:mx="library://ns.adobe.com/flex/mx"
+          xmlns:jn="com.j_nid.components.*"
+          creationComplete="creationCompleteHandler(event)"
+          width="100%" height="100%">
+    
+    <fx:Script>
+        <![CDATA[
+            import com.j_nid.ui.popups.ManageSaleProductForm;
+            import com.j_nid.ui.popups.ReturnBasketForm;
+            import com.j_nid.utils.Responder;
+            import com.j_nid.utils.ServiceUtils;
+            import com.j_nid.utils.Utils;
+            
+            import mx.collections.XMLListCollection;
+            import mx.events.FlexEvent;
+            import mx.events.ItemClickEvent;
+            import mx.rpc.events.ResultEvent;
+            
+            [Bindable]
+            public var subMenuList:Array = [
+                "กำหนดรายการสินค้า", "รายการคืนลัง", "แจ้งรายการ",
+                "ออกรายงาน"];
+            
+            private function creationCompleteHandler(e:FlexEvent):void {
+                var responder:com.j_nid.utils.Responder =
+                    new com.j_nid.utils.Responder(resultHandler);
+                var attrs:String = "attrs=id,name,color,cost_per_unit,price_per_unit";
+                var filters:String = "filters=is_sale=1";
+                ServiceUtils.send("/products/?" + attrs + "&" + filters,
+                    "GET", responder);
+            }
+            
+            private function resultHandler(data:Object):void {
+            	var resultEvent:ResultEvent = ResultEvent(data);
+            	productList.dataProvider =
+                    new XMLListCollection(resultEvent.result.children());
+            }
+            
+            private function subMenuClickHandler(e:ItemClickEvent):void {
+            	switch (e.index) {
+            		case 0:
+                        Utils.showPopUp(ManageSaleProductForm);
+                        break;
+					case 1:
+						Utils.showPopUp(ReturnBasketForm);
+						break;
+            	}
+            }
+        ]]>
+    </fx:Script>
+    
+    <!--<s:Scroller width="100%" height="100%">
+        <s:DataGroup id="productList"
+                     itemRenderer="com.j_nid.ui.renderers.MainProductRenderer">
+            <s:layout>
+                <s:TileLayout orientation="columns" useVirtualLayout="true"
+                              rowAlign="justifyUsingHeight" rowHeight="25"/>
+            </s:layout>
+        </s:DataGroup>
+    </s:Scroller>-->
+    
+    <jn:AutoScrollDataGroup id="productList"
+                            itemRenderer="com.j_nid.ui.renderers.MainProductRenderer"
+                            width="100%" height="100%">
+        <jn:dataLayout>
+            <s:TileLayout orientation="columns" useVirtualLayout="true"
+                          rowAlign="justifyUsingHeight" rowHeight="25"/>
+        </jn:dataLayout>
+    </jn:AutoScrollDataGroup>
+    
+    <mx:ButtonBar id="subMenu"
+                  dataProvider="{subMenuList}" horizontalAlign="center"
+                  itemClick="subMenuClickHandler(event)"
+                  buttonWidth="200" horizontalGap="10" width="100%"/>
+</s:VGroup>

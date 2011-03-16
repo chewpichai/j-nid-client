@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+               xmlns:s="library://ns.adobe.com/flex/spark"
+               xmlns:mx="library://ns.adobe.com/flex/mx"
+               creationComplete="creationCompleteHandler(event)"
+               close="close()"
+               width="800" height="400">
+    <s:layout>
+        <s:HorizontalLayout/>
+    </s:layout>
+	
+	 <fx:Script>
+		<![CDATA[
+            import com.j_nid.utils.ServiceUtils;
+            import com.j_nid.utils.Utils;
+            
+            import mx.collections.XMLListCollection;
+            import mx.events.FlexEvent;
+            import mx.events.ListEvent;
+            import mx.rpc.events.ResultEvent;
+            
+            import spark.events.IndexChangeEvent;
+			
+			public var selectedProduct:XML;
+			
+			private function creationCompleteHandler(e:FlexEvent):void {
+				loadProductTypes();
+				loadProducts();
+			}
+			
+			private function loadProductTypes():void {
+				var responder:com.j_nid.utils.Responder =
+					new com.j_nid.utils.Responder(productTypeResultHandler);
+				var filters:String = "filters=is_sale=1";
+				ServiceUtils.send("/producttypes/?" + filters,
+					"GET", responder);
+			}
+			
+			private function productTypeResultHandler(data:Object):void {
+				var resultEvent:ResultEvent = ResultEvent(data);
+				productTypeList.dataProvider =
+                    new XMLListCollection(resultEvent.result.children());
+				productTypeList.dataProvider.addItemAt(Utils.getBasketType(), 0);
+				productTypeList.dataProvider.addItemAt(Utils.getAllProductType(), 0);
+				productTypeList.selectedIndex = 0;
+			}
+			
+			private function loadProducts(typeID:int=0):void {
+				var responder:com.j_nid.utils.Responder =
+					new com.j_nid.utils.Responder(productResultHandler);
+				var attrs:String = "attrs=id,name,unit,price_per_unit,cost_per_unit";
+				var filters:String = "filters=is_sale=1";
+				if (typeID > 0) {
+					filters += ",type_id=" + typeID;
+				}
+				if (typeID == -1) {
+					ServiceUtils.send("/baskets/?" + filters, "GET", responder);
+				} else {
+					ServiceUtils.send("/products/?" + attrs + "&" + filters,
+						"GET", responder);
+				}
+			}
+			
+			private function productResultHandler(data:Object):void {
+				var resultEvent:ResultEvent = ResultEvent(data);
+				productList.dataProvider =
+                    new XMLListCollection(resultEvent.result.children());
+			}
+			
+			private function productTypeListChange(e:IndexChangeEvent):void {
+				loadProducts(productTypeList.selectedItem.id);
+			}
+						
+			private function productDoubleClick(e:MouseEvent):void {
+				selectedProduct = XML(productList.selectedItem);
+				close();
+			}
+			
+			private function close():void {
+				Utils.hidePopUp(this);
+			}
+		]]>
+	</fx:Script>
+	
+    <s:HGroup width="100%" height="100%">
+        <s:Panel title="ชนิดสินค้า" width="220" height="100%">
+            <s:List id="productTypeList" change="productTypeListChange(event)"
+                    labelField="name" borderVisible="false"
+                    height="100%" width="100%"/>
+        </s:Panel>
+		<s:Panel title="สินค้า" width="100%" height="100%">
+            <mx:DataGrid id="productList" variableRowHeight="true"
+                         dragEnabled="true" doubleClickEnabled="true"
+                         headerStyleName="centerHeader" borderStyle="none"
+                         doubleClick="productDoubleClick(event)"
+                         width="100%" height="100%">
+                <mx:columns>
+                    <mx:DataGridColumn headerText="ชื่อ" dataField="name"
+                                       wordWrap="true"/>
+                    <mx:DataGridColumn headerText="หน่วย" dataField="unit"
+                                       labelFunction="Utils.unitLabelFunction"
+                                       width="50"/>
+                    <mx:DataGridColumn headerText="ราคาต่อหน่วย"
+                                       labelFunction="Utils.priceLabelFunction"
+                                       dataField="price_per_unit" width="90"/>
+                </mx:columns>
+            </mx:DataGrid>
+		</s:Panel>
+	</s:HGroup>
+</s:TitleWindow>

@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:VGroup xmlns:fx="http://ns.adobe.com/mxml/2009" 
+          xmlns:s="library://ns.adobe.com/flex/spark" 
+          xmlns:mx="library://ns.adobe.com/flex/mx"
+          paddingTop="20" paddingBottom="20"
+          paddingLeft="20" paddingRight="20"
+          horizontalAlign="center" gap="10"
+          fontSize="10">
+    
+    <fx:Script>
+        <![CDATA[
+            import com.j_nid.utils.Utils;
+            
+            import mx.collections.ArrayList;
+            
+            [Bindable]
+            private var _transactions:ArrayList;
+            [Bindable]
+            public var year:int;
+            [Bindable]
+            public var month:int;
+            
+            public function set transactions(transactions:ArrayList):void
+            {
+                _transactions = transactions;
+                quantitySum.text = Utils.formatPrice(Utils.sum(_transactions.source, "quantity"));
+                orderSum.text = Utils.formatPrice(Utils.sum(_transactions.source, "ordered_total"));
+                paymentSum.text = Utils.formatPrice(Utils.sum(_transactions.source, "paid_total"));
+                var sum:Number = Utils.sum(_transactions.source, "outstanding_total");
+                if (sum < 0)
+                    outstandingSum.setStyle("color", "0xFF0000");
+                else
+                    outstandingSum.setStyle("color", "0x0000FF");
+                outstandingSum.text = Utils.formatPrice(Math.abs(sum));
+            }
+            
+            public function startJob():void
+            {
+                header.visible = true;
+                header.includeInLayout = true;
+                validateNow();
+            }
+            
+            public function nextPage():Boolean
+            {
+                header.visible = false;
+                header.includeInLayout = false;
+                printGrid.nextPage();
+                validateNow();
+                return printGrid.validNextPage;
+            }
+            
+            private function priceLabelFunction(item:Object,
+                                                column:DataGridColumn):String
+            {   
+                if (Number(item[column.dataField]) != 0)
+                    return Utils.formatPrice(item[column.dataField]);
+                return "";
+            }
+            
+            private function formatDateForTransaction(item:Object,
+                                                      column:DataGridColumn):String
+            {   
+                if (String(item[column.dataField]).length > 0)
+                {
+                    var created:Date = new Date(Date.parse(item[column.dataField]));
+                    return Utils.formatDate(created, "DD MMM YYYY JJ:NN");
+                }
+                return "";
+            }
+            
+            private function formatDate(item:Object,
+                                        column:DataGridColumn):String
+            {   
+                var created:Date = new Date(Date.parse(item[column.dataField]));
+                return Utils.formatDate(created, "DD MMM YYYY");
+            }
+        ]]>
+    </fx:Script>
+    
+    <s:HGroup id="header" verticalAlign="middle" horizontalAlign="center"
+              width="100%">
+        <s:Label text="เดือน:"/>
+        <s:Label text="{month}"/>
+        <s:Label text="ปี:"/>
+        <s:Label text="{year}"/>
+    </s:HGroup>
+    
+    <mx:PrintDataGrid id="printGrid" dataProvider="{_transactions}"
+                      styleName="reportDataGrid" height="100%">
+        <mx:columns>
+            <mx:DataGridColumn headerText="วันที่" dataField="created"
+                               headerStyleName="centerHeader"
+                               labelFunction="formatDate"
+                               textAlign="center" width="80"/>
+            <mx:DataGridColumn headerText="จำนวนสินค้า" dataField="quantity"
+                               headerStyleName="centerHeader"
+                               textAlign="center" width="70"/>
+            <mx:DataGridColumn headerText="ยอดขาย" dataField="ordered_total"
+                               headerStyleName="centerHeader"
+                               labelFunction="Utils.priceLabelFunction"
+                               textAlign="right" color="0xFF0000"
+                               paddingRight="5" width="90"/>
+            <mx:DataGridColumn headerText="ยอดจ่าย" dataField="paid_total"
+                               headerStyleName="centerHeader"
+                               labelFunction="Utils.priceLabelFunction"
+                               textAlign="right" color="0x0000FF"
+                               paddingRight="5" width="90"/>
+            <mx:DataGridColumn headerText="ยอดค้าง" dataField="outstanding_total"
+                               headerStyleName="centerHeader"
+                               itemRenderer="com.j_nid.ui.renderers.OutstandingRenderer"
+                               textAlign="right" paddingRight="5"
+                               width="90"/>
+        </mx:columns>
+    </mx:PrintDataGrid>
+    
+    <s:HGroup verticalAlign="middle" horizontalAlign="right">
+        <s:Label text="จำนวนสินค้ารวม:"/>
+        <s:Label id="quantitySum" color="#00ff00"/>
+        <s:Label text="ชิ้น"/>
+        <s:Label text="ยอดขายรวม:"/>
+        <s:Label id="orderSum" color="#ff0000"/>
+        <s:Label text="บาท"/>
+        <s:Label text="ยอดจ่ายรวม:"/>
+        <s:Label id="paymentSum" color="#0000ff"/>
+        <s:Label text="บาท"/>
+        <s:Label text="ยอดค้างรวม:"/>
+        <s:Label id="outstandingSum"/>
+        <s:Label text="บาท"/>
+    </s:HGroup>
+</s:VGroup>

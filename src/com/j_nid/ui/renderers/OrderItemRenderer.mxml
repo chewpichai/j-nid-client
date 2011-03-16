@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:MXDataGridItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009"
+                          xmlns:s="library://ns.adobe.com/flex/spark"
+                          xmlns:mx="library://ns.adobe.com/flex/mx">
+    
+    <fx:Script>
+        <![CDATA[
+            import com.j_nid.utils.Utils;
+            
+            import mx.controls.DataGrid;
+            import mx.controls.dataGridClasses.DataGridColumn;
+            import mx.controls.dataGridClasses.DataGridListData;
+            
+            override public function set data(obj:Object):void {
+                super.data = obj;
+                if (data) {
+                    var dataField:String = DataGridListData(listData).dataField;
+                    if (dataField == "name")
+                    {
+                        lbl.text = data[dataField];
+                    }
+                    else
+                    {
+                        if (data.name() == "basket" && dataField == "quantity")
+                        {
+                            lbl.text = "0";
+                        }
+                        else
+                        {
+                            lbl.text = Utils.formatPrice(Math.abs(data[dataField]));
+                        }
+                    }
+                }
+            }
+            
+            override protected function updateDisplayList(unscaleWidth:Number, unscaleHeight:Number):void
+            {
+                super.updateDisplayList(unscaleWidth, unscaleHeight);
+                var dg:DataGrid = DataGrid(listData.owner);
+                var column:DataGridColumn = dg.columns[listData.columnIndex];
+                graphics.clear();
+                if (Boolean(int(data["is_deleted"])))
+                {
+                    graphics.lineStyle(1, 0xFF0000);
+                    graphics.moveTo(0, unscaleHeight / 2);
+                    graphics.lineTo(unscaleWidth, unscaleHeight / 2);
+                    lbl.setStyle("color", 0xFF0000);
+                    column.editable = false;
+                    dg.destroyItemEditor();
+                }
+                else
+                {
+                    lbl.setStyle("color", 0x000000);
+                    if ((data.name() == "basket" && column.dataField == "quantity") ||
+                        column.dataField == "name" || column.dataField == "total")
+                    {
+                        
+                        column.editable = false;
+                    }
+                    else
+                    {
+                        column.editable = true;
+                    }
+                }
+            }
+        ]]>
+    </fx:Script>
+    
+    <s:Label id="lbl" verticalCenter="0" paddingLeft="5"/>
+</s:MXDataGridItemRenderer>
