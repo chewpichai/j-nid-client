@@ -7,17 +7,18 @@
     
     <fx:Script>
         <![CDATA[
-            import com.j_nid.ui.popups.PersonSelectForm;
-            import com.j_nid.utils.Responder;
-            import com.j_nid.utils.ServiceUtils;
-            import com.j_nid.utils.Utils;
-            
-            import mx.collections.XMLListCollection;
-            import mx.controls.Alert;
-            import mx.events.CloseEvent;
-            import mx.events.FlexEvent;
-            
-            import spark.events.IndexChangeEvent;
+			import com.j_nid.ui.popups.PaymentDetailForm;
+			import com.j_nid.ui.popups.PersonSelectForm;
+			import com.j_nid.utils.Responder;
+			import com.j_nid.utils.ServiceUtils;
+			import com.j_nid.utils.Utils;
+			
+			import mx.collections.XMLListCollection;
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			
+			import spark.events.IndexChangeEvent;
             
             private function creationCompleteHandler(e:FlexEvent):void {
                 loadCustomers();
@@ -52,14 +53,25 @@
                     personSelectFormCloseHandler);
                 if (form.selectedPerson) {
                     customerField.selectedItem = form.selectedPerson;
-                    loadPayments(customerField.selectedItem);
+                    loadPayments();
                 }
             }
             
-            private function loadPayments(customer:XML):void {
+            private function loadPayments():void {
                 var responder:com.j_nid.utils.Responder =
                     new com.j_nid.utils.Responder(paymetsResultHandler);
-                ServiceUtils.send("/people/" + customer.id + "/payments/", "GET", responder);
+				var customerID:int = customerField.selectedItem.id;
+				var filters:String = "filters=date_range=";
+				if (isTodayField.selected) {
+					startDateField.selectedDate = new Date();
+					endDateField.selectedDate = new Date();
+				}
+				var startDate:Date = startDateField.selectedDate;
+				var endDate:Date = new Date(endDateField.selectedDate.time);
+				endDate.date += 1;
+				filters += Utils.formatDate(startDate, "YYYYMMDD") +
+					":" + Utils.formatDate(endDate, "YYYYMMDD");
+                ServiceUtils.send("/people/" + customerID + "/payments/?" + filters, "GET", responder);
             }
             
             private function paymetsResultHandler(data:Object):void {
@@ -93,14 +105,31 @@
             }
             
             private function deleteResultHandler(data:Object):void {
-                loadPayments(customerField.selectedItem);
+                loadPayments();
             }
 
             protected function customerFieldChangeHandler(e:IndexChangeEvent):void {
                 if (customerField.selectedItem is XML)
-                    loadPayments(customerField.selectedItem);
+                    loadPayments();
             }
+			
+			private function paymentListDoubleClick(e:MouseEvent):void {
+				showPaymentDetailForm(paymentList.selectedItem.id);
+			}
 
+			private function showPaymentDetailForm(paymentID:int):void {
+				var responder:com.j_nid.utils.Responder =
+					new com.j_nid.utils.Responder(paymentResultHandler);
+				var attrs:String = "attrs=id,amount,person_name,notation,created";
+				ServiceUtils.send("/payments/" + paymentID + "/?" + attrs,
+					"GET", responder);
+			}
+			
+			private function paymentResultHandler(data:Object):void {
+				var form:PaymentDetailForm =
+					PaymentDetailForm(Utils.showPopUp(PaymentDetailForm));
+				form.payment = data.result;
+			}
         ]]>
     </fx:Script>
     
@@ -110,24 +139,39 @@
     
     <s:HGroup id="customerGroup" horizontalAlign="center" verticalAlign="middle"
               width="100%">
-        <s:Label text="ชื่อลูกค้า:"/>
-        <s:ComboBox id="customerField" labelField="name"
-                    change="customerFieldChangeHandler(event)"
-                    width="250"/>
-        <s:Button label="เลือก" buttonDown="selectCustomerBtnDown(event)"/>
+		<s:HGroup verticalAlign="middle">
+	        <s:Label text="ชื่อลูกค้า:"/>
+	        <s:ComboBox id="customerField" labelField="name"
+	                    change="customerFieldChangeHandler(event)"
+	                    width="250"/>
+	        <s:Button label="เลือก" buttonDown="selectCustomerBtnDown(event)"/>
+			<s:CheckBox id="isTodayField" label="รายการจ่ายวันนี้" selected="true"
+						change="loadPayments()"/>
+		</s:HGroup>
+		<s:HGroup id="dateRangeGroup" verticalAlign="middle"
+				  enabled="{!isTodayField.selected}">
+			<s:Label text="เริ่มจากวันที่:"/>
+			<mx:DateField id="startDateField" selectedDate="{new Date()}"
+						  change="loadPayments()"/>
+			<s:Label text="ถึงวันที่:"/>
+			<mx:DateField id="endDateField" selectedDate="{new Date()}"
+						  change="loadPayments()"/>
+		</s:HGroup>
     </s:HGroup>
     
     <mx:DataGrid id="paymentList" headerStyleName="centerHeader"
                  wordWrap="true" variableRowHeight="true"
                  keyDown="paymentListKeyDown(event)"
-                 width="60%" height="100%">
+				 doubleClickEnabled="true"
+				 doubleClick="paymentListDoubleClick(event)"
+                 width="70%" height="100%">
         <mx:columns>
             <mx:DataGridColumn headerText="วันที่" dataField="created"
                                labelFunction="cratedLabelFunction"
                                width="150"/>
             <mx:DataGridColumn headerText="จำนวน" dataField="amount"
                                labelFunction="Utils.priceLabelFunction"
-                               textAlign="center" width="100"/>
+                               textAlign="center" width="120"/>
             <mx:DataGridColumn headerText="หมายเหตุ" dataField="notation"/>
         </mx:columns>
     </mx:DataGrid>

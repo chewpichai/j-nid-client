@@ -39,6 +39,8 @@
 			private var nonDepositBaskets:XMLListCollection;
 			[Bindable]
             private var total:Number;
+			[Bindable]
+			private var totalQuantity:uint;
             [Bindable]
             private var paid:Number;
 			[Bindable]
@@ -49,6 +51,7 @@
             private function creationCompleteHandler(e:FlexEvent):void {
 				total = 0;
 				paid = 0;
+				totalQuantity = 0;
 				currentState = "TodayOrder";
 				initTodayOrder();
             }
@@ -153,6 +156,7 @@
 					}
 				}
                 unsaveOrderItems = new XMLListCollection(orderItems.copy());
+				totalQuantity = Utils.sum(orderItems, "quantity");
 			}
 			
 			private function getNonDepositBasket(item:XML):XML {
@@ -403,6 +407,7 @@
 					if (!Boolean(int(item.is_deleted)))
 						items.push(item);
 				total = Utils.sum(items, "total");
+				totalQuantity = Utils.sum(items, "quantity");
             }
 			
 			private function getCreatedString(value:String):String {
@@ -523,6 +528,8 @@
                     <s:Button label="เพิ่ม" click="addOrderItemClick(event)"
                               enabled="{orderList.selectedItem != null}"
                               width="75"/>
+					<s:Label id="quantityTotalTxt"
+							 text="จำนวนรวม {totalQuantity} ชิ้น"/>
                     <s:Label id="summaryField" text="รวมทั้งสิ้น {Utils.formatPrice(total)} (จ่ายแล้ว {Utils.formatPrice(paid)})"/>
                 </s:VGroup>
             </s:HGroup>
