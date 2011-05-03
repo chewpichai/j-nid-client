@@ -86,7 +86,7 @@ package com.j_nid.utils {
         
         public static function sum(obj:Object, field:String):Number
         {
-            var sum:Number = 0;
+			var sum:Number = 0;
             for each (var item:* in obj)
             {
                 sum += Number(item[field]);
