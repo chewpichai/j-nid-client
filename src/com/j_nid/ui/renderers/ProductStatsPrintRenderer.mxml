@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:DataRenderer xmlns:fx="http://ns.adobe.com/mxml/2009" 
+          		xmlns:s="library://ns.adobe.com/flex/spark" 
+          		xmlns:mx="library://ns.adobe.com/flex/mx">
+	
+	<fx:Script>
+		<![CDATA[
+			import com.j_nid.utils.Utils;
+			
+			import mx.collections.XMLListCollection;
+		]]>
+	</fx:Script>
+	
+	<s:BorderContainer cornerRadius="5" borderWeight="1" borderColor="0x0000FF">
+	    <s:layout>
+	        <s:VerticalLayout horizontalAlign="center" gap="10"
+	                          paddingBottom="5" paddingTop="5"
+							  paddingLeft="5" paddingRight="5"/>
+	    </s:layout>
+		
+		<s:Label text="{data.@name}"/>
+	    
+	    <s:DataGrid dataProvider="{new XMLListCollection(data.stat)}"
+					skinClass="com.j_nid.ui.skins.NoScrollDataGridSkin">
+	        <s:columns>
+				<s:ArrayList>
+					<s:GridColumn headerText="จำนวน" dataField="@quantity"
+								  width="56"/>
+					<s:GridColumn headerText="ราคา" dataField="@price_per_unit"
+								  labelFunction="Utils.sPriceLabelFunction"
+								  width="105"/>
+				</s:ArrayList>
+	        </s:columns>
+	    </s:DataGrid>
+	    
+	    <s:HGroup width="100%" horizontalAlign="center">
+	        <s:Label text="รวม: {Utils.sum(data.stat, '@quantity')} ชิ้น"/>
+	        <s:Rect width="14"/>
+	        <s:Label text="เฉลี่ย: {Utils.formatPrice(Utils.avrg(data.stat, '@price_per_unit'))} บาท"/>
+	    </s:HGroup>
+	</s:BorderContainer>
+</s:DataRenderer>

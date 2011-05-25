@@ -7,19 +7,22 @@
     
     <fx:Script>
         <![CDATA[
-            import com.j_nid.ui.popups.OrderDetailForm;
-            import com.j_nid.ui.popups.PaymentDetailForm;
-            import com.j_nid.ui.windows.ProductStats;
-            import com.j_nid.utils.PrintUtils;
-            import com.j_nid.utils.ServiceUtils;
-            import com.j_nid.utils.Utils;
-            
-            import mx.collections.ArrayCollection;
-            import mx.collections.ListCollectionView;
-            import mx.collections.XMLListCollection;
-            import mx.utils.URLUtil;
-            
-            import spark.events.IndexChangeEvent;
+			import com.j_nid.ui.popups.OrderDetailForm;
+			import com.j_nid.ui.popups.PaymentDetailForm;
+			import com.j_nid.ui.windows.ProductStats;
+			import com.j_nid.ui.windows.ProductsStats;
+			import com.j_nid.utils.PrintUtils;
+			import com.j_nid.utils.ServiceUtils;
+			import com.j_nid.utils.Utils;
+			
+			import mx.collections.ArrayCollection;
+			import mx.collections.ListCollectionView;
+			import mx.collections.XMLListCollection;
+			import mx.utils.URLUtil;
+			
+			import spark.collections.Sort;
+			import spark.collections.SortField;
+			import spark.events.IndexChangeEvent;
             
             private function formatDateForTransaction(item:Object,
                                                       column:DataGridColumn):String
@@ -166,6 +169,41 @@
                 window.stats = new XMLListCollection(data.result.children());
                 window.open();
             }
+			
+			private function showDetailBtnClick(e:MouseEvent):void
+			{
+				var productIDs:Array = [];
+				for each (var item:* in productStatList.selectedItems)
+					productIDs.push(item.id);
+				var responder:com.j_nid.utils.Responder =
+					new com.j_nid.utils.Responder(productsStatsResultHandler);
+				var startDate:Date = startDateField.selectedDate;
+				var endDate:Date = new Date(endDateField.selectedDate.time);
+				endDate.date += 1;
+				var dateRange:String = Utils.formatDate(startDate, "YYYYMMDD") +
+					":" + Utils.formatDate(endDate, "YYYYMMDD");
+				var data:Object = {date_range: dateRange, product_ids: productIDs.join(",")};
+				if (customerField.selectedItem)
+					data['person_id'] = int(customerField.selectedItem.id);
+				ServiceUtils.send("/products/stats/detail/?" + URLUtil.objectToString(data),
+					"GET", responder);
+			}
+			
+			private function productsStatsResultHandler(data:Object):void
+			{
+				var window:ProductsStats = new ProductsStats();
+				var startDate:Date = startDateField.selectedDate;
+				var endDate:Date = endDateField.selectedDate;
+				window.title = Utils.formatDate(startDate, "DD MMM YYYY") + " ถึง " + 
+					Utils.formatDate(endDate, "DD MMM YYYY");
+				var productsStats:XMLListCollection = new XMLListCollection(data.result.children());
+				var sort:Sort = new Sort();
+				sort.fields = [new SortField("@num_stats", false, true)];
+				productsStats.sort = sort;
+				productsStats.refresh();
+				window.productsStats = productsStats;
+				window.open();
+			}
         ]]>
     </fx:Script>
     
@@ -183,9 +221,12 @@
         </s:HGroup>
         <s:HGroup width="100%" height="100%">
             <s:Panel title="จำนวนสินค้าที่ขาย" width="300" height="100%">
+				<s:layout>
+					<s:VerticalLayout />
+				</s:layout>
                 <mx:DataGrid id="productStatList" borderStyle="none"
                              wordWrap="true" variableRowHeight="true"
-                             doubleClickEnabled="true" doubleClick="productStatListDoubleClickHandler(event)"
+                             selectable="true" allowMultipleSelection="true"
                              width="100%" height="100%">
                     <mx:columns>
                         <mx:DataGridColumn headerText="ชื่อ" dataField="name"/>
@@ -197,6 +238,10 @@
                                            width="60"/>
                     </mx:columns>
                 </mx:DataGrid>
+				<s:HGroup horizontalAlign="right" paddingBottom="5" paddingRight="5" width="100%">
+					<s:Button label="แสดงรายละเอียด" enabled="{productStatList.selectedIndex > -1}"
+							  click="showDetailBtnClick(event)"/>
+				</s:HGroup>
             </s:Panel>
             <mx:DataGrid id="transactionList" headerStyleName="centerHeader"
                          doubleClickEnabled="true"

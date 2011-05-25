@@ -20,11 +20,13 @@
 			
 			import spark.events.IndexChangeEvent;
             
-            private function creationCompleteHandler(e:FlexEvent):void {
+            private function creationCompleteHandler(e:FlexEvent):void
+			{
                 loadCustomers();
             }
             
-            private function loadCustomers():void {
+            private function loadCustomers():void
+			{
                 var responder:com.j_nid.utils.Responder =
                     new com.j_nid.utils.Responder(customerResultHandler);
                 var attrs:String = "attrs=id,name,outstanding_total";
@@ -33,13 +35,17 @@
                     "GET", responder);
             }
             
-            private function customerResultHandler(data:Object):void {
+            private function customerResultHandler(data:Object):void
+			{
                 customerField.dataProvider =
                     new XMLListCollection(data.result.children());
-                customerField.selectedIndex = -1;
+				customerField.dataProvider.addItemAt(<person><id>0</id><name>ทั้งหมด</name><outstanding_total>0</outstanding_total></person>, 0);
+                customerField.selectedIndex = 0;
+				loadPayments();
             }
             
-            private function selectCustomerBtnDown(e:FlexEvent):void {
+            private function selectCustomerBtnDown(e:FlexEvent):void
+			{
                 var form:PersonSelectForm =
                     PersonSelectForm(Utils.showPopUp(PersonSelectForm));
                 form.people = new XMLListCollection(XMLList(customerField.dataProvider));
@@ -47,17 +53,20 @@
                     personSelectFormCloseHandler);
             }
             
-            private function personSelectFormCloseHandler(e:Event):void {
+            private function personSelectFormCloseHandler(e:Event):void
+			{
                 var form:PersonSelectForm = PersonSelectForm(e.currentTarget);
                 form.removeEventListener(Event.REMOVED_FROM_STAGE,
                     personSelectFormCloseHandler);
-                if (form.selectedPerson) {
+                if (form.selectedPerson)
+				{
                     customerField.selectedItem = form.selectedPerson;
                     loadPayments();
                 }
             }
             
-            private function loadPayments():void {
+            private function loadPayments():void
+			{
                 var responder:com.j_nid.utils.Responder =
                     new com.j_nid.utils.Responder(paymetsResultHandler);
 				var customerID:int = customerField.selectedItem.id;
@@ -71,53 +80,66 @@
 				endDate.date += 1;
 				filters += Utils.formatDate(startDate, "YYYYMMDD") +
 					":" + Utils.formatDate(endDate, "YYYYMMDD");
-                ServiceUtils.send("/people/" + customerID + "/payments/?" + filters, "GET", responder);
+				if (customerID == 0)
+                	ServiceUtils.send("/people/" + customerID + "/payments/?" + filters, "GET", responder);
+				else
+					ServiceUtils.send("/payments/?" + filters, "GET", responder);
             }
             
-            private function paymetsResultHandler(data:Object):void {
+            private function paymetsResultHandler(data:Object):void
+			{
                 paymentList.dataProvider =
                     new XMLListCollection(data.result.children());
             }
             
             private function cratedLabelFunction(item:Object,
-                                                 column:DataGridColumn):String {
+                                                 column:DataGridColumn):String
+			{
                 var created:Date = new Date(Date.parse(item[column.dataField]));
                 return Utils.formatDate(created, "DD MMM YYYY JJ:NN");
             }
             
-            private function paymentListKeyDown(e:KeyboardEvent):void {
+            private function paymentListKeyDown(e:KeyboardEvent):void
+			{
                 if (e.keyCode == Keyboard.DELETE &&
-                    paymentList.selectedItem != null) {
+                    paymentList.selectedItem != null)
+				{
                     
                     Utils.showConfirm("ต้องการลบข้อมูลหรือไม่",
                         "ยืนยันการลบ", closeHandler);
                 }
             }
             
-            private function closeHandler(e:CloseEvent):void {
+            private function closeHandler(e:CloseEvent):void
+			{
                 var id:int = paymentList.selectedItem.id;
                 var responder:com.j_nid.utils.Responder =
                     new com.j_nid.utils.Responder(deleteResultHandler);
-                if (e.detail == Alert.OK) {
+                if (e.detail == Alert.OK)
+				{
                     ServiceUtils.send("/payments/" + id + "/",
                         "DELETE", responder);
                 }
             }
             
-            private function deleteResultHandler(data:Object):void {
+            private function deleteResultHandler(data:Object):void
+			{
                 loadPayments();
             }
 
-            protected function customerFieldChangeHandler(e:IndexChangeEvent):void {
+            protected function customerFieldChangeHandler(e:IndexChangeEvent):void
+			{
                 if (customerField.selectedItem is XML)
                     loadPayments();
             }
 			
-			private function paymentListDoubleClick(e:MouseEvent):void {
+			private function paymentListDoubleClick(e:MouseEvent):void
+			{
 				showPaymentDetailForm(paymentList.selectedItem.id);
 			}
 
-			private function showPaymentDetailForm(paymentID:int):void {
+			private function showPaymentDetailForm(paymentID:int):void
+			{
 				var responder:com.j_nid.utils.Responder =
 					new com.j_nid.utils.Responder(paymentResultHandler);
 				var attrs:String = "attrs=id,amount,person_name,notation,created";
@@ -125,7 +147,8 @@
 					"GET", responder);
 			}
 			
-			private function paymentResultHandler(data:Object):void {
+			private function paymentResultHandler(data:Object):void
+			{
 				var form:PaymentDetailForm =
 					PaymentDetailForm(Utils.showPopUp(PaymentDetailForm));
 				form.payment = data.result;
