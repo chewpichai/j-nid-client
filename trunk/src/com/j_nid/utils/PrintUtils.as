@@ -2,6 +2,7 @@ package com.j_nid.utils {
     
     import com.j_nid.ui.prints.MonthlyReportPrintView;
     import com.j_nid.ui.prints.OrderPrintView;
+    import com.j_nid.ui.prints.ProductsStatsPrintView;
     import com.j_nid.ui.prints.ReportPrintView;
     import com.j_nid.ui.prints.ReportSummaryPrintView;
     import com.j_nid.ui.prints.TransactionPrintView;
@@ -33,7 +34,15 @@ package com.j_nid.utils {
                 printView.width = printJob.pageWidth;
                 printView.height = printJob.pageHeight;
                 printView.order = order;
-                var orderItems:Array = new XMLListCollection(order.order_items.children()).toArray();
+				var orderItems:Array;
+                try
+				{
+					orderItems = new XMLListCollection(order.order_items.order_item.(is_deleted=="0")).toArray();
+				}
+				catch (err:ReferenceError)
+				{
+					orderItems = new XMLListCollection(order.order_items.order_item).toArray();
+				}
                 var numOrderItems:int = orderItems.length;
                 var numPages:int = Math.ceil(numOrderItems / NUM_ITEMS_PER_PAGE);
                 if (numPages > 1) {
@@ -213,16 +222,19 @@ package com.j_nid.utils {
             }
         }
         
-        private static function getBalance(transactions:ListCollectionView):Number {
+        private static function getBalance(transactions:ListCollectionView):Number
+		{
             var transaction:XML = XML(transactions.getItemAt(transactions.length - 1));
             if (transaction.type == "balance")
                 return Number(transaction.balance);
             return 0;
         }
         
-        private static function getOutstandingOrders(transactions:ListCollectionView):Array {
+        private static function getOutstandingOrders(transactions:ListCollectionView):Array
+		{
             var orders:Array = new Array();
-            for each (var transaction:XML in transactions) {
+            for each (var transaction:XML in transactions)
+			{
                 if (transaction.type == "order")
                     orders.push(transaction);
             }
@@ -230,9 +242,11 @@ package com.j_nid.utils {
             return orders;
         }
         
-        public static function getPayments(transactions:ListCollectionView):Array {
+        public static function getPayments(transactions:ListCollectionView):Array
+		{
             var payments:Array = new Array();
-            for each (var transaction:XML in transactions) {
+            for each (var transaction:XML in transactions)
+			{
                 if (transaction.type == "payment")
                     payments.push(transaction);
             }
@@ -240,7 +254,8 @@ package com.j_nid.utils {
             return payments;
         }
         
-        private static function createdCompare(obj1:Object, obj2:Object):int {
+        private static function createdCompare(obj1:Object, obj2:Object):int
+		{
             var date1:Date = new Date(Date.parse(obj1["created"]));
             var date2:Date = new Date(Date.parse(obj2["created"]));
             if (date1 < date2)
@@ -249,5 +264,22 @@ package com.j_nid.utils {
                 return 1;
             return 0;
         }
+		
+		public static function printProductsStats(productsStats:XMLListCollection):void
+		{
+			var printJob:FlexPrintJob = new FlexPrintJob();
+			printJob.printAsBitmap = false;
+			if (printJob.start())
+			{
+				var printView:ProductsStatsPrintView = new ProductsStatsPrintView();
+				FlexGlobals.topLevelApplication.addElement(printView);
+				printView.width = printJob.pageWidth;
+//				printView.height = printJob.pageHeight;
+				printView.productsStats = productsStats;
+				printJob.addObject(printView);
+				printJob.send();
+				FlexGlobals.topLevelApplication.removeElement(printView);
+			}
+		}
     }
 }

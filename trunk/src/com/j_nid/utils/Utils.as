@@ -27,6 +27,7 @@ package com.j_nid.utils {
     import mx.managers.PopUpManager;
     
     import spark.components.ComboBox;
+    import spark.components.gridClasses.GridColumn;
     
     [Bindable]
     public class Utils {
@@ -58,6 +59,12 @@ package com.j_nid.utils {
         {   
             return Utils.formatPrice(item[column.dataField]);
         }
+		
+		public static function sPriceLabelFunction(item:Object,
+												  column:GridColumn):String
+		{   
+			return Utils.formatPrice(item[column.dataField]);
+		}
         
         public static function formatPrice(num:Number):String {
             /*if (numberFormatter == null) {
@@ -88,19 +95,20 @@ package com.j_nid.utils {
         {
 			var sum:Number = 0;
             for each (var item:* in obj)
-            {
                 sum += Number(item[field]);
-            }
             return sum;
         }
         
-        public static function avrg(obj:Object, field:String):Number {
+        public static function avrg(obj:Object, field:String):Number
+		{
             var sum:Number = sum(obj, field);
-            return sum / obj.length;
+			var len:int = obj.length is int ? obj.length : obj.length();
+            return sum / len;
         }
         
         public static function convertFirstChar(str:String,
-                                                isLower:Boolean):String {
+                                                isLower:Boolean):String
+		{
             
             var firstChar:String = str.charAt(0);
             if (isLower) {
@@ -112,13 +120,15 @@ package com.j_nid.utils {
             return str;
         }
         
-        public static function isSameDate(date1:Date, date2:Date):Boolean {
+        public static function isSameDate(date1:Date, date2:Date):Boolean
+		{
             return date1.date == date2.date && 
                 date1.month == date2.month &&
                 date1.fullYear == date2.fullYear;
         }
         
-        public static function getDateStr(date:Date):String {
+        public static function getDateStr(date:Date):String
+		{
             return formatDate(date, "YYYY-MM-DD HH");
         }
         

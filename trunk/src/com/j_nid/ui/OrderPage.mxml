@@ -235,12 +235,17 @@
                 }
             }
 			
-			private function deleteOrderItemConfirmCloseHandler(e:CloseEvent):void {
+			private function deleteOrderItemConfirmCloseHandler(e:CloseEvent):void
+			{
 				var item:XML = XML(orderItemList.selectedItem);
-				if (e.detail == Alert.OK) {
-					if (item.name() == "order_item" && item.hasOwnProperty("is_deleted")) {
+				if (e.detail == Alert.OK)
+				{
+					if (item.name() == "order_item" && item.hasOwnProperty("is_deleted"))
+					{
 						item.is_deleted = 1;
-					} else {
+					}
+					else
+					{
 						orderItems.removeItemAt(orderItems.getItemIndex(item));
 						if (item.name() == "basket")
 							removeDepositedBasket(item);
