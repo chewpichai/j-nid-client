@@ -34,36 +34,40 @@ package com.j_nid.utils {
                 printView.width = printJob.pageWidth;
                 printView.height = printJob.pageHeight;
                 printView.order = order;
-				var orderItems:Array;
-                try
+				var orderItems:Array =[];
+                for each (var obj:* in order.order_items.children())
 				{
-					orderItems = new XMLListCollection(order.order_items.order_item.(is_deleted=="0")).toArray();
-				}
-				catch (err:ReferenceError)
-				{
-					orderItems = new XMLListCollection(order.order_items.order_item).toArray();
+					if (!int(obj.is_deleted))
+						orderItems.push(obj);
 				}
                 var numOrderItems:int = orderItems.length;
                 var numPages:int = Math.ceil(numOrderItems / NUM_ITEMS_PER_PAGE);
-                if (numPages > 1) {
+                if (numPages > 1)
+				{
                     var pageNum:int = 1;
                     printView.numPages = numPages;
-                    while(true) {
+                    while(true)
+					{
                         var start:int = (pageNum - 1) * NUM_ITEMS_PER_PAGE;
                         var end:int = pageNum * NUM_ITEMS_PER_PAGE;
                         printView.orderItems = orderItems.slice(start, end);
                         printView.pageNum = pageNum;
-                        if (pageNum == numPages) {
+                        if (pageNum == numPages)
+						{
                             printView.currentState = "base";
                             printJob.addObject(printView);
                             break;
-                        } else {
+                        }
+						else
+						{
                             printView.currentState = "middle";
                             printJob.addObject(printView);
                         }
                         pageNum++;
                     }
-                } else {
+                }
+				else
+				{
                     printView.orderItems = orderItems;
                     printView.numPages = 1;
                     printView.pageNum = 1;
@@ -274,7 +278,7 @@ package com.j_nid.utils {
 				var printView:ProductsStatsPrintView = new ProductsStatsPrintView();
 				FlexGlobals.topLevelApplication.addElement(printView);
 				printView.width = printJob.pageWidth;
-//				printView.height = printJob.pageHeight;
+//				printView.height = int.MAX_VALUE;
 				printView.productsStats = productsStats;
 				printJob.addObject(printView);
 				printJob.send();
