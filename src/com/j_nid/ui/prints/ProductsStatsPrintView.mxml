@@ -13,12 +13,12 @@
         ]]>
     </fx:Script>
 	
-    <s:DataGroup dataProvider="{productsStats}"
+    <s:DataGroup id="list" dataProvider="{productsStats}"
 				 itemRenderer="com.j_nid.ui.renderers.ProductStatsPrintRenderer"
 				 right="5" left="5" top="5" bottom="5">
 		<s:layout>
 			<s:TileLayout horizontalGap="15" verticalGap="15"
-						  requestedColumnCount="3" verticalAlign="justify" />
+						  requestedColumnCount="3" rowAlign="justifyUsingGap"/>
 		</s:layout>
 	</s:DataGroup>
 </s:Group>
