@@ -16,8 +16,8 @@ package com.j_nid.utils {
     import mx.printing.FlexPrintJob;
     import mx.printing.FlexPrintJobScaleType;
     
-    public class PrintUtils {
-        
+    public class PrintUtils 
+	{
         private static const NUM_ITEMS_PER_PAGE:int = 14;
         private static const NUM_TRANSACTIONS_PER_PAGE:int = 30;
         
@@ -40,6 +40,8 @@ package com.j_nid.utils {
 					if (!int(obj.is_deleted))
 						orderItems.push(obj);
 				}
+				printView.quantity = Utils.sum(orderItems, 'quantity');
+				printView.total = Utils.sum(orderItems, 'total');
                 var numOrderItems:int = orderItems.length;
                 var numPages:int = Math.ceil(numOrderItems / NUM_ITEMS_PER_PAGE);
                 if (numPages > 1)
@@ -85,7 +87,8 @@ package com.j_nid.utils {
         {   
             var printJob:FlexPrintJob = new FlexPrintJob();
             printJob.printAsBitmap = false;
-            if (printJob.start()) {
+            if (printJob.start())
+			{
                 var transactionPrintView:TransactionPrintView = 
                     new TransactionPrintView();
                 FlexGlobals.topLevelApplication.addElement(transactionPrintView);
@@ -97,14 +100,16 @@ package com.j_nid.utils {
                 transactionPrintView.personName = person.name;
                 var balance:Number = getBalance(transactions);
                 var outstandingOrders:Array = getOutstandingOrders(transactions);
-                if (balance < 0) {
+                if (balance < 0)
+				{
                     outstandingOrders.unshift({created: "ยอดค้างยกมา",
                         outstanding: Math.abs(balance)});
                 }
                 transactionPrintView.outstandingTotal = Utils.sum(outstandingOrders, "outstanding");
                 transactionPrintView.orders = outstandingOrders;
                 var payments:Array = getPayments(transactions);
-                if (balance > 0) {
+                if (balance > 0)
+				{
                     payments.unshift({created: "ยอดจ่ายยกมา",
                         paid: Math.abs(balance)});
                 }
@@ -143,7 +148,8 @@ package com.j_nid.utils {
                 reportPrintView.quantitySum = quantitySum;
                 reportPrintView.orderSum = orderSum;
                 reportPrintView.paymentSum = paymentSum;
-                transactions.sort(function(a:*, b:*):Number {
+                transactions.sort(function(a:*, b:*):Number
+				{
                     var aDate:Date = new Date(Date.parse(a.created));
                     var bDate:Date = new Date(Date.parse(b.created));
                     if (aDate > bDate)

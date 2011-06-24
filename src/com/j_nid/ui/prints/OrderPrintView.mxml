@@ -16,6 +16,10 @@
             public var numPages:int;
             [Bindable]
             public var pageNum:int;
+			[Bindable]
+			public var quantity:int;
+			[Bindable]
+			public var total:int;
         ]]>
     </fx:Script>
     
@@ -54,10 +58,9 @@
     <s:Label id="noteTxt" text="{order.notation}" bottom="75" left="12"
              width="280" includeIn="base"/>
     <s:Label id="quantityTotalTxt"
-             text="จำนวนรวม {Utils.sum(orderItems, 'quantity')} ชิ้น"
+             text="จำนวนรวม {quantity} ชิ้น"
              bottom="45" left="12" width="120" height="24" includeIn="base"/>
-    <s:Label id="totalLbl"
-             text="{Utils.formatPrice(Utils.sum(orderItems, 'total'))}"
-             text.middle="มีต่อ" textAlign="right" bottom="45" left="294"
+    <s:Label id="totalLbl" text="{Utils.formatPrice(total)}" text.middle="มีต่อ"
+			 textAlign="right" bottom="45" left="294"
              bottom.middle="65" height="24" width="85"/>
 </s:Group>
